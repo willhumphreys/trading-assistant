@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+
+    <changeSet id="create_account_setup_groups_table" author="will">
+        <createTable tableName="account_setup_groups">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+
+            <column name="account_id" type="int">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="setup_groups_id" type="int">
+                <constraints nullable="false"/>
+            </column>
+
+        </createTable>
+
+
+        <addForeignKeyConstraint constraintName="fk_account_setup_groups_setup_groups"
+                                 baseTableName="account_setup_groups"
+                                 baseColumnNames="setup_groups_id"
+                                 referencedTableName="setup_groups"
+                                 referencedColumnNames="id"/>
+
+        <addForeignKeyConstraint constraintName="fk_account_setup_groups_account"
+                                 baseTableName="account_setup_groups"
+                                 baseColumnNames="account_id"
+                                 referencedTableName="account"
+                                 referencedColumnNames="id"/>
+    </changeSet>
+
+</databaseChangeLog>

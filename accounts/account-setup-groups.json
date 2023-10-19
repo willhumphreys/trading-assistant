@@ -1,0 +1,27 @@
+[
+  {
+    "name": "linux-long",
+    "setup-group-name": "long",
+    "metatrader-account": "long"
+  },
+  {
+    "name": "windows-long",
+    "setup-group-name": "long",
+    "metatrader-account": "long-windows-23"
+  },
+  {
+    "name": "linux-short",
+    "setup-group-name": "short",
+    "metatrader-account": "short"
+  },
+  {
+    "name": "windows-short",
+    "setup-group-name": "short",
+    "metatrader-account": "short-windows-04"
+  },
+  {
+    "name": "linux-dev",
+    "setup-group-name": "long",
+    "metatrader-account": "long-dev-linux"
+  }
+]

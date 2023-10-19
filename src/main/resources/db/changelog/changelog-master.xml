@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <include file="classpath:db/changelog/001_add_accounts.xml"/>
+    <include file="classpath:db/changelog/002_add_setup_groups.xml"/>
+    <include file="classpath:db/changelog/003_add_setup_table.xml"/>
+    <include file="classpath:db/changelog/004_add_trade_table.xml"/>
+    <include file="classpath:db/changelog/005_add_account_setup_groups.xml"/>
+</databaseChangeLog>

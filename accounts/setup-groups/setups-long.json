@@ -1,0 +1,41 @@
+{
+  "name": "long",
+  "scriptsDirectory": "../mochi-java/scripts/mochi-graphs/",
+  "setupGroups": [
+    {
+      "path": "eurusd-1m-btmH/s_-3000..-100..100___l_100..7500..100___o_-800..-100..50___d_14..14..7___out_8..8..4/aggregated-eurusd-1m-btmH_s_-3000..-100..100___l_100..7500..100___o_-800..-100..50___d_14..14..7___out_8..8..4_aggregationQueryTemplate-all.csv.lzo/eurusd_BestTrades/profitperrisk/eurusd_bestTrades.csv",
+      "symbol": "EURUSD",
+      "enabled": true
+    },
+    {
+      "path": "gbpusd-1m-btmH/s_-3000..-100..100___l_100..7500..100___o_-800..-100..50___d_14..14..7___out_8..8..4/aggregated-gbpusd-1m-btmH_s_-3000..-100..100___l_100..7500..100___o_-800..-100..50___d_14..14..7___out_8..8..4_aggregationQueryTemplate-all.csv.lzo/gbpusd_BestTrades/profitperrisk/gbpusd_bestTrades.csv",
+      "symbol": "GBPUSD",
+      "enabled": true
+    },
+    {
+      "path": "usdchf-1m-btmH/s_-3000..-100..100___l_100..7500..100___o_-800..-100..50___d_14..14..7___out_8..8..4/aggregated-usdchf-1m-btmH_s_-3000..-100..100___l_100..7500..100___o_-800..-100..50___d_14..14..7___out_8..8..4_aggregationQueryTemplate-all.csv.lzo/usdchf_BestTrades/profitperrisk/usdchf_bestTrades.csv",
+      "symbol": "USDCHF",
+      "enabled": true
+    },
+    {
+      "path": "usdjpy-1m-btmH/s_-3000..-100..200___l_100..7500..200___o_-800..-100..50___d_14..14..7___out_8..8..4/aggregated-usdjpy-1m-btmH_s_-3000..-100..200___l_100..7500..200___o_-800..-100..50___d_14..14..7___out_8..8..4_aggregationQueryTemplate-all.csv.lzo/usdjpy_BestTrades/profitperrisk/usdjpy_bestTrades.csv",
+      "symbol": "USDJPY",
+      "enabled": true
+    },
+    {
+      "path": "audusd-1m-btmH/s_-3000..-100..100___l_100..7500..100___o_-800..-100..50___d_14..14..7___out_8..8..4/aggregated-audusd-1m-btmH_s_-3000..-100..100___l_100..7500..100___o_-800..-100..50___d_14..14..7___out_8..8..4_aggregationQueryTemplate-all.csv.lzo/audusd_BestTrades/profitperrisk/audusd_bestTrades.csv",
+      "symbol": "AUDUSD",
+      "enabled": true
+    },
+    {
+      "path": "nzdusd-1m-btmH/s_-3000..-100..100___l_100..7500..100___o_-800..-100..50___d_14..14..7___out_8..8..4/aggregated-nzdusd-1m-btmH_s_-3000..-100..100___l_100..7500..100___o_-800..-100..50___d_14..14..7___out_8..8..4_aggregationQueryTemplate-all.csv.lzo/nzdusd_BestTrades/profitperrisk/nzdusd_bestTrades.csv",
+      "symbol": "NZDUSD",
+      "enabled": true
+    },
+    {
+      "path": "usdcad-1m-btmH/s_-3000..-100..100___l_100..7500..100___o_-800..-100..50___d_14..14..7___out_8..8..4/aggregated-usdcad-1m-btmH_s_-3000..-100..100___l_100..7500..100___o_-800..-100..50___d_14..14..7___out_8..8..4_aggregationQueryTemplate-all.csv.lzo/usdcad_BestTrades/profitperrisk/usdcad_bestTrades.csv",
+      "symbol": "USDCAD",
+      "enabled": true
+    }
+  ]
+}

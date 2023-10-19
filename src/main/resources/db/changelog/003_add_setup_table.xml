@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="create_setup_table" author="will">
+        <createTable tableName="setup">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="setup_group_id" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="symbol" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rank_column" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="day_of_week" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="hour_of_day" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="stop_column" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="limit_column" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tick_offset" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trade_duration" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="out_of_time" type="int">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint constraintName="fk_setup_setup_group"
+                                 baseTableName="setup"
+                                 baseColumnNames="setup_group_id"
+                                 referencedTableName="setup_group"
+                                 referencedColumnNames="id"/>
+
+
+        <createIndex indexName="idx_symbol" tableName="setup">
+            <column name="symbol"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

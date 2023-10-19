@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="create_setup_groups_table" author="will">
+        <createTable tableName="setup_groups">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="scripts_directory" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+
+    </changeSet>
+
+    <changeSet id="create_setup_group_table" author="will">
+        <createTable tableName="setup_group">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="setup_groups_id" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="path" type="varchar(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="symbol" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="enabled" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint constraintName="fk_setup_group_setup_groups"
+                                 baseTableName="setup_group"
+                                 baseColumnNames="setup_groups_id"
+                                 referencedTableName="setup_groups"
+                                 referencedColumnNames="id"/>
+
+        <createIndex indexName="index_setup_group_enabled" tableName="setup_group">
+            <column name="enabled"/>
+        </createIndex>
+
+    </changeSet>
+
+
+</databaseChangeLog>

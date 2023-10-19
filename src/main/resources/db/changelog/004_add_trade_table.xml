@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="create_trade_table" author="will">
+        <createTable tableName="trade">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="type" type="ENUM(
+    'WAITING_TO_PLACED',
+    'PLACED',
+    'PLACED_IN_MT',
+    'FILLED',
+    'OUT_OF_TIME',
+    'CLOSED_BY_STOP',
+    'CLOSED_BY_LIMIT',
+    'CLOSED_BY_TIME',
+    'CLOSED_BY_USER')">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="setup_id" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="account_id" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="metatrader_id" type="int"/>
+
+            <column name="placed_date_time" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="placed_price" type="decimal(19, 4)"/>
+            <column name="filled_date_time" type="timestamp"/>
+            <column name="filled_price" type="decimal(19, 4)"/>
+            <column name="closed_date_time" type="timestamp"/>
+            <column name="closed_price" type="decimal(19, 4)"/>
+            <column name="close_type" type="varchar(255)"/>
+            <column name="profit" type="decimal(19, 4)"/>
+            <column name="message_column" type="varchar(255)"/>
+        </createTable>
+
+
+        <createIndex indexName="index_trade_placed_date_time" tableName="trade">
+            <column name="placed_date_time"/>
+        </createIndex>
+
+        <addForeignKeyConstraint constraintName="fk_trade_setup"
+                                 baseTableName="trade"
+                                 baseColumnNames="setup_id"
+                                 referencedTableName="setup"
+                                 referencedColumnNames="id"/>
+
+        <addForeignKeyConstraint constraintName="fk_trade_account"
+                                 baseTableName="trade"
+                                 baseColumnNames="account_id"
+                                 referencedTableName="account"
+                                 referencedColumnNames="id"/>
+    </changeSet>
+
+</databaseChangeLog>
