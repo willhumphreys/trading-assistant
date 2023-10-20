@@ -28,16 +28,17 @@ export default function QueryBuilder({query, setQuery}: Props) {
                     }}
                     className="w-full mt-1 p-2 border rounded-md"
                 >
-                    <option value="eurusd">EUR/USD</option>
-                    <option value="usdjpy">USD/JPY</option>
-                    <option value="gbpusd">GBP/USD</option>
-                    <option value="usdchf">USD/CHF</option>
-                    <option value="audusd">AUD/USD</option>
-                    <option value="usdcad">USD/CAD</option>
-                    <option value="nzdusd">NZD/USD</option>
-                    <option value="eurjpy">EUR/JPY</option>
-                    <option value="euraud">EUR/AUD</option>
-                    <option value="eurgbp">EUR/GBP</option>
+                    <option value="">--Select--</option>
+                    {[  'EUR/USD',
+                        'USD/JPY',
+                        'GBP/USD',
+                        'USD/CHF',
+                        'AUD/USD',
+                        'USD/CAD',
+                        'NZD/USD',
+                        'EUR/JPY',
+                        'EUR/AUD',
+                        'EUR/GBP'   ].map((symbol, index) => (<option key={index} value={symbol.replace('/','').toLowerCase()}>{symbol}</option>))}
                 </select>
             </label>
 

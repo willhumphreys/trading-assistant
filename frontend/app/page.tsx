@@ -25,7 +25,7 @@ export default function FetchTradesClient() {
     const [query, setQuery] = useState<Query>({
         id: null, account: {id: null}, setup: {
 
-            id: null, symbol: 'eurusd', rank: null, dayOfWeek: null, hourOfDay: null, stop: null, limit: null, tickOffset: null, tradeDuration: null, outOfTime: null
+            id: null, symbol: '', rank: null, dayOfWeek: null, hourOfDay: null, stop: null, limit: null, tickOffset: null, tradeDuration: null, outOfTime: null
         }, type: '', placedDateTime: '', placedPrice: '', filledDateTime: '', filledPrice: '', closedDateTime: '', closedPrice: '', closeType: '', message: ''
     });
 
