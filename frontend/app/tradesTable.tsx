@@ -6,14 +6,40 @@ type Props = {
 
 export default function TradesTable({trades, handleHeaderClick}: Props) {
 
-    const columns = ['id', 'symbol', 'type', 'rank', 'dayOfWeek', 'hourOfDay', 'stop', 'limit', 'tickOffset', 'tradeDuration', 'outOfTime', 'placedDateTime', 'placedPrice', 'filledDateTime', 'filledPrice', 'closedDateTime', 'closedPrice', 'closeType', 'message'];
+    const columns = [
+        {name: 'id', entity: ''},
+        {name: 'symbol', entity: 'setup'},
+        {name: 'type', entity: ''},
+        {name: 'rank', entity: 'setup'},
+        {name: 'dayOfWeek', entity: 'setup'},
+        {name: 'hourOfDay', entity: 'setup'},
+        {name: 'stop', entity: 'setup'},
+        {name: 'limit', entity: 'setup'},
+        {name: 'tickOffset', entity: 'setup'},
+        {name: 'tradeDuration', entity: 'setup'},
+        {name: 'outOfTime', entity: 'setup'},
+        {name: 'placedDateTime', entity: ''},
+        {name: 'placedPrice', entity: ''},
+        {name: 'filledDateTime', entity: ''},
+        {name: 'filledPrice', entity: ''},
+        {name: 'closedDateTime', entity: ''},
+        {name: 'closedPrice', entity: ''},
+        {name: 'closeType', entity: ''},
+        {name: 'message', entity: ''}
+    ];
+
 
     return (<table className="min-w-full bg-white rounded-lg overflow-hidden">
         <thead className="bg-gray-800 text-white">
         <tr>
-            {columns.map((col) => (<th key={col} onClick={() => handleHeaderClick(col)}>
-                {col.charAt(0).toUpperCase() + col.slice(1).replace(/([A-Z])/g, ' $1')}
-            </th>))}
+            {columns.map((col) => (
+                <th
+                    key={col.name}
+                    onClick={() => handleHeaderClick(col.entity ? `${col.entity}.${col.name}` : col.name)}
+                >
+                    {col.name.charAt(0).toUpperCase() + col.name.slice(1).replace(/([A-Z])/g, ' $1')}
+                </th>
+            ))}
         </tr>
 
         </thead>
