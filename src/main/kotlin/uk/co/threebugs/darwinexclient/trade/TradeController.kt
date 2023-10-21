@@ -15,7 +15,7 @@ class TradeController (
 
     @PostMapping("/trades/searchByExample")
     fun findWithExample(
-            @RequestBody exampleRecord: TradeDto?,
+        @RequestBody exampleRecord: TradeDto,
             @RequestParam(name = "sortColumn", required = false) sortColumn: String?,
             @RequestParam(name = "sortDirection", required = false) sortDirection: Sort.Direction?): List<TradeDto?> {
         var sort = Sort.unsorted()
@@ -24,6 +24,6 @@ class TradeController (
         }
 
         //val exampleRecord1 = TradeDto()
-        return tradeService.findTrades(exampleRecord!!, sort)
+        return tradeService.findTrades(exampleRecord, sort)
     }
 }

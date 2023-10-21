@@ -9,6 +9,7 @@ import java.time.ZonedDateTime
 
 data class TradeDto (
     var id: Int? = null,
+    var createdDateTime: ZonedDateTime? = null,
     var type: Type? = null,
     var setup: SetupDto? = null,
     var account: AccountDto? = null,

@@ -9,6 +9,9 @@
             <column name="id" type="int" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
+            <column name="created_date_time" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
             <column name="type" type="ENUM(
     'WAITING_TO_PLACED',
     'PLACED',
@@ -30,9 +33,7 @@
             </column>
             <column name="metatrader_id" type="int"/>
 
-            <column name="placed_date_time" type="timestamp">
-                <constraints nullable="false"/>
-            </column>
+            <column name="placed_date_time" type="timestamp"/>
             <column name="placed_price" type="decimal(19, 4)"/>
             <column name="filled_date_time" type="timestamp"/>
             <column name="filled_price" type="decimal(19, 4)"/>

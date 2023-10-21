@@ -9,6 +9,9 @@
             <column name="id" type="int" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
+            <column name="created_date_time" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
             <column name="setup_group_id" type="int">
                 <constraints nullable="false"/>
             </column>

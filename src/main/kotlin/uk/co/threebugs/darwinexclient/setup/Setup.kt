@@ -2,6 +2,7 @@ package uk.co.threebugs.darwinexclient.setup
 
 import jakarta.persistence.*
 import uk.co.threebugs.darwinexclient.setupgroup.SetupGroup
+import java.time.ZonedDateTime
 
 @Entity
 @Table(name = "setup")
@@ -9,6 +10,7 @@ class Setup (
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Int? = null,
+    var createdDateTime: ZonedDateTime? = null,
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "setup_group_id")
@@ -29,6 +31,10 @@ class Setup (
     var tradeDuration: Int? = null,
     var outOfTime: Int? = null) {
 
+    @PrePersist
+    fun prePersist() {
+        createdDateTime = ZonedDateTime.now()
+    }
 
     val isLong: Boolean
         get() = stop!! < limit!!

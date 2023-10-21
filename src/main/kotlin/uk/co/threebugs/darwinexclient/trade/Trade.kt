@@ -14,6 +14,8 @@ data class Trade (
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Int? = null,
 
+    var createdDateTime: ZonedDateTime? = null,
+
     //@Column(name = "type", columnDefinition = "ENUM('BUY', 'SELL', 'HOLD')")
     @Enumerated(EnumType.STRING)
     var type: Type? = null,
@@ -26,6 +28,8 @@ data class Trade (
     @JoinColumn(name = "account_id")
     var account: Account? = null,
     var metatraderId: Int? = null,
+
+
     var placedDateTime: ZonedDateTime? = null,
     var placedPrice: BigDecimal? = null,
     var filledDateTime: ZonedDateTime? = null,
@@ -39,6 +43,10 @@ data class Trade (
 )
 
 {
+    @PrePersist
+    fun prePersist() {
+        createdDateTime = ZonedDateTime.now()
+    }
 val newTradeMessage: String
     get() = "New Trade: ${setup?.rank} ${setup?.symbol} ${setup?.direction} in account: ${account?.name}"
 

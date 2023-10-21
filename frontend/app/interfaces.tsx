@@ -27,6 +27,7 @@ export interface SetupGroup {
 
 export interface Setup {
     id: number;
+    createdDateTime: string;
     setupGroup: SetupGroup;
     symbol: string;
     rank: number;
@@ -43,6 +44,7 @@ export interface Trade {
     id: number;
     type: string;
     setup: Setup;
+    createdDateTime: string;
     placedDateTime: string;
     placedPrice: number | null;
     filledDateTime: string | null;
@@ -60,6 +62,7 @@ export interface Query {
     };
     setup: {
         id: number | null;
+        createdDateTime: string;
         // setupGroup?: SetupGroup | null;
         symbol: string;
         rank: number | null;
@@ -72,6 +75,7 @@ export interface Query {
         outOfTime?: number | null;
     };
     type: string;
+    createdDateTime: string;
     placedDateTime: string;
     placedPrice: string;
     filledDateTime: string;

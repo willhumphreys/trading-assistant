@@ -10,7 +10,7 @@ type Props = {
 export default function QueryBuilder({query, setQuery}: Props) {
 
 
-    const fieldsToFilter = ['type', 'placedDateTime', 'placedPrice', 'filledDateTime', 'filledPrice', 'closedDateTime', 'closedPrice', 'closeType', 'message'];
+    const fieldsToFilter = ['type', 'createdDateTime', 'placedDateTime', 'placedPrice', 'filledDateTime', 'filledPrice', 'closedDateTime', 'closedPrice', 'closeType', 'message'];
 
     return (
 
@@ -81,7 +81,7 @@ export default function QueryBuilder({query, setQuery}: Props) {
             </label>
 
 
-            {['rank', 'stop', 'limit', 'tickOffset', 'tradeDuration', 'outOfTime'].map((field) => (
+            {['createdDateTime', 'rank', 'stop', 'limit', 'tickOffset', 'tradeDuration', 'outOfTime'].map((field) => (
                 <label key={field}
                        className="w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/6 mb-2 text-sm font-bold text-gray-700">
                     {field.charAt(0).toUpperCase() + field.slice(1)}:

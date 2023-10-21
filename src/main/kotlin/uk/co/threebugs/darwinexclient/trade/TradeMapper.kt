@@ -11,10 +11,14 @@ import java.time.ZonedDateTime
 abstract class TradeMapper {
     abstract fun toDto(trade: Trade): TradeDto
 
+    @Mapping(source = "tradeDto.createdDateTime", target = "createdDateTime")
     @Mapping(target = "id", source = "tradeDto.id")
     abstract fun toEntity(tradeDto: TradeDto, setup: Setup): Trade
+
+    @Mapping(source = "tradeDto.createdDateTime", target = "createdDateTime")
     abstract fun toEntity(tradeDto: TradeDto): Trade
 
+    @Mapping(target = "createdDateTime", ignore = true)
     @Mapping(target = "metatraderId", ignore = true)
     @Mapping(target = "profit", ignore = true)
     @Mapping(target = "type", ignore = true)

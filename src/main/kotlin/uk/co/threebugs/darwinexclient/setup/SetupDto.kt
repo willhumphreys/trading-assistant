@@ -1,9 +1,11 @@
 package uk.co.threebugs.darwinexclient.setup
 
 import uk.co.threebugs.darwinexclient.setupgroup.SetupGroupDto
+import java.time.ZonedDateTime
 
 data class SetupDto (
     var id: Int? = null,
+    var createdDateTime: ZonedDateTime? = null,
     var setupGroup: SetupGroupDto? = null,
     var symbol: String? = null,
     var rank: Int? = null,
