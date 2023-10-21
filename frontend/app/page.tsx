@@ -5,6 +5,8 @@ import TradesTable from "@/app/tradesTable";
 import QueryBuilder from "@/app/queryBuilder";
 import {fetchTrades} from '@/app/fetchTrades';
 import {fetchAccounts} from '@/app/fetchAccounts';
+import useWebSocket from '@/app/useWebSocket';
+
 
 export default function FetchTradesClient() {
 
@@ -72,6 +74,7 @@ export default function FetchTradesClient() {
         updateTrades();
     };
 
+    const {connectWebSocket} = useWebSocket();
 
     return (<section className="bg-gray-100 py-10 min-h-screen">
         <div className="container mx-auto">
@@ -101,6 +104,11 @@ export default function FetchTradesClient() {
                 <button onClick={updateTrades}
                         className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                     Apply Filters
+                </button>
+                {/* New Button for WebSocket */}
+                <button onClick={connectWebSocket}
+                        className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded ml-4">
+                    Connect WebSocket
                 </button>
 
             </div>
