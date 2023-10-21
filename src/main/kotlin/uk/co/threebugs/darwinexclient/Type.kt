@@ -1,8 +1,8 @@
 package uk.co.threebugs.darwinexclient
 
 enum class Type {
-    WAITING_TO_PLACED,
-    PLACED,
+    PENDING,
+    ORDER_SENT,
     PLACED_IN_MT,
     FILLED,
     OUT_OF_TIME,

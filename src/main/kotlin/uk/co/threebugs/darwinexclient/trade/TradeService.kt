@@ -68,7 +68,7 @@ class TradeService(private val tradeRepository: TradeRepository, private val set
             val existingTrade = tradeRepository.findBySetupAndPlacedDateTimeAndAccount(setup, targetPlaceTime, account)
             if (existingTrade == null) {
                 val trade = tradeMapper.toEntity(setup, targetPlaceTime, account).apply {
-                    type = Type.WAITING_TO_PLACED
+                    type = Type.PENDING
                 }
                 tradeRepository.save(trade)
                 slackClient.sendSlackNotification(trade.newTradeMessage)
@@ -77,7 +77,8 @@ class TradeService(private val tradeRepository: TradeRepository, private val set
     }
 
     fun placeTrades(dwx: Client, symbol: String, bid: BigDecimal, ask: BigDecimal, account: Account) {
-        tradeRepository.findByTypeAndSetup_SymbolAndAccount(Type.WAITING_TO_PLACED, symbol, account).forEach(Consumer { trade: Trade ->
+        tradeRepository.findByTypeAndSetup_SymbolAndAccount(Type.PENDING, symbol, account)
+            .forEach(Consumer { trade: Trade ->
             val now = ZonedDateTime.now(ZoneOffset.UTC)
             val targetPlaceDateTime = trade.targetPlaceDateTime
             if (now.isAfter(targetPlaceDateTime)) {
@@ -121,7 +122,7 @@ class TradeService(private val tradeRepository: TradeRepository, private val set
                 comment = trade.setup!!.concatenateFields())
         )
 
-        trade.type = Type.PLACED
+        trade.type = Type.ORDER_SENT
         slackClient.sendSlackNotification("Order placed: " + trade.setup!!.concatenateFields())
         return trade
     }

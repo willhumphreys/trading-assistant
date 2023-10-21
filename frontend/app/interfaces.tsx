@@ -40,9 +40,21 @@ export interface Setup {
     outOfTime: number;
 }
 
+export enum TradeType {
+    PENDING = 'PENDING',
+    ORDER_SENT = 'ORDER_SENT',
+    PLACED_IN_MT = 'PLACED_IN_MT',
+    FILLED = 'FILLED',
+    OUT_OF_TIME = 'OUT_OF_TIME',
+    CLOSED_BY_STOP = 'CLOSED_BY_STOP',
+    CLOSED_BY_LIMIT = 'CLOSED_BY_LIMIT',
+    CLOSED_BY_TIME = 'CLOSED_BY_TIME',
+    CLOSED_BY_USER = 'CLOSED_BY_USER'
+}
+
 export interface Trade {
     id: number;
-    type: string;
+    type: TradeType;
     setup: Setup;
     createdDateTime: string;
     targetPlaceDateTime: string;

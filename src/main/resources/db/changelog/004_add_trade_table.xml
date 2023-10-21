@@ -13,8 +13,8 @@
                 <constraints nullable="false"/>
             </column>
             <column name="type" type="ENUM(
-    'WAITING_TO_PLACED',
-    'PLACED',
+    'PENDING',
+    'ORDER_SENT',
     'PLACED_IN_MT',
     'FILLED',
     'OUT_OF_TIME',

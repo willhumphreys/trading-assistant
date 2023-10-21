@@ -1,4 +1,4 @@
-import {Query} from "@/app/interfaces";
+import {Query, TradeType} from "@/app/interfaces";
 
 
 type Props = {
@@ -10,7 +10,7 @@ type Props = {
 export default function QueryBuilder({query, setQuery}: Props) {
 
 
-    const fieldsToFilter = ['type', 'targetPlaceDateTime', 'placedDateTime', 'placedPrice', 'filledDateTime', 'filledPrice', 'closedDateTime', 'closedPrice', 'closeType', 'message'];
+    const fieldsToFilter = ['targetPlaceDateTime', 'placedDateTime', 'placedPrice', 'filledDateTime', 'filledPrice', 'closedDateTime', 'closedPrice', 'closeType', 'message'];
 
     return (
 
@@ -29,7 +29,7 @@ export default function QueryBuilder({query, setQuery}: Props) {
                     className="w-full mt-1 p-2 border rounded-md"
                 >
                     <option value="">--Select--</option>
-                    {[  'EUR/USD',
+                    {['EUR/USD',
                         'USD/JPY',
                         'GBP/USD',
                         'USD/CHF',
@@ -38,7 +38,8 @@ export default function QueryBuilder({query, setQuery}: Props) {
                         'NZD/USD',
                         'EUR/JPY',
                         'EUR/AUD',
-                        'EUR/GBP'   ].map((symbol, index) => (<option key={index} value={symbol.replace('/','')}>{symbol}</option>))}
+                        'EUR/GBP'].map((symbol, index) => (
+                        <option key={index} value={symbol.replace('/', '')}>{symbol}</option>))}
                 </select>
             </label>
 
@@ -80,7 +81,6 @@ export default function QueryBuilder({query, setQuery}: Props) {
                 </select>
             </label>
 
-
             {['rank', 'stop', 'limit', 'tickOffset', 'tradeDuration', 'outOfTime'].map((field) => (
                 <label key={field}
                        className="w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/6 mb-2 text-sm font-bold text-gray-700">
@@ -95,10 +95,34 @@ export default function QueryBuilder({query, setQuery}: Props) {
                         }}
                         className="w-full mt-1 p-2 border rounded-md"
                     />
-                </label>))}
+                </label>))
+            }
+
+
 
             <div className="query-builder flex flex-wrap">
-                {/* ... Your existing filters */}
+
+                <label htmlFor="type-select"
+                       className="w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/6 mb-2 text-sm font-bold text-gray-700">
+                    Type:
+                    <select
+                        id="type-select"
+                        value={query.type ?? "PENDING"}
+                        onChange={(e) => {
+
+                            const type = e.target.value;
+                            setQuery({...query, type});
+                        }}
+                        className="w-full mt-1 p-2 border rounded-md"
+                    >
+                        <option value="">--Select--</option>
+                        {
+                            Object.values(TradeType).map((type, index) => (
+                                <option key={index} value={type}>{type}</option>))
+                        }
+                    </select>
+                </label>
+
                 {fieldsToFilter.map((field) => {
 
                     const fieldValue = query[field as keyof typeof query];
