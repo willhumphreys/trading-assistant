@@ -1,3 +1,7 @@
+export interface HelloMessage {
+    name: string;
+}
+
 export interface Account {
     id: number;
     name: string;

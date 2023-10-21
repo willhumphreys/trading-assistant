@@ -1,6 +1,7 @@
 package uk.co.threebugs.darwinexclient.metatrader
 
 import org.json.JSONObject
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import uk.co.threebugs.darwinexclient.SlackClient
 import uk.co.threebugs.darwinexclient.account.AccountDto
@@ -15,9 +16,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 @Component
 class TradeEventHandler(
 
-        private val tradeService: TradeService,
-        private val slackClient: SlackClient,
-        private val accountMapper: AccountMapper
+    private val tradeService: TradeService,
+    private val slackClient: SlackClient,
+    private val accountMapper: AccountMapper,
 
 ) {
     private val executed = AtomicBoolean(false)
@@ -68,16 +69,33 @@ class TradeEventHandler(
     }
 
     @Synchronized
-    fun onBarData(dwx: Client, symbol: String, timeFrame: String, time: String, open: BigDecimal, high: BigDecimal, low: BigDecimal, close: BigDecimal, tickVolume: Int) {
+    fun onBarData(
+        dwx: Client,
+        symbol: String,
+        timeFrame: String,
+        time: String,
+        open: BigDecimal,
+        high: BigDecimal,
+        low: BigDecimal,
+        close: BigDecimal,
+        tickVolume: Int
+    ) {
 
         //logger.info("onBarData: " + symbol + ", " + timeFrame + ", " + time + ", " + open + ", " + high + ", " + low + ", " + close + ", " + tickVolume);
+    }
+
+    @Scheduled(fixedRate = 5000)
+    fun sendPeriodicMessages() {
+        //myWebSocketService.sendMessageToClients("Periodic message")
     }
 
     @Synchronized
     fun onMessage(dwx: Client, message: JSONObject) {
         if (message["type"]
-                == "ERROR") logger.info(message["type"].toString() + " | " + message["error_type"] + " | " + message["description"]) else if (message["type"]
-                == "INFO") logger.info(message["type"].toString() + " | " + message["message"])
+            == "ERROR"
+        ) logger.info(message["type"].toString() + " | " + message["error_type"] + " | " + message["description"]) else if (message["type"]
+            == "INFO"
+        ) logger.info(message["type"].toString() + " | " + message["message"])
         slackClient.sendSlackNotification("message: $message")
     }
 
