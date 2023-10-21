@@ -10,7 +10,7 @@ export default function TradesTable({trades, handleHeaderClick}: Props) {
         {name: 'id', entity: ''},
         {name: 'symbol', entity: 'setup'},
         {name: 'type', entity: ''},
-        {name: 'createdDateTime', entity: 'setup'},
+        //   {name: 'createdDateTime', entity: 'setup'},
         {name: 'rank', entity: 'setup'},
         {name: 'dayOfWeek', entity: 'setup'},
         {name: 'hourOfDay', entity: 'setup'},
@@ -19,7 +19,7 @@ export default function TradesTable({trades, handleHeaderClick}: Props) {
         {name: 'tickOffset', entity: 'setup'},
         {name: 'tradeDuration', entity: 'setup'},
         {name: 'outOfTime', entity: 'setup'},
-        {name: 'createdDateTime', entity: ''},
+        //   {name: 'createdDateTime', entity: ''},
         {name: 'placedDateTime', entity: ''},
         {name: 'placedPrice', entity: ''},
         {name: 'filledDateTime', entity: ''},
@@ -56,7 +56,7 @@ export default function TradesTable({trades, handleHeaderClick}: Props) {
                 <td>{trade.setup.symbol}</td>
                 <td>{trade.type}</td>
                 <td>{trade.setup.rank}</td>
-                <td>{trade.setup.createdDateTime}</td>
+                {/*<td>{trade.setup.createdDateTime}</td>*/}
                 <td>{trade.setup.dayOfWeek}</td>
                 <td>{trade.setup.hourOfDay}</td>
                 <td>{trade.setup.stop}</td>
@@ -64,7 +64,7 @@ export default function TradesTable({trades, handleHeaderClick}: Props) {
                 <td>{trade.setup.tickOffset}</td>
                 <td>{trade.setup.tradeDuration}</td>
                 <td>{trade.setup.outOfTime}</td>
-                <td>{trade.createdDateTime}</td>
+                {/*<td>{trade.createdDateTime}</td>*/}
                 <td>{trade.placedDateTime}</td>
                 <td>{trade.placedPrice}</td>
                 <td>{trade.filledDateTime}</td>
