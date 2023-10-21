@@ -33,6 +33,7 @@
             </column>
             <column name="metatrader_id" type="int"/>
 
+            <column name="target_place_date_time" type="timestamp"/>
             <column name="placed_date_time" type="timestamp"/>
             <column name="placed_price" type="decimal(19, 4)"/>
             <column name="filled_date_time" type="timestamp"/>

@@ -10,7 +10,7 @@ type Props = {
 export default function QueryBuilder({query, setQuery}: Props) {
 
 
-    const fieldsToFilter = ['type', 'placedDateTime', 'placedPrice', 'filledDateTime', 'filledPrice', 'closedDateTime', 'closedPrice', 'closeType', 'message'];
+    const fieldsToFilter = ['type', 'targetPlaceDateTime', 'placedDateTime', 'placedPrice', 'filledDateTime', 'filledPrice', 'closedDateTime', 'closedPrice', 'closeType', 'message'];
 
     return (
 

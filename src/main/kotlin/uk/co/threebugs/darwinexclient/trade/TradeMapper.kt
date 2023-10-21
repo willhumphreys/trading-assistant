@@ -23,6 +23,7 @@ abstract class TradeMapper {
     @Mapping(target = "profit", ignore = true)
     @Mapping(target = "type", ignore = true)
     @Mapping(target = "placedPrice", ignore = true)
+    @Mapping(target = "placedDateTime", ignore = true)
     @Mapping(target = "message", ignore = true)
     @Mapping(target = "filledPrice", ignore = true)
     @Mapping(target = "filledDateTime", ignore = true)
@@ -30,7 +31,7 @@ abstract class TradeMapper {
     @Mapping(target = "closedDateTime", ignore = true)
     @Mapping(target = "closeType", ignore = true)
     @Mapping(target = "id", ignore = true)
-    abstract fun toEntity(setup: Setup, placedDateTime: ZonedDateTime, account: Account): Trade
+    abstract fun toEntity(setup: Setup, targetPlaceDateTime: ZonedDateTime, account: Account): Trade
     fun toPath(path: String?): Path? {
         return path?.let { Path.of(it) }
     }

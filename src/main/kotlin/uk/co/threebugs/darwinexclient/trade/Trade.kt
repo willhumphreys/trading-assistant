@@ -31,6 +31,7 @@ data class Trade (
 
 
     var placedDateTime: ZonedDateTime? = null,
+    var targetPlaceDateTime: ZonedDateTime? = null,
     var placedPrice: BigDecimal? = null,
     var filledDateTime: ZonedDateTime? = null,
     var filledPrice: BigDecimal? = null,

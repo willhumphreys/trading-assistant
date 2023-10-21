@@ -63,10 +63,11 @@ class TradeService(private val tradeRepository: TradeRepository, private val set
     private fun createAndPlaceTradesForEnabledSetupsInSetupGroup(symbol: String, account: Account, accountSetupGroup: AccountSetupGroups) {
         val setups = setupRepository.findEnabledSetups(symbol, accountSetupGroup.setupGroups!!)
         setups.forEach { setup ->
-            val placedDateTime: ZonedDateTime = SetupFileRepository.getNextEventTime(setup.dayOfWeek!!, setup.hourOfDay!!)
-            val existingTrade = tradeRepository.findBySetupAndPlacedDateTimeAndAccount(setup, placedDateTime, account)
+            val targetPlaceTime: ZonedDateTime =
+                SetupFileRepository.getNextEventTime(setup.dayOfWeek!!, setup.hourOfDay!!)
+            val existingTrade = tradeRepository.findBySetupAndPlacedDateTimeAndAccount(setup, targetPlaceTime, account)
             if (existingTrade == null) {
-                val trade = tradeMapper.toEntity(setup, placedDateTime, account).apply {
+                val trade = tradeMapper.toEntity(setup, targetPlaceTime, account).apply {
                     type = Type.WAITING_TO_PLACED
                 }
                 tradeRepository.save(trade)
@@ -78,8 +79,8 @@ class TradeService(private val tradeRepository: TradeRepository, private val set
     fun placeTrades(dwx: Client, symbol: String, bid: BigDecimal, ask: BigDecimal, account: Account) {
         tradeRepository.findByTypeAndSetup_SymbolAndAccount(Type.WAITING_TO_PLACED, symbol, account).forEach(Consumer { trade: Trade ->
             val now = ZonedDateTime.now(ZoneOffset.UTC)
-            val placedDateTime = trade.placedDateTime
-            if (now.isAfter(placedDateTime)) {
+            val targetPlaceDateTime = trade.targetPlaceDateTime
+            if (now.isAfter(targetPlaceDateTime)) {
                 tradeRepository.save(placeTrade(dwx, bid, ask, trade))
             }
         })
@@ -127,7 +128,8 @@ class TradeService(private val tradeRepository: TradeRepository, private val set
 
     fun closeTradesAtTime(dwx: Client, symbol: String, account: Account) {
         tradeRepository.findByTypeAndSetup_SymbolAndAccount(Type.FILLED, symbol, account).stream().filter { record: Trade ->
-            record.placedDateTime!!.plusHours(record.setup!!.tradeDuration!!.toLong()).isBefore(ZonedDateTime.now(ZoneOffset.UTC))
+            record.targetPlaceDateTime!!.plusHours(record.setup!!.tradeDuration!!.toLong())
+                .isBefore(ZonedDateTime.now(ZoneOffset.UTC))
         }.forEach { trade: Trade ->
             dwx.closeOrdersByMagic(trade.id!!)
             trade.type = Type.CLOSED_BY_TIME

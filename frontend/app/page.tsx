@@ -40,6 +40,7 @@ export default function FetchTradesClient() {
         type: '',
         createdDateTime: '',
         placedDateTime: '',
+        targetPlaceDateTime: '',
         placedPrice: '',
         filledDateTime: '',
         filledPrice: '',

@@ -14,6 +14,7 @@ data class TradeDto (
     var setup: SetupDto? = null,
     var account: AccountDto? = null,
     var metatraderId: Int? = null,
+    var targetPlaceDateTime: ZonedDateTime? = null,
     var placedDateTime: ZonedDateTime? = null,
     var placedPrice: BigDecimal? = null,
     var filledDateTime: ZonedDateTime? = null,

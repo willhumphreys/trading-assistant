@@ -45,6 +45,7 @@ export interface Trade {
     type: string;
     setup: Setup;
     createdDateTime: string;
+    targetPlaceDateTime: string;
     placedDateTime: string;
     placedPrice: number | null;
     filledDateTime: string | null;
@@ -76,6 +77,7 @@ export interface Query {
     };
     type: string;
     createdDateTime: string;
+    targetPlaceDateTime: string;
     placedDateTime: string;
     placedPrice: string;
     filledDateTime: string;
