@@ -1,6 +1,6 @@
 package uk.co.threebugs.darwinexclient
 
-enum class Type {
+enum class Status {
     PENDING,
     ORDER_SENT,
     PLACED_IN_MT,

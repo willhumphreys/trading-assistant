@@ -5,7 +5,7 @@ import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.co.threebugs.darwinexclient.SlackClient
-import uk.co.threebugs.darwinexclient.Type
+import uk.co.threebugs.darwinexclient.Status
 import uk.co.threebugs.darwinexclient.account.Account
 import uk.co.threebugs.darwinexclient.accountsetupgroups.AccountSetupGroups
 import uk.co.threebugs.darwinexclient.accountsetupgroups.AccountSetupGroupsRepository
@@ -68,7 +68,7 @@ class TradeService(private val tradeRepository: TradeRepository, private val set
             val existingTrade = tradeRepository.findBySetupAndPlacedDateTimeAndAccount(setup, targetPlaceTime, account)
             if (existingTrade == null) {
                 val trade = tradeMapper.toEntity(setup, targetPlaceTime, account).apply {
-                    type = Type.PENDING
+                    status = Status.PENDING
                 }
                 tradeRepository.save(trade)
                 slackClient.sendSlackNotification(trade.newTradeMessage)
@@ -77,7 +77,7 @@ class TradeService(private val tradeRepository: TradeRepository, private val set
     }
 
     fun placeTrades(dwx: Client, symbol: String, bid: BigDecimal, ask: BigDecimal, account: Account) {
-        tradeRepository.findByTypeAndSetup_SymbolAndAccount(Type.PENDING, symbol, account)
+        tradeRepository.findByStatusAndSetup_SymbolAndAccount(Status.PENDING, symbol, account)
             .forEach(Consumer { trade: Trade ->
             val now = ZonedDateTime.now(ZoneOffset.UTC)
             val targetPlaceDateTime = trade.targetPlaceDateTime
@@ -122,18 +122,19 @@ class TradeService(private val tradeRepository: TradeRepository, private val set
                 comment = trade.setup!!.concatenateFields())
         )
 
-        trade.type = Type.ORDER_SENT
+        trade.status = Status.ORDER_SENT
         slackClient.sendSlackNotification("Order placed: " + trade.setup!!.concatenateFields())
         return trade
     }
 
     fun closeTradesAtTime(dwx: Client, symbol: String, account: Account) {
-        tradeRepository.findByTypeAndSetup_SymbolAndAccount(Type.FILLED, symbol, account).stream().filter { record: Trade ->
+        tradeRepository.findByStatusAndSetup_SymbolAndAccount(Status.FILLED, symbol, account).stream()
+            .filter { record: Trade ->
             record.targetPlaceDateTime!!.plusHours(record.setup!!.tradeDuration!!.toLong())
                 .isBefore(ZonedDateTime.now(ZoneOffset.UTC))
         }.forEach { trade: Trade ->
             dwx.closeOrdersByMagic(trade.id!!)
-            trade.type = Type.CLOSED_BY_TIME
+            trade.status = Status.CLOSED_BY_TIME
             trade.closedDateTime = ZonedDateTime.now()
             tradeRepository.save(trade)
             slackClient.sendSlackNotification("Order closed: " + trade.setup!!.rank + " " + trade.setup!!.symbol + " " + (if (trade.setup!!.isLong) "LONG" else "SHORT") + " " + trade.profit)
@@ -144,7 +145,7 @@ class TradeService(private val tradeRepository: TradeRepository, private val set
         tradeRepository.findById(tradeInfo.magic!!).ifPresentOrElse({ trade: Trade ->
             trade.placedPrice = tradeInfo.openPrice
             trade.placedDateTime = ZonedDateTime.of(tradeInfo.openTime, ZoneId.of("Europe/Zurich"))
-            trade.type = Type.PLACED_IN_MT
+            trade.status = Status.PLACED_IN_MT
             trade.metatraderId = metatraderId
             tradeRepository.save(trade)
             slackClient.sendSlackNotification("Order placed in MT: $trade")
@@ -156,7 +157,7 @@ class TradeService(private val tradeRepository: TradeRepository, private val set
     }
 
     private fun closeTrade(tradeInfo: TradeInfo, trade: Trade) {
-        trade.type = Type.CLOSED_BY_USER
+        trade.status = Status.CLOSED_BY_USER
         trade.closedPrice = tradeInfo.takeProfit
         trade.closedDateTime = ZonedDateTime.now()
         trade.profit = tradeInfo.profitAndLoss

@@ -1,4 +1,4 @@
-import {Query, TradeType} from "@/app/interfaces";
+import {Query, Status} from "@/app/interfaces";
 
 
 type Props = {
@@ -104,20 +104,20 @@ export default function QueryBuilder({query, setQuery}: Props) {
 
                 <label htmlFor="type-select"
                        className="w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/6 mb-2 text-sm font-bold text-gray-700">
-                    Type:
+                    Status:
                     <select
                         id="type-select"
-                        value={query.type ?? "PENDING"}
+                        value={query.status ?? "PENDING"}
                         onChange={(e) => {
 
-                            const type = e.target.value;
-                            setQuery({...query, type});
+                            const status = e.target.value;
+                            setQuery({...query, status});
                         }}
                         className="w-full mt-1 p-2 border rounded-md"
                     >
                         <option value="">--Select--</option>
                         {
-                            Object.values(TradeType).map((type, index) => (
+                            Object.values(Status).map((type, index) => (
                                 <option key={index} value={type}>{type}</option>))
                         }
                     </select>

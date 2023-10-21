@@ -40,7 +40,7 @@ export interface Setup {
     outOfTime: number;
 }
 
-export enum TradeType {
+export enum Status {
     PENDING = 'PENDING',
     ORDER_SENT = 'ORDER_SENT',
     PLACED_IN_MT = 'PLACED_IN_MT',
@@ -54,7 +54,7 @@ export enum TradeType {
 
 export interface Trade {
     id: number;
-    type: TradeType;
+    status: Status;
     setup: Setup;
     createdDateTime: string;
     targetPlaceDateTime: string;
@@ -87,7 +87,7 @@ export interface Query {
         tradeDuration?: number | null;
         outOfTime?: number | null;
     };
-    type: string;
+    status: string;
     createdDateTime: string;
     targetPlaceDateTime: string;
     placedDateTime: string;

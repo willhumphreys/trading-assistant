@@ -12,7 +12,7 @@
             <column name="created_date_time" type="timestamp">
                 <constraints nullable="false"/>
             </column>
-            <column name="type" type="ENUM(
+            <column name="status" type="ENUM(
     'PENDING',
     'ORDER_SENT',
     'PLACED_IN_MT',

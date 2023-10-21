@@ -1,7 +1,7 @@
 package uk.co.threebugs.darwinexclient.trade
 
 import jakarta.persistence.*
-import uk.co.threebugs.darwinexclient.Type
+import uk.co.threebugs.darwinexclient.Status
 import uk.co.threebugs.darwinexclient.account.Account
 import uk.co.threebugs.darwinexclient.setup.Setup
 import java.math.BigDecimal
@@ -18,7 +18,7 @@ data class Trade (
 
     //@Column(name = "type", columnDefinition = "ENUM('BUY', 'SELL', 'HOLD')")
     @Enumerated(EnumType.STRING)
-    var type: Type? = null,
+    var status: Status? = null,
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "setup_id")

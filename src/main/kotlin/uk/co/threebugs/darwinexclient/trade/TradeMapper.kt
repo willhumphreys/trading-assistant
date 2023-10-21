@@ -21,7 +21,7 @@ abstract class TradeMapper {
     @Mapping(target = "createdDateTime", ignore = true)
     @Mapping(target = "metatraderId", ignore = true)
     @Mapping(target = "profit", ignore = true)
-    @Mapping(target = "type", ignore = true)
+    @Mapping(target = "status", ignore = true)
     @Mapping(target = "placedPrice", ignore = true)
     @Mapping(target = "placedDateTime", ignore = true)
     @Mapping(target = "message", ignore = true)

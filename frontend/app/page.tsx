@@ -37,7 +37,7 @@ export default function FetchTradesClient() {
             tradeDuration: null,
             outOfTime: null
         },
-        type: '',
+        status: '',
         createdDateTime: '',
         placedDateTime: '',
         targetPlaceDateTime: '',

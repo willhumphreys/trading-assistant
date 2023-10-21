@@ -1,6 +1,6 @@
 package uk.co.threebugs.darwinexclient.trade
 
-import uk.co.threebugs.darwinexclient.Type
+import uk.co.threebugs.darwinexclient.Status
 import uk.co.threebugs.darwinexclient.account.AccountDto
 import uk.co.threebugs.darwinexclient.setup.SetupDto
 import java.math.BigDecimal
@@ -10,7 +10,7 @@ import java.time.ZonedDateTime
 data class TradeDto (
     var id: Int? = null,
     var createdDateTime: ZonedDateTime? = null,
-    var type: Type? = null,
+    var status: Status? = null,
     var setup: SetupDto? = null,
     var account: AccountDto? = null,
     var metatraderId: Int? = null,

@@ -9,7 +9,7 @@ export default function TradesTable({trades, handleHeaderClick}: Props) {
     const columns = [
         {name: 'id', entity: ''},
         {name: 'symbol', entity: 'setup'},
-        {name: 'type', entity: ''},
+        {name: 'status', entity: ''},
         //   {name: 'createdDateTime', entity: 'setup'},
         {name: 'rank', entity: 'setup'},
         {name: 'dayOfWeek', entity: 'setup'},
@@ -55,7 +55,7 @@ export default function TradesTable({trades, handleHeaderClick}: Props) {
 
                 <td>{trade.id}</td>
                 <td>{trade.setup.symbol}</td>
-                <td>{trade.type}</td>
+                <td>{trade.status}</td>
                 <td>{trade.setup.rank}</td>
                 {/*<td>{trade.setup.createdDateTime}</td>*/}
                 <td>{trade.setup.dayOfWeek}</td>
