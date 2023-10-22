@@ -1,85 +1,24 @@
 'use client'
 import {useEffect, useState} from 'react';
-import {Account, HelloMessage, Query, Trade} from "@/app/interfaces";
+import {Account, Query, Trade} from "@/app/interfaces";
 import TradesTable from "@/app/tradesTable";
 import QueryBuilder from "@/app/queryBuilder";
 import {fetchTrades} from '@/app/fetchTrades';
 import {fetchAccounts} from '@/app/fetchAccounts';
-import {Client, IMessage} from '@stomp/stompjs';
 import AccountSelector from '@/app/accountSelector';
-
-
-function receiveMessages(setClient: (value: (((prevState: (Client | null)) => (Client | null)) | Client | null)) => void) {
-    const newClient = new Client({
-        brokerURL: 'ws://localhost:8080/gs-guide-websocket'
-    });
-
-    // Setup connection behavior
-    newClient.onConnect = (frame) => {
-        console.log('Connected: ' + frame);
-
-        newClient.subscribe('/topic/greetings', (message: IMessage) => {
-            if (message.body) {
-                console.log('Received message: ', message.body);
-            }
-        });
-    };
-
-    newClient.onStompError = (frame) => {
-        console.log('Broker reported error: ' + frame.headers['message']);
-        console.log('Additional details: ' + frame.body);
-    };
-
-    // Activate the client
-    newClient.activate();
-    setClient(newClient);
-
-    // Cleanup logic for disconnecting from STOMP server
-    return () => {
-        newClient.deactivate();
-    };
-}
+import {useWebSocketClient} from '@/app/useWebSocketClient';
 
 export default function FetchTradesClient() {
 
+    const {client, sendHelloMessage} = useWebSocketClient();
 
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [trades, setTrades] = useState<Trade[]>([]);
     const [sortColumn, setSortColumn] = useState('id');  // Default sort column
     const [sortDirection, setSortDirection] = useState('ASC');  // Default sort direction
-
-    const [client, setClient] = useState<Client | null>(null);
-
-    useEffect(() => {
-        return receiveMessages(setClient);
-    }, []);
-
-    const sendHelloMessage = () => {
-        const message: HelloMessage = {
-            name: "Your Name"
-        };
-
-        if (client && client.connected) {
-
-            console.log("sending message")
-
-            client.publish({
-                destination: "/app/hello",
-                body: JSON.stringify(message)
-            });
-        }
-    };
-
-    const fetchAllAccounts = async () => {
-        const fetchedAccounts = await fetchAccounts();
-        if (fetchedAccounts !== null) {
-            setAccounts(fetchedAccounts);
-        }
-    };
-
+    // const [client, setClient] = useState<Client>(null);
     const [query, setQuery] = useState<Query>({
         id: null, account: {id: null}, setup: {
-
             id: null,
             createdDateTime: '',
             symbol: '',
@@ -104,6 +43,20 @@ export default function FetchTradesClient() {
         closeType: '',
         message: ''
     });
+
+
+    // useEffect(() => {
+    //     return receiveMessages(setClient);
+    // }, []);
+
+
+    const fetchAllAccounts = async () => {
+        const fetchedAccounts = await fetchAccounts();
+        if (fetchedAccounts !== null) {
+            setAccounts(fetchedAccounts);
+        }
+    };
+
 
     const updateTrades = async () => {
         const fetchedTrades = await fetchTrades(query, sortColumn, sortDirection);
@@ -141,7 +94,7 @@ export default function FetchTradesClient() {
                         className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                     Apply Filters
                 </button>
-                {/* New Button for WebSocket */}
+
                 <button onClick={sendHelloMessage}
                         className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded ml-4">
                     Connect WebSocket
