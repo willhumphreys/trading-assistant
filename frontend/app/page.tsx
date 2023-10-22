@@ -6,7 +6,39 @@ import QueryBuilder from "@/app/queryBuilder";
 import {fetchTrades} from '@/app/fetchTrades';
 import {fetchAccounts} from '@/app/fetchAccounts';
 import {Client, IMessage} from '@stomp/stompjs';
+import AccountSelector from '@/app/accountSelector';
 
+
+function receiveMessages(setClient: (value: (((prevState: (Client | null)) => (Client | null)) | Client | null)) => void) {
+    const newClient = new Client({
+        brokerURL: 'ws://localhost:8080/gs-guide-websocket'
+    });
+
+    // Setup connection behavior
+    newClient.onConnect = (frame) => {
+        console.log('Connected: ' + frame);
+
+        newClient.subscribe('/topic/greetings', (message: IMessage) => {
+            if (message.body) {
+                console.log('Received message: ', message.body);
+            }
+        });
+    };
+
+    newClient.onStompError = (frame) => {
+        console.log('Broker reported error: ' + frame.headers['message']);
+        console.log('Additional details: ' + frame.body);
+    };
+
+    // Activate the client
+    newClient.activate();
+    setClient(newClient);
+
+    // Cleanup logic for disconnecting from STOMP server
+    return () => {
+        newClient.deactivate();
+    };
+}
 
 export default function FetchTradesClient() {
 
@@ -19,34 +51,7 @@ export default function FetchTradesClient() {
     const [client, setClient] = useState<Client | null>(null);
 
     useEffect(() => {
-        const newClient = new Client({
-            brokerURL: 'ws://localhost:8080/gs-guide-websocket'
-        });
-
-        // Setup connection behavior
-        newClient.onConnect = (frame) => {
-            console.log('Connected: ' + frame);
-
-            newClient.subscribe('/topic/greetings', (message: IMessage) => {
-                if (message.body) {
-                    console.log('Received message: ', message.body);
-                }
-            });
-        };
-
-        newClient.onStompError = (frame) => {
-            console.log('Broker reported error: ' + frame.headers['message']);
-            console.log('Additional details: ' + frame.body);
-        };
-
-        // Activate the client
-        newClient.activate();
-        setClient(newClient);
-
-        // Cleanup logic for disconnecting from STOMP server
-        return () => {
-            newClient.deactivate();
-        };
+        return receiveMessages(setClient);
     }, []);
 
     const sendHelloMessage = () => {
@@ -125,24 +130,9 @@ export default function FetchTradesClient() {
     return (<section className="bg-gray-100 py-10 min-h-screen">
         <div className="container mx-auto">
             <div className="w-full h-16 bg-gray-700 flex items-center pl-6 space-x-4">
-                <select className="mt-1 p-2 border rounded-md"
-                        onChange={(e) => {
-                            const accountId = e.target.value;
-
-                            setQuery({
-                                ...query, account: {
-                                    ...query.account, id: accountId === '' ? null : parseInt(accountId)
-                                }
-
-                            })
-                        }}>
-                    <option value="all">All</option>
-                    {accounts.map((account, index) => (<option key={index} value={account.id}>
-                        {account.name}
-                    </option>))}
-
-                </select>
+                <AccountSelector accounts={accounts} setQuery={setQuery} query={query}/>
             </div>
+
 
             <h1 className="text-3xl font-bold mb-4">Trades</h1>
             <div className="mb-6 flex flex-wrap items-center">
