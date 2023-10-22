@@ -1,7 +1,7 @@
 package uk.co.threebugs.darwinexclient.websocket
 
-data class HelloMessage(
+data class ServerMessage(
 
-  var name: String
+  var content: String
 
 )

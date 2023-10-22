@@ -16,9 +16,9 @@ class WebSocketController(
     @MessageMapping("/hello")
     @SendTo("/topic/greetings")
     @Throws(Exception::class)
-    fun greeting(message: HelloMessage): webSocketMessage {
+    fun greeting(message: ServerMessage): webSocketMessage {
 
-        return webSocketMessage("Hello, " + HtmlUtils.htmlEscape(message.name) + "!")
+        return webSocketMessage("Hello, " + HtmlUtils.htmlEscape(message.content) + "!")
     }
 
     fun sendMessage(webSocketMessage: webSocketMessage) {
