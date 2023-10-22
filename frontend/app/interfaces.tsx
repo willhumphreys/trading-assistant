@@ -1,5 +1,5 @@
-export interface HelloMessage {
-    name: string;
+export interface ServerMessage {
+    content: string;
 }
 
 export interface Account {

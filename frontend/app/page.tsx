@@ -84,7 +84,7 @@ export default function FetchTradesClient() {
         <div className="container mx-auto">
             <div className="w-full h-16 bg-gray-700 flex items-center pl-6 space-x-4">
                 <AccountSelector accounts={accounts} setQuery={setQuery} query={query}/>
-                <div className="text-white text-xl">{serverMessage}</div>
+                <div className="text-white text-xl">{serverMessage.content}</div>
             </div>
 
 

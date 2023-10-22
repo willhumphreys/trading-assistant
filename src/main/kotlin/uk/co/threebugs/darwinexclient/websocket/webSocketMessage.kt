@@ -1,5 +1,5 @@
 package uk.co.threebugs.darwinexclient.websocket
 
-data class Greeting(
+data class webSocketMessage(
       var content: String
 )

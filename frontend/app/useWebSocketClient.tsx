@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react';
 import {Client, IMessage} from '@stomp/stompjs';
-import {HelloMessage} from "@/app/interfaces";
+import {ServerMessage} from "@/app/interfaces";
 
 const newClient = new Client({
     brokerURL: 'ws://localhost:8080/gs-guide-websocket'
@@ -8,7 +8,7 @@ const newClient = new Client({
 
 export function useWebSocketClient() {
 
-    const [serverMessage, setServerMessage] = useState('');  // Default sort column
+    const [serverMessage, setServerMessage] = useState<ServerMessage>({content: ''});
 
 
     useEffect(() => {
@@ -20,7 +20,7 @@ export function useWebSocketClient() {
             newClient.subscribe('/topic/greetings', (message: IMessage) => {
                 if (message.body) {
                     console.log('Received message: ', message.body);
-                    setServerMessage(message.body);
+                    setServerMessage(JSON.parse(message.body));
                 }
             });
         };
@@ -40,8 +40,8 @@ export function useWebSocketClient() {
     }, []);
 
     const sendHelloMessage = () => {
-        const message: HelloMessage = {
-            name: "Your Name"
+        const message: ServerMessage = {
+            content: "Your Name"
         };
 
         if (newClient && newClient.connected) {

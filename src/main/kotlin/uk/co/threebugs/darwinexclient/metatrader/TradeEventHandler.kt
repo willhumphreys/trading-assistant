@@ -1,13 +1,14 @@
 package uk.co.threebugs.darwinexclient.metatrader
 
 import org.json.JSONObject
-import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import uk.co.threebugs.darwinexclient.SlackClient
 import uk.co.threebugs.darwinexclient.account.AccountDto
 import uk.co.threebugs.darwinexclient.account.AccountMapper
 import uk.co.threebugs.darwinexclient.trade.TradeService
 import uk.co.threebugs.darwinexclient.utils.logger
+import uk.co.threebugs.darwinexclient.websocket.WebSocketController
+import uk.co.threebugs.darwinexclient.websocket.webSocketMessage
 import java.math.BigDecimal
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -16,6 +17,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 @Component
 class TradeEventHandler(
 
+    private val webSocketController: WebSocketController,
     private val tradeService: TradeService,
     private val slackClient: SlackClient,
     private val accountMapper: AccountMapper,
@@ -47,6 +49,8 @@ class TradeEventHandler(
     // use synchronized so that price updates and execution updates are not processed one after the other.
     @Synchronized
     fun onTick(dwx: Client, symbol: String, bid: BigDecimal, ask: BigDecimal, accountDto: AccountDto) {
+
+        webSocketController.sendMessage(webSocketMessage("Tick: $symbol, $bid, $ask"))
 
 //        if (executed.compareAndSet(false, true)) {
 //                    dwx.openOrder(Order.builder()
@@ -84,11 +88,6 @@ class TradeEventHandler(
         //logger.info("onBarData: " + symbol + ", " + timeFrame + ", " + time + ", " + open + ", " + high + ", " + low + ", " + close + ", " + tickVolume);
     }
 
-    @Scheduled(fixedRate = 5000)
-    fun sendPeriodicMessages() {
-        //myWebSocketService.sendMessageToClients("Periodic message")
-    }
-
     @Synchronized
     fun onMessage(dwx: Client, message: JSONObject) {
         if (message["type"]
@@ -97,6 +96,9 @@ class TradeEventHandler(
             == "INFO"
         ) logger.info(message["type"].toString() + " | " + message["message"])
         slackClient.sendSlackNotification("message: $message")
+
+        webSocketController.sendMessage(webSocketMessage("Message: $message"))
+
     }
 
     @Synchronized
@@ -112,10 +114,12 @@ class TradeEventHandler(
     }
 
     fun onNewOrder(tradeInfo: TradeInfo, metaTraderId: Int) {
+        webSocketController.sendMessage(webSocketMessage("New Order: $tradeInfo"))
         tradeService.fillTrade(tradeInfo, metaTraderId)
     }
 
     fun onClosedOrder(tradeInfo: TradeInfo) {
+        webSocketController.sendMessage(webSocketMessage("Close Order: $tradeInfo"))
         tradeService.closeTrade(tradeInfo)
     }
 }
