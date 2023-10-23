@@ -157,18 +157,19 @@ class TradeService(
     }
 
     fun fillTrade(tradeInfo: TradeInfo, metatraderId: Int) {
-        tradeRepository.findByIdOrNull(tradeInfo.magic)
-            ?.takeIf { it.status == Status.PENDING || it.status == Status.ORDER_SENT }
-            ?.apply {
-                placedPrice = tradeInfo.openPrice
-                placedDateTime = ZonedDateTime.of(tradeInfo.openTime, ZoneId.of("Europe/Zurich"))
-                status = Status.PLACED_IN_MT
-                this.metatraderId = metatraderId
+        tradeRepository.findByIdOrNull(tradeInfo.magic)?.let { trade ->
+            if (trade.status == Status.PENDING || trade.status == Status.ORDER_SENT) {
+                trade.apply {
+                    placedPrice = tradeInfo.openPrice
+                    placedDateTime = ZonedDateTime.of(tradeInfo.openTime, ZoneId.of("Europe/Zurich"))
+                    status = Status.PLACED_IN_MT
+                    this.metatraderId = metatraderId
+                }.also {
+                    tradeRepository.save(it)
+                    slackClient.sendSlackNotification("Order placed in MT: $it")
+                }
             }
-            ?.also {
-                tradeRepository.save(it)
-                slackClient.sendSlackNotification("Order placed in MT: $it")
-            } ?: logger.warn("Trade not found or status not suitable: $tradeInfo")
+        } ?: logger.warn("Trade not found: $tradeInfo")
     }
 
     fun closeTrade(tradeInfo: TradeInfo) {

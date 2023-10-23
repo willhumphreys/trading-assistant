@@ -26,6 +26,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
+import kotlin.concurrent.thread
 
 @Component
 class Client(
@@ -106,22 +107,19 @@ class Client(
             )
 
         loadMessages()
-        val openOrdersThread = Thread {
+
+        thread(name = "openOrdersThread") {
             try {
                 checkOpenOrders()
             } catch (e: JsonProcessingException) {
                 throw RuntimeException(e)
             }
         }
-        openOrdersThread.start()
-        val messageThread = Thread { checkMessages() }
-        messageThread.start()
-        val marketDataThread = Thread { checkMarketData() }
-        marketDataThread.start()
-        val barDataThread = Thread { checkBarData() }
-        barDataThread.start()
-        val historicDataThread = Thread { checkHistoricData() }
-        historicDataThread.start()
+        thread(name = "checkMessage") { checkMessages() }
+        thread(name = "checkMarketData") { checkMarketData() }
+        thread(name = "checkBarData") { checkBarData() }
+        thread(name = "checkHistoricData") { checkHistoricData() }
+
         resetCommandIDs()
         loadOrders()
         logger.info("\nAccount info:\n$accountInfo\n")
