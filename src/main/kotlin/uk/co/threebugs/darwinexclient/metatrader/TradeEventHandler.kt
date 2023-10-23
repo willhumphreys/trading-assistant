@@ -3,6 +3,7 @@ package uk.co.threebugs.darwinexclient.metatrader
 import org.json.JSONObject
 import org.springframework.stereotype.Component
 import uk.co.threebugs.darwinexclient.SlackClient
+import uk.co.threebugs.darwinexclient.Status
 import uk.co.threebugs.darwinexclient.account.AccountDto
 import uk.co.threebugs.darwinexclient.account.AccountMapper
 import uk.co.threebugs.darwinexclient.trade.TradeService
@@ -10,6 +11,8 @@ import uk.co.threebugs.darwinexclient.utils.logger
 import uk.co.threebugs.darwinexclient.websocket.WebSocketController
 import uk.co.threebugs.darwinexclient.websocket.webSocketMessage
 import java.math.BigDecimal
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import java.util.concurrent.atomic.AtomicBoolean
 
 /*Custom event handler implementing the EventHandler interface.
@@ -121,5 +124,20 @@ class TradeEventHandler(
     fun onClosedOrder(tradeInfo: TradeInfo) {
         webSocketController.sendMessage(webSocketMessage("Close Order: $tradeInfo"), "/topic/order-change")
         tradeService.closeTrade(tradeInfo)
+    }
+
+    fun onTradeStateChange(currentValue: TradeInfo, previousValue: TradeInfo) {
+
+        if ((previousValue.type.equals("buylimit") && currentValue.type.equals("buy")) || (previousValue.type.equals("selllimit") && currentValue.type.equals(
+                "sell"
+            ))
+        ) {
+            tradeService.findById(currentValue.magic)?.let { trade ->
+                trade.apply {
+                    status = Status.FILLED
+                    filledDateTime = ZonedDateTime.now(ZoneOffset.UTC)
+                }.also { tradeService.save(it) }
+            }
+        }
     }
 }

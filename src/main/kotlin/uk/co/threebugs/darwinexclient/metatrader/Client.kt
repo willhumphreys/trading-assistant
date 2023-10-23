@@ -239,7 +239,6 @@ class Client(
                 openOrders.orders[it]?.let { it1 -> eventHandler.onNewOrder(it1, it) }
             }
 
-
             for ((key, currentOrder) in openOrders.orders) {
 
                 // Check if the key exists in previousDataOrders
@@ -325,6 +324,8 @@ class Client(
                     .append(" -> ")
                     .append(currentValue.type)
                     .append(", ")
+
+                this.eventHandler.onTradeStateChange(currentValue, previousValue)
                 log = true
             }
             if (currentValue.openPrice != previousValue.openPrice) {
