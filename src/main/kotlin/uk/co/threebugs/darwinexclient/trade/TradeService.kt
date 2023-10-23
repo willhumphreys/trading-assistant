@@ -157,28 +157,16 @@ class TradeService(
     }
 
     fun fillTrade(tradeInfo: TradeInfo, metatraderId: Int?) {
-        val magicId = tradeInfo.magic
-
-        val optionalTrade = tradeRepository.findById(magicId)
-        if (optionalTrade.isEmpty) {
-            logger.warn("Trade not found: $tradeInfo")
-            return
-        }
-
-        val trade = optionalTrade.get()
-        if (trade.status != Status.PENDING && trade.status != Status.ORDER_SENT) {
-            return
-        }
-
-        trade.apply {
-            placedPrice = tradeInfo.openPrice
-            placedDateTime = ZonedDateTime.of(tradeInfo.openTime, ZoneId.of("Europe/Zurich"))
-            status = Status.PLACED_IN_MT
-            this.metatraderId = metatraderId
-        }
-
-        tradeRepository.save(trade)
-        slackClient.sendSlackNotification("Order placed in MT: $trade")
+        tradeRepository.findByIdOrNull(tradeInfo.magic)
+            ?.takeIf { it.status == Status.PENDING || it.status == Status.ORDER_SENT }
+            ?.let { trade ->
+                trade.placedPrice = tradeInfo.openPrice
+                trade.placedDateTime = ZonedDateTime.of(tradeInfo.openTime, ZoneId.of("Europe/Zurich"))
+                trade.status = Status.PLACED_IN_MT
+                trade.metatraderId = metatraderId
+                tradeRepository.save(trade)
+                slackClient.sendSlackNotification("Order placed in MT: $trade")
+            } ?: logger.warn("Trade not found or status not suitable: $tradeInfo")
     }
 
     fun closeTrade(tradeInfo: TradeInfo) {
