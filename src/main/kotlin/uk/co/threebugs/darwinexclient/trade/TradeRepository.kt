@@ -11,5 +11,9 @@ import java.time.ZonedDateTime
 @Repository
 interface TradeRepository : JpaRepository<Trade, Int>, QueryByExampleExecutor<Trade> {
     fun findByStatusAndSetup_SymbolAndAccount(status: Status, symbol: String, account: Account): List<Trade>
-    fun findBySetupAndPlacedDateTimeAndAccount(setup: Setup, placedDateTime: ZonedDateTime, account: Account): Trade?
+    fun findBySetupAndTargetPlaceDateTimeAndAccount(
+        setup: Setup,
+        placedDateTime: ZonedDateTime,
+        account: Account
+    ): Trade?
 }

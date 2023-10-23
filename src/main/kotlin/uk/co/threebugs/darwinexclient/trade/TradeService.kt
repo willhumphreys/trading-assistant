@@ -65,7 +65,8 @@ class TradeService(private val tradeRepository: TradeRepository, private val set
         setups.forEach { setup ->
             val targetPlaceTime: ZonedDateTime =
                 SetupFileRepository.getNextEventTime(setup.dayOfWeek!!, setup.hourOfDay!!)
-            val existingTrade = tradeRepository.findBySetupAndPlacedDateTimeAndAccount(setup, targetPlaceTime, account)
+            val existingTrade =
+                tradeRepository.findBySetupAndTargetPlaceDateTimeAndAccount(setup, targetPlaceTime, account)
             if (existingTrade == null) {
                 val trade = tradeMapper.toEntity(setup, targetPlaceTime, account).apply {
                     status = Status.PENDING

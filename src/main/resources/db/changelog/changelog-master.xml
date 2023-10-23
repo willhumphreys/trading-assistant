@@ -10,4 +10,5 @@
     <include file="classpath:db/changelog/003_add_setup_table.xml"/>
     <include file="classpath:db/changelog/004_add_trade_table.xml"/>
     <include file="classpath:db/changelog/005_add_account_setup_groups.xml"/>
+    <include file="classpath:db/changelog/006_add_trade_constraint.xml"/>
 </databaseChangeLog>
