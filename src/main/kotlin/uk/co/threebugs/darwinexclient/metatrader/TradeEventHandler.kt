@@ -9,7 +9,7 @@ import uk.co.threebugs.darwinexclient.account.AccountMapper
 import uk.co.threebugs.darwinexclient.trade.TradeService
 import uk.co.threebugs.darwinexclient.utils.logger
 import uk.co.threebugs.darwinexclient.websocket.WebSocketController
-import uk.co.threebugs.darwinexclient.websocket.webSocketMessage
+import uk.co.threebugs.darwinexclient.websocket.WebSocketMessage
 import java.math.BigDecimal
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -53,7 +53,10 @@ class TradeEventHandler(
     @Synchronized
     fun onTick(dwx: Client, symbol: String, bid: BigDecimal, ask: BigDecimal, accountDto: AccountDto) {
 
-        webSocketController.sendMessage(webSocketMessage("Tick: $symbol, $bid, $ask"), "/topic/ticks")
+        webSocketController.sendMessage(
+            WebSocketMessage(id = 0, field = "tick", value = "$symbol, $bid, $ask"),
+            "/topic/ticks"
+        )
 
 //        if (executed.compareAndSet(false, true)) {
 //                    dwx.openOrder(Order.builder()
@@ -100,7 +103,7 @@ class TradeEventHandler(
         ) logger.info(message["type"].toString() + " | " + message["message"])
         slackClient.sendSlackNotification("message: $message")
 
-        webSocketController.sendMessage(webSocketMessage("Message: $message"), "/topic/ticks")
+        webSocketController.sendMessage(WebSocketMessage(id = 0, field = "message", value = "$message"), "/topic/ticks")
 
     }
 
@@ -117,12 +120,24 @@ class TradeEventHandler(
     }
 
     fun onNewOrder(tradeInfo: TradeInfo, metaTraderId: Int) {
-        webSocketController.sendMessage(webSocketMessage("New Order: $tradeInfo"), "/topic/order-change")
+        webSocketController.sendMessage(
+            WebSocketMessage(
+                id = tradeInfo.magic,
+                field = "trade",
+                value = tradeInfo.toString()
+            ), "/topic/order-change"
+        )
         tradeService.fillTrade(tradeInfo, metaTraderId)
     }
 
     fun onClosedOrder(tradeInfo: TradeInfo) {
-        webSocketController.sendMessage(webSocketMessage("Close Order: $tradeInfo"), "/topic/order-change")
+        webSocketController.sendMessage(
+            WebSocketMessage(
+                id = tradeInfo.magic,
+                field = "trade",
+                value = tradeInfo.toString()
+            ), "/topic/order-change"
+        )
         tradeService.closeTrade(tradeInfo)
     }
 

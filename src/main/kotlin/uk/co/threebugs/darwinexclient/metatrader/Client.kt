@@ -20,7 +20,7 @@ import uk.co.threebugs.darwinexclient.setupgroup.SetupGroup
 import uk.co.threebugs.darwinexclient.setupgroup.SetupGroupService
 import uk.co.threebugs.darwinexclient.utils.logger
 import uk.co.threebugs.darwinexclient.websocket.WebSocketController
-import uk.co.threebugs.darwinexclient.websocket.webSocketMessage
+import uk.co.threebugs.darwinexclient.websocket.WebSocketMessage
 import java.io.IOException
 import java.math.BigDecimal
 import java.nio.file.Files
@@ -349,6 +349,16 @@ class Client(
                     .append(previousValue.profitAndLoss)
                     .append(" -> ")
                     .append(currentValue.profitAndLoss)
+
+
+                webSocketController.sendMessage(
+                    WebSocketMessage(
+                        id = currentValue.magic,
+                        field = "profitAndLoss",
+                        value = currentValue.profitAndLoss.toString()
+                    ), "/topic/order-change"
+                )
+
                 log = true
 
             }
@@ -367,7 +377,11 @@ class Client(
                     .append(currentValue.empty)
             }
             if (log) {
-                webSocketController.sendMessage(webSocketMessage(changes.toString()), "/topic/order-change")
+//                webSocketController.sendMessage(webSocketMessage(
+//                        id = currentValue.magic,
+//                        field = "Order",
+//                        value = changes.toString()
+//                        ), "/topic/order-change")
             }
         }
     }

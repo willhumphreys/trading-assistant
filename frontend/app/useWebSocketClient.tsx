@@ -8,8 +8,8 @@ const newClient = new Client({
 
 export function useWebSocketClient() {
 
-    const [tickMessage, setTickMessage] = useState<ServerMessage>({content: ''});
-    const [orderMessage, setOrderMessage] = useState<ServerMessage>({content: ''});
+    const [tickMessage, setTickMessage] = useState<ServerMessage>({id: 0, field: '', value: ''});
+    const [orderMessage, setOrderMessage] = useState<ServerMessage>({id: 0, field: '', value: ''});
 
 
     useEffect(() => {
@@ -49,7 +49,9 @@ export function useWebSocketClient() {
 
     const sendHelloMessage = () => {
         const message: ServerMessage = {
-            content: "Your Name"
+            id: 0,
+            field: "dummyMessage",
+            value: "Will"
         };
 
         if (newClient && newClient.connected) {

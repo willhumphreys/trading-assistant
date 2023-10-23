@@ -1,5 +1,7 @@
 export interface ServerMessage {
-    content: string;
+    id: number;
+    field: string;
+    value: string;
 }
 
 export interface Account {
