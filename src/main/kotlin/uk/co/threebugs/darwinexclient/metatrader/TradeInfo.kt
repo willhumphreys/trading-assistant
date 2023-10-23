@@ -7,7 +7,7 @@ import java.time.LocalDateTime
 
 
 data class TradeInfo (
-    var magic: Int? = null,
+    var magic: Int,
     var lots: BigDecimal? = null,
     var symbol: String? = null,
     var swap: BigDecimal? = null,

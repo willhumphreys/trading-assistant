@@ -24,7 +24,14 @@ import java.time.ZonedDateTime
 import java.util.function.Consumer
 
 @Service
-class TradeService(private val tradeRepository: TradeRepository, private val setupRepository: SetupRepository, private val accountSetupGroupsRepository: AccountSetupGroupsRepository, private val tradeMapper: TradeMapper, private val timeHelper: TimeHelper, private val slackClient: SlackClient) {
+class TradeService(
+    private val tradeRepository: TradeRepository,
+    private val setupRepository: SetupRepository,
+    private val accountSetupGroupsRepository: AccountSetupGroupsRepository,
+    private val tradeMapper: TradeMapper,
+    private val timeHelper: TimeHelper,
+    private val slackClient: SlackClient
+) {
     fun findById(id: Int): TradeDto? {
         return tradeRepository.findByIdOrNull(id)?.let { tradeMapper.toDto(it) }
     }
@@ -32,7 +39,7 @@ class TradeService(private val tradeRepository: TradeRepository, private val set
 
     fun save(tradeDto: TradeDto): TradeDto {
         val setup = setupRepository.findByIdOrNull(tradeDto.setup!!.id)
-                ?: throw IllegalArgumentException("Setup not found for ID: ${tradeDto.setup!!.id}")
+            ?: throw IllegalArgumentException("Setup not found for ID: ${tradeDto.setup!!.id}")
 
         var record = tradeMapper.toEntity(tradeDto, setup)
         record = tradeRepository.save(record)
@@ -60,7 +67,11 @@ class TradeService(private val tradeRepository: TradeRepository, private val set
         }
     }
 
-    private fun createAndPlaceTradesForEnabledSetupsInSetupGroup(symbol: String, account: Account, accountSetupGroup: AccountSetupGroups) {
+    private fun createAndPlaceTradesForEnabledSetupsInSetupGroup(
+        symbol: String,
+        account: Account,
+        accountSetupGroup: AccountSetupGroups
+    ) {
         val setups = setupRepository.findEnabledSetups(symbol, accountSetupGroup.setupGroups!!)
         setups.forEach { setup ->
             val targetPlaceTime: ZonedDateTime =
@@ -80,12 +91,12 @@ class TradeService(private val tradeRepository: TradeRepository, private val set
     fun placeTrades(dwx: Client, symbol: String, bid: BigDecimal, ask: BigDecimal, account: Account) {
         tradeRepository.findByStatusAndSetup_SymbolAndAccount(Status.PENDING, symbol, account)
             .forEach(Consumer { trade: Trade ->
-            val now = ZonedDateTime.now(ZoneOffset.UTC)
-            val targetPlaceDateTime = trade.targetPlaceDateTime
-            if (now.isAfter(targetPlaceDateTime)) {
-                tradeRepository.save(placeTrade(dwx, bid, ask, trade))
-            }
-        })
+                val now = ZonedDateTime.now(ZoneOffset.UTC)
+                val targetPlaceDateTime = trade.targetPlaceDateTime
+                if (now.isAfter(targetPlaceDateTime)) {
+                    tradeRepository.save(placeTrade(dwx, bid, ask, trade))
+                }
+            })
     }
 
     fun placeTrade(dwx: Client, bid: BigDecimal, ask: BigDecimal, trade: Trade): Trade {
@@ -112,7 +123,9 @@ class TradeService(private val tradeRepository: TradeRepository, private val set
 //                           .expiration(TradeService.addSecondsToCurrentTime(8))
 //                           .build());
         val magic = trade.id
-        dwx.openOrder(Order(symbol = trade.setup!!.symbol,
+        dwx.openOrder(
+            Order(
+                symbol = trade.setup!!.symbol,
                 orderType = orderType,
                 lots = 0.01,
                 price = price,
@@ -120,7 +133,8 @@ class TradeService(private val tradeRepository: TradeRepository, private val set
                 takeProfit = takeProfit,
                 magic = magic,
                 expiration = timeHelper.addSecondsToCurrentTime(trade.setup!!.outOfTime!!.toLong()),
-                comment = trade.setup!!.concatenateFields())
+                comment = trade.setup!!.concatenateFields()
+            )
         )
 
         trade.status = Status.ORDER_SENT
@@ -131,30 +145,49 @@ class TradeService(private val tradeRepository: TradeRepository, private val set
     fun closeTradesAtTime(dwx: Client, symbol: String, account: Account) {
         tradeRepository.findByStatusAndSetup_SymbolAndAccount(Status.FILLED, symbol, account).stream()
             .filter { record: Trade ->
-            record.targetPlaceDateTime!!.plusHours(record.setup!!.tradeDuration!!.toLong())
-                .isBefore(ZonedDateTime.now(ZoneOffset.UTC))
-        }.forEach { trade: Trade ->
-            dwx.closeOrdersByMagic(trade.id!!)
-            trade.status = Status.CLOSED_BY_TIME
-            trade.closedDateTime = ZonedDateTime.now()
-            tradeRepository.save(trade)
-            slackClient.sendSlackNotification("Order closed: " + trade.setup!!.rank + " " + trade.setup!!.symbol + " " + (if (trade.setup!!.isLong) "LONG" else "SHORT") + " " + trade.profit)
-        }
+                record.targetPlaceDateTime!!.plusHours(record.setup!!.tradeDuration!!.toLong())
+                    .isBefore(ZonedDateTime.now(ZoneOffset.UTC))
+            }.forEach { trade: Trade ->
+                dwx.closeOrdersByMagic(trade.id!!)
+                trade.status = Status.CLOSED_BY_TIME
+                trade.closedDateTime = ZonedDateTime.now()
+                tradeRepository.save(trade)
+                slackClient.sendSlackNotification("Order closed: " + trade.setup!!.rank + " " + trade.setup!!.symbol + " " + (if (trade.setup!!.isLong) "LONG" else "SHORT") + " " + trade.profit)
+            }
     }
 
     fun fillTrade(tradeInfo: TradeInfo, metatraderId: Int?) {
-        tradeRepository.findById(tradeInfo.magic!!).ifPresentOrElse({ trade: Trade ->
-            trade.placedPrice = tradeInfo.openPrice
-            trade.placedDateTime = ZonedDateTime.of(tradeInfo.openTime, ZoneId.of("Europe/Zurich"))
-            trade.status = Status.PLACED_IN_MT
-            trade.metatraderId = metatraderId
-            tradeRepository.save(trade)
-            slackClient.sendSlackNotification("Order placed in MT: $trade")
-        }) { logger.info("Trade not found: $tradeInfo") }
+        val magicId = tradeInfo.magic
+
+        val optionalTrade = tradeRepository.findById(magicId)
+        if (optionalTrade.isEmpty) {
+            logger.warn("Trade not found: $tradeInfo")
+            return
+        }
+
+        val trade = optionalTrade.get()
+        if (trade.status != Status.PENDING && trade.status != Status.ORDER_SENT) {
+            return
+        }
+
+        trade.apply {
+            placedPrice = tradeInfo.openPrice
+            placedDateTime = ZonedDateTime.of(tradeInfo.openTime, ZoneId.of("Europe/Zurich"))
+            status = Status.PLACED_IN_MT
+            this.metatraderId = metatraderId
+        }
+
+        tradeRepository.save(trade)
+        slackClient.sendSlackNotification("Order placed in MT: $trade")
     }
 
     fun closeTrade(tradeInfo: TradeInfo) {
-        tradeRepository.findById(tradeInfo.magic!!).ifPresentOrElse({ trade: Trade -> closeTrade(tradeInfo, trade) }) { logger.info("Trade not found: $tradeInfo") }
+        tradeRepository.findById(tradeInfo.magic).ifPresentOrElse({ trade: Trade ->
+            closeTrade(
+                tradeInfo,
+                trade
+            )
+        }) { logger.info("Trade not found: $tradeInfo") }
     }
 
     private fun closeTrade(tradeInfo: TradeInfo, trade: Trade) {
