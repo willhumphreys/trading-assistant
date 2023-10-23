@@ -144,15 +144,15 @@ class TradeService(
 
     fun closeTradesAtTime(dwx: Client, symbol: String, account: Account) {
         tradeRepository.findByStatusAndSetup_SymbolAndAccount(Status.FILLED, symbol, account).stream()
-            .filter { record: Trade ->
-                record.targetPlaceDateTime!!.plusHours(record.setup!!.tradeDuration!!.toLong())
+            .filter { trade: Trade ->
+                trade.targetPlaceDateTime!!.plusHours(trade.setup!!.tradeDuration!!.toLong())
                     .isBefore(ZonedDateTime.now(ZoneOffset.UTC))
             }.forEach { trade: Trade ->
                 dwx.closeOrdersByMagic(trade.id!!)
                 trade.status = Status.CLOSED_BY_TIME
                 trade.closedDateTime = ZonedDateTime.now()
                 tradeRepository.save(trade)
-                slackClient.sendSlackNotification("Order closed: " + trade.setup!!.rank + " " + trade.setup!!.symbol + " " + (if (trade.setup!!.isLong) "LONG" else "SHORT") + " " + trade.profit)
+                slackClient.sendSlackNotification("Order closed: ${trade.setup!!.rank} ${trade.setup!!.symbol} ${trade.setup!!.direction} ${trade.profit}")
             }
     }
 
