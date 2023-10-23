@@ -50,7 +50,7 @@ class TradeEventHandler(
     @Synchronized
     fun onTick(dwx: Client, symbol: String, bid: BigDecimal, ask: BigDecimal, accountDto: AccountDto) {
 
-        webSocketController.sendMessage(webSocketMessage("Tick: $symbol, $bid, $ask"))
+        webSocketController.sendMessage(webSocketMessage("Tick: $symbol, $bid, $ask"), "/topic/ticks")
 
 //        if (executed.compareAndSet(false, true)) {
 //                    dwx.openOrder(Order.builder()
@@ -97,7 +97,7 @@ class TradeEventHandler(
         ) logger.info(message["type"].toString() + " | " + message["message"])
         slackClient.sendSlackNotification("message: $message")
 
-        webSocketController.sendMessage(webSocketMessage("Message: $message"))
+        webSocketController.sendMessage(webSocketMessage("Message: $message"), "/topic/ticks")
 
     }
 
@@ -114,12 +114,12 @@ class TradeEventHandler(
     }
 
     fun onNewOrder(tradeInfo: TradeInfo, metaTraderId: Int) {
-        webSocketController.sendMessage(webSocketMessage("New Order: $tradeInfo"))
+        webSocketController.sendMessage(webSocketMessage("New Order: $tradeInfo"), "/topic/order-change")
         tradeService.fillTrade(tradeInfo, metaTraderId)
     }
 
     fun onClosedOrder(tradeInfo: TradeInfo) {
-        webSocketController.sendMessage(webSocketMessage("Close Order: $tradeInfo"))
+        webSocketController.sendMessage(webSocketMessage("Close Order: $tradeInfo"), "/topic/order-change")
         tradeService.closeTrade(tradeInfo)
     }
 }

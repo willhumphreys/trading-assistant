@@ -8,7 +8,8 @@ const newClient = new Client({
 
 export function useWebSocketClient() {
 
-    const [serverMessage, setServerMessage] = useState<ServerMessage>({content: ''});
+    const [tickMessage, setTickMessage] = useState<ServerMessage>({content: ''});
+    const [orderMessage, setOrderMessage] = useState<ServerMessage>({content: ''});
 
 
     useEffect(() => {
@@ -17,10 +18,17 @@ export function useWebSocketClient() {
         newClient.onConnect = (frame) => {
             console.log('Connected: ' + frame);
 
-            newClient.subscribe('/topic/greetings', (message: IMessage) => {
+            newClient.subscribe('/topic/ticks', (message: IMessage) => {
                 if (message.body) {
                     console.log('Received message: ', message.body);
-                    setServerMessage(JSON.parse(message.body));
+                    setTickMessage(JSON.parse(message.body));
+                }
+            });
+
+            newClient.subscribe('/topic/order-change', (message: IMessage) => {
+                if (message.body) {
+                    console.log('Received message: ', message.body);
+                    setOrderMessage(JSON.parse(message.body));
                 }
             });
         };
@@ -56,6 +64,7 @@ export function useWebSocketClient() {
     return {
         client: newClient,
         sendHelloMessage,
-        serverMessage
+        tickMessage: tickMessage,
+        orderMessage: orderMessage
     };
 }

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.KotlinFeature
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.json.JSONObject
 import org.springframework.beans.factory.annotation.Value
@@ -64,16 +63,7 @@ class Client(
     private final val account: AccountDto
 
     init {
-        objectMapper.registerModule(
-            KotlinModule.Builder()
-                .withReflectionCacheSize(COMPILED_CODE)
-                .configure(KotlinFeature.NullToEmptyCollection, COMPILED_CODE)
-                .configure(KotlinFeature.NullToEmptyMap, COMPILED_CODE)
-                .configure(KotlinFeature.NullIsSameAsDefault, COMPILED_CODE)
-                .configure(KotlinFeature.SingletonSupport, COMPILED_CODE)
-                .configure(KotlinFeature.StrictNullChecks, COMPILED_CODE)
-                .build()
-        )
+        objectMapper.registerModule(KotlinModule())
         objectMapper.registerModule(JavaTimeModule())
         val accountDtos = loadMetaTraderInstalls(Paths.get("accounts", "metatrader_dirs.json"))
         val setupGroupsPath = Paths.get("accounts", "setup-groups")
@@ -340,6 +330,7 @@ class Client(
                     .append(previousValue.profitAndLoss)
                     .append(" -> ")
                     .append(currentValue.profitAndLoss)
+                log = true
 
             }
             if (currentValue.mapType != previousValue.mapType) {
@@ -357,7 +348,7 @@ class Client(
                     .append(currentValue.empty)
             }
             if (log) {
-                webSocketController.sendMessage(webSocketMessage(changes.toString()))
+                webSocketController.sendMessage(webSocketMessage(changes.toString()), "/topic/order-change")
             }
         }
     }

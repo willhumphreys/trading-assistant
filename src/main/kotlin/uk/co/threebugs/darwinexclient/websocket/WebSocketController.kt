@@ -14,15 +14,15 @@ class WebSocketController(
 
 
     @MessageMapping("/hello")
-    @SendTo("/topic/greetings")
+    @SendTo("/topic/ticks")
     @Throws(Exception::class)
     fun greeting(message: ServerMessage): webSocketMessage {
 
         return webSocketMessage("Hello, " + HtmlUtils.htmlEscape(message.content) + "!")
     }
 
-    fun sendMessage(webSocketMessage: webSocketMessage) {
-        template.convertAndSend("/topic/greetings", webSocketMessage)
+    fun sendMessage(webSocketMessage: webSocketMessage, topic: String) {
+        template.convertAndSend(topic, webSocketMessage)
     }
 
 }
