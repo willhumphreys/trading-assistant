@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.readValue
 import org.json.JSONObject
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -42,8 +43,17 @@ class Client(
     private val objectMapper: ObjectMapper,
     private val webSocketController: WebSocketController,
 ) {
-    var openOrders: Map<Int, TradeInfo> = java.util.Map.of()
-    var accountInfo = JSONObject()
+    var openOrders: Orders = Orders(
+        accountInfo = AccountInfo(
+            number = 0,
+            leverage = 0,
+            balance = BigDecimal.ZERO,
+            freeMargin = BigDecimal.ZERO,
+            name = "dummy",
+            currency = "",
+            equity = BigDecimal.ZERO
+        ), orders = mapOf()
+    )
     var marketData: Map<String, CurrencyInfo> = java.util.Map.of()
     var barData = JSONObject()
     var historicData = JSONObject()
@@ -53,7 +63,17 @@ class Client(
     private final val pathMap: Map<String, Path>
     private var commandID = 0
     private var lastMessagesMillis: Long = 0
-    private var lastOpenOrdersStr: String? = ""
+    private var lastOpenOrders: Orders = Orders(
+        accountInfo = AccountInfo(
+            number = 0,
+            leverage = 0,
+            balance = BigDecimal.ZERO,
+            freeMargin = BigDecimal.ZERO,
+            name = "dummy",
+            currency = "",
+            equity = BigDecimal.ZERO
+        ), orders = mapOf()
+    )
     private var lastMessagesStr: String? = ""
     private var lastBarDataStr: String? = ""
     private var lastHistoricDataStr: String? = ""
@@ -122,7 +142,7 @@ class Client(
 
         resetCommandIDs()
         loadOrders()
-        logger.info("\nAccount info:\n$accountInfo\n")
+        logger.info("\nAccount info:\n${openOrders.accountInfo}\n")
 
         // subscribe to tick data:
         subscribeSymbols(symbols)
@@ -188,54 +208,54 @@ class Client(
         while (ACTIVE) {
             Helpers.sleep(sleepDelay)
             if (!START) continue
-            val newDataStr =
-                Helpers.tryReadFile(pathMap["pathOrders"] ?: throw NoSuchElementException("Key 'pathOrders' not found"))
-            if (newDataStr.isEmpty() || newDataStr == lastOpenOrdersStr) continue
-            var previousDataOrders = java.util.Map.of<Int?, TradeInfo?>()
-            if (lastOpenOrdersStr != null && lastOpenOrdersStr!!.isNotEmpty()) {
-                val previousDataJSON = JSONObject(lastOpenOrdersStr)
-                previousDataOrders = objectMapper.readValue(previousDataJSON.getJSONObject("orders")
-                    .toString(), object : TypeReference<Map<Int?, TradeInfo?>?>() {})
-            }
-            lastOpenOrdersStr = newDataStr
-            val newDataJSON = JSONObject(newDataStr)
-            val dataOrders: Map<Int, TradeInfo> = objectMapper.readValue(
-                newDataJSON.getJSONObject("orders").toString(),
-                object : TypeReference<Map<Int, TradeInfo>>() {})
 
-            for (ticket in openOrders.keys) {
-                if (!dataOrders.containsKey(ticket)) {
-                    logger.info("Order removed: " + openOrders[ticket])
-                    val tradeInfo = objectMapper.convertValue(openOrders[ticket], TradeInfo::class.java)
-                    eventHandler.onClosedOrder(tradeInfo)
-                }
+            val ordersPath =
+                pathMap["pathOrders"] ?: throw NoSuchElementException("Key 'pathOrders' not found")
+
+
+            val data: Orders = objectMapper.readValue(ordersPath.toFile())
+
+            if (data.orders.isEmpty()) continue
+
+            openOrders = data
+
+            // Get the keys (order IDs) from both maps
+            val openOrderIds = openOrders.orders.keys
+            val lastOpenOrderIds = lastOpenOrders.orders.keys
+
+            // Find IDs that are in openOrderIds but not in lastOpenOrderIds
+            val newOrders = openOrderIds - lastOpenOrderIds
+
+            // Find IDs that are in lastOpenOrderIds but not in openOrderIds
+            val closedOrders = lastOpenOrderIds - openOrderIds
+
+            closedOrders.forEach {
+                logger.info("Order removed: $it")
+                lastOpenOrders.orders[it]?.let { it1 -> eventHandler.onClosedOrder(it1) }
             }
-            for (ticket in dataOrders.keys) {
-                if (!openOrders.containsKey(ticket)) {
-                    val tradeInfo = dataOrders[ticket]
-                    logger.info("New order: $tradeInfo")
-                    eventHandler.onNewOrder(tradeInfo!!, ticket)
-                }
+
+            newOrders.forEach {
+                logger.info("Order added: $it")
+                openOrders.orders[it]?.let { it1 -> eventHandler.onNewOrder(it1, it) }
             }
-            for ((key, currentValue) in dataOrders) {
+
+
+            for ((key, currentOrder) in openOrders.orders) {
 
                 // Check if the key exists in previousDataOrders
-                if (previousDataOrders.containsKey(key)) {
-                    val previousValue = previousDataOrders[key]
+                if (lastOpenOrders.orders.containsKey(key)) {
+                    val previousOrder = lastOpenOrders.orders[key]
 
                     // Compare the TradeInfo objects
-                    compareTradeInfo(key, currentValue, previousValue!!)
+                    compareTradeInfo(key, currentOrder, previousOrder!!)
                 } else {
                     // Log new orders that didn't exist in previousDataOrders
-                    logger.info("New order: $key, Value: $currentValue")
+                    logger.info("New order: $key, Value: $currentOrder")
                 }
             }
-            openOrders = dataOrders
-            accountInfo = newDataJSON["account_info"] as JSONObject
 
-            //if (loadOrdersFromFile) Helpers.tryWriteToFile(pathOrdersStored, data.toString());
-
-            //if (newEvent) eventHandler.onOrderEvent(this.openOrders);
+            lastOpenOrders = data
+            Helpers.tryWriteToFile(pathMap["pathOrdersStored"], objectMapper.writeValueAsString(data))
         }
     }
 
@@ -529,20 +549,23 @@ class Client(
      */
     @Throws(JsonProcessingException::class)
     private fun loadOrders() {
-        val text = Helpers.tryReadFile(
+        val storedOrdersPath =
             pathMap["pathOrdersStored"] ?: throw NoSuchElementException("Key 'pathOrdersStored' not found")
-        )
-        if (text.isEmpty()) return
-        val data: JSONObject
-        data = try {
-            JSONObject(text)
-        } catch (e: Exception) {
+
+        if (!storedOrdersPath.toFile().exists()) {
+            logger.warn("No stored orders found")
             return
         }
-        lastOpenOrdersStr = text
-        openOrders = objectMapper.readValue(
-            data.getJSONObject("orders").toString(),
-            object : TypeReference<Map<Int, TradeInfo>>() {})
+
+        try {
+            val storedOrders = objectMapper.readValue<Orders>(storedOrdersPath.toFile())
+            lastOpenOrders = storedOrders
+            openOrders = storedOrders
+        } catch (e: Exception) {
+            logger.error("Error loading stored orders", e)
+            val tryReadFile = Helpers.tryReadFile(storedOrdersPath)
+            logger.info("Stored orders: $tryReadFile")
+        }
 
     }
 
