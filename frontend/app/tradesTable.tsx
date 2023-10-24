@@ -1,4 +1,5 @@
 import {Trade} from './interfaces';
+import {useEffect, useState} from "react";
 
 type Props = {
     trades: Trade[];
@@ -6,6 +7,42 @@ type Props = {
 };
 
 export default function TradesTable({trades, handleHeaderClick}: Props) {
+
+    type CellColors = { [key: number]: string };
+    type PreviousProfits = { [key: number]: number };
+
+
+    const [previousProfits, setPreviousProfits] = useState<PreviousProfits>({});
+    const [cellColors, setCellColors] = useState<CellColors>({});
+
+    useEffect(() => {
+        const newCellColors: CellColors = {};
+        const newPreviousProfits: PreviousProfits = {};
+
+        trades.forEach((trade) => {
+            if (trade.profit === null) return;
+
+            const prevProfit = previousProfits[trade.id] || 0;
+            newPreviousProfits[trade.id] = trade.profit;
+
+            if (trade.profit > prevProfit) {
+                newCellColors[trade.id] = 'bg-green-400';
+            } else if (trade.profit < prevProfit) {
+                newCellColors[trade.id] = 'bg-red-400';
+            } else {
+                newCellColors[trade.id] = '';
+            }
+        });
+
+        setPreviousProfits(newPreviousProfits);
+        setCellColors(newCellColors);
+
+        const timer = setTimeout(() => {
+            setCellColors({});
+        }, 1000); // 1 second duration
+
+        return () => clearTimeout(timer);
+    }, [trades]);
 
     const columns = [
         {name: 'id', entity: ''},
@@ -73,7 +110,7 @@ export default function TradesTable({trades, handleHeaderClick}: Props) {
                 <td>{trade.placedPrice}</td>
                 <td>{trade.filledDateTime}</td>
                 <td>{trade.filledPrice}</td>
-                <td>{trade.profit}</td>
+                <td className={cellColors[trade.id] || ''}>{trade.profit}</td>
                 <td>{trade.closedDateTime}</td>
                 <td>{trade.closedPrice}</td>
                 <td>{trade.closeType}</td>

@@ -81,10 +81,6 @@ export default function FetchTradesClient() {
                         profit: parseFloat(orderMessage.value), // assuming the value is a string that can be parsed to float
                     };
                 }
-                if (trade.profit) {
-
-                    console.log(trade)
-                }
                 return trade;
             });
             setTrades(updatedTrades);
@@ -106,7 +102,7 @@ export default function FetchTradesClient() {
             <div className="w-full h-16 bg-gray-700 flex items-center pl-6 space-x-4">
                 <AccountSelector accounts={accounts} setQuery={setQuery} query={query}/>
                 <div className="text-white text-xl">{tickMessage.id}:{tickMessage.field}:{tickMessage.value}</div>
-                <div className="text-white text-xl">{orderMessage.id}:{orderMessage.field}:{orderMessage.value}</div>
+                {/*<div className="text-white text-xl">{orderMessage.id}:{orderMessage.field}:{orderMessage.value}</div>*/}
             </div>
 
 
