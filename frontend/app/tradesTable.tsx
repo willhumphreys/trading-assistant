@@ -1,7 +1,8 @@
 import {Trade} from './interfaces';
 
 type Props = {
-    trades: Trade[]; handleHeaderClick: (newSortColumn: string) => void;
+    trades: Trade[];
+    handleHeaderClick: (newSortColumn: string) => void;
 };
 
 export default function TradesTable({trades, handleHeaderClick}: Props) {
@@ -25,6 +26,7 @@ export default function TradesTable({trades, handleHeaderClick}: Props) {
         {name: 'placedPrice', entity: ''},
         {name: 'filledDateTime', entity: ''},
         {name: 'filledPrice', entity: ''},
+        {name: 'profit', entity: ''},
         {name: 'closedDateTime', entity: ''},
         {name: 'closedPrice', entity: ''},
         {name: 'closeType', entity: ''},
@@ -71,6 +73,7 @@ export default function TradesTable({trades, handleHeaderClick}: Props) {
                 <td>{trade.placedPrice}</td>
                 <td>{trade.filledDateTime}</td>
                 <td>{trade.filledPrice}</td>
+                <td>{trade.profit}</td>
                 <td>{trade.closedDateTime}</td>
                 <td>{trade.closedPrice}</td>
                 <td>{trade.closeType}</td>

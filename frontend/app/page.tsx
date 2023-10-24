@@ -70,6 +70,27 @@ export default function FetchTradesClient() {
         updateTrades();
     }, [sortColumn, sortDirection, query]);
 
+    useEffect(() => {
+        console.log(orderMessage)
+        if (orderMessage.id && orderMessage.field === 'profitAndLoss') {
+            console.log('here')
+            const updatedTrades = trades.map((trade) => {
+                if (trade.id === orderMessage.id) {
+                    return {
+                        ...trade,
+                        profit: parseFloat(orderMessage.value), // assuming the value is a string that can be parsed to float
+                    };
+                }
+                if (trade.profit) {
+
+                    console.log(trade)
+                }
+                return trade;
+            });
+            setTrades(updatedTrades);
+        }
+    }, [orderMessage]);
+
     const handleHeaderClick = (newSortColumn: string) => {
         if (newSortColumn === sortColumn) {
             setSortDirection(sortDirection === 'ASC' ? 'DESC' : 'ASC');

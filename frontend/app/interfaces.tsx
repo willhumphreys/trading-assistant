@@ -68,6 +68,7 @@ export interface Trade {
     placedPrice: number | null;
     filledDateTime: string | null;
     filledPrice: number | null;
+    profit: number | null;
     closedDateTime: string | null;
     closedPrice: number | null;
     closeType: string | null;
