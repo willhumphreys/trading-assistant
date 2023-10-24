@@ -115,14 +115,14 @@ class Client(
         dwxPath = metaTraderDirPath.resolve("DWX")
 
         pathMap = mapOf(
-            "pathOrders" to dwxPath.resolve("DWX_Orders.txt"),
-            "pathMessages" to dwxPath.resolve("DWX_Messages.txt"),
-            "pathMarketData" to dwxPath.resolve("DWX_Market_Data.txt"),
-            "pathBarData" to dwxPath.resolve("DWX_Bar_Data.txt"),
-            "pathHistoricData" to dwxPath.resolve("DWX_Historic_Data.txt"),
-            "pathHistoricTrades" to dwxPath.resolve("DWX_Historic_Trades.txt"),
-            "pathOrdersStored" to dwxPath.resolve("DWX_Orders_Stored.txt"),
-            "pathMessagesStored" to dwxPath.resolve("DWX_Messages_Stored.txt"),
+            "pathOrders" to dwxPath.resolve("DWX_Orders.json"),
+            "pathMessages" to dwxPath.resolve("DWX_Messages.json"),
+            "pathMarketData" to dwxPath.resolve("DWX_Market_Data.json"),
+            "pathBarData" to dwxPath.resolve("DWX_Bar_Data.json"),
+            "pathHistoricData" to dwxPath.resolve("DWX_Historic_Data.json"),
+            "pathHistoricTrades" to dwxPath.resolve("DWX_Historic_Trades.json"),
+            "pathOrdersStored" to dwxPath.resolve("DWX_Orders_Stored.json"),
+            "pathMessagesStored" to dwxPath.resolve("DWX_Messages_Stored.json"),
 
             )
 

@@ -58,12 +58,12 @@ string startIdentifier = "<:";
 string endIdentifier = ":>";
 string delimiter = "|";
 string folderName = "DWX";
-string filePathOrders = folderName + "/DWX_Orders.txt";
-string filePathMessages = folderName + "/DWX_Messages.txt";
-string filePathMarketData = folderName + "/DWX_Market_Data.txt";
-string filePathBarData = folderName + "/DWX_Bar_Data.txt";
-string filePathHistoricData = folderName + "/DWX_Historic_Data.txt";
-string filePathHistoricTrades = folderName + "/DWX_Historic_Trades.txt";
+string filePathOrders = folderName + "/DWX_Orders.json";
+string filePathMessages = folderName + "/DWX_Messages.json";
+string filePathMarketData = folderName + "/DWX_Market_Data.json";
+string filePathBarData = folderName + "/DWX_Bar_Data.json";
+string filePathHistoricData = folderName + "/DWX_Historic_Data.json";
+string filePathHistoricTrades = folderName + "/DWX_Historic_Trades.json";
 string filePathCommandsPrefix = folderName + "/DWX_Commands_";
 
 string lastOrderText = "", lastMarketDataText = "", lastMessageText = "";
