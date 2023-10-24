@@ -18,5 +18,9 @@
   {
     "name": "long-dev-linux",
     "dir-path": "/home/will/.cxoffice/MetaTrader_5-3/drive_c/Program Files/MetaTrader 5/MQL5/Files/"
+  },
+  {
+    "name": "test",
+    "dir-path": "test-ea-files"
   }
 ]

@@ -12,6 +12,8 @@ import java.io.IOException
 @Component
 class SlackClient private constructor(@param:Value("\${slack.webhook.url}") private val slackWebhookUrl: String, @param:Value("\${slack.webhook.enabled}") private val slackWebhookEnabled: Boolean) {
     fun sendSlackNotification(message: String) {
+        if (!slackWebhookEnabled) return
+
         logger.info(message)
         try {
             HttpClients.createDefault().use { httpClient ->

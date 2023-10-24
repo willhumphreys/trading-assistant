@@ -23,5 +23,10 @@
     "name": "linux-dev",
     "setup-group-name": "long",
     "metatrader-account": "long-dev-linux"
+  },
+  {
+    "name": "test",
+    "setup-group-name": "long",
+    "metatrader-account": "test"
   }
 ]
