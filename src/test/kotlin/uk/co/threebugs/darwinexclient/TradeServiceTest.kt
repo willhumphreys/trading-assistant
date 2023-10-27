@@ -123,17 +123,17 @@ class TradeServiceTest : FunSpec() {
             ) {
 
                 logger.info("Client time ${getTime()}")
-                val sendTrades = getTrades(accountName)
+                val tradesWithStatusOrderSent = getTrades(accountName)
 
-                sendTrades.size shouldBe 2
+                tradesWithStatusOrderSent.size shouldBe 2
 
-                val allTradesHaveStatusSent = sendTrades.all {
+                val allTradesHaveStatusSent = tradesWithStatusOrderSent.all {
                     logger.info("Found trade status: ${it.status}")
                     it.status == Status.ORDER_SENT
                 }
 
-                sendTrades.any { it.id == magicTrade1 } shouldBe true
-                sendTrades.any { it.id == magicTrade2 } shouldBe true
+                tradesWithStatusOrderSent.any { it.id == magicTrade1 } shouldBe true
+                tradesWithStatusOrderSent.any { it.id == magicTrade2 } shouldBe true
 
                 writeMarketData(EURUSD)
 
@@ -145,7 +145,6 @@ class TradeServiceTest : FunSpec() {
             }
 
             writeOrdersWithMagic(magicTrade1, magicTrade2)
-
 
             waitForCondition(
                 timeout = SECONDS_30,
