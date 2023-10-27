@@ -132,6 +132,14 @@ class MetaTraderFileHelper {
             )
             mapper.writeValue(ordersFile, openTradeOrder)
         }
+
+        fun readOrdersFile(): Orders {
+            return mapper.readValue(ordersFile, Orders::class.java)
+        }
+
+        fun writeOrdersFile(orders: Orders) {
+            mapper.writeValue(ordersFile, orders)
+        }
     }
 
 }

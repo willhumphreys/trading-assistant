@@ -8,8 +8,10 @@ import kotlinx.coroutines.delay
 import uk.co.threebugs.darwinexclient.Status
 import uk.co.threebugs.darwinexclient.helpers.MetaTraderFileHelper.Companion.deleteFilesBeforeTest
 import uk.co.threebugs.darwinexclient.helpers.MetaTraderFileHelper.Companion.deleteMarketDataFile
+import uk.co.threebugs.darwinexclient.helpers.MetaTraderFileHelper.Companion.readOrdersFile
 import uk.co.threebugs.darwinexclient.helpers.MetaTraderFileHelper.Companion.writeEmptyOrders
 import uk.co.threebugs.darwinexclient.helpers.MetaTraderFileHelper.Companion.writeMarketData
+import uk.co.threebugs.darwinexclient.helpers.MetaTraderFileHelper.Companion.writeOrdersFile
 import uk.co.threebugs.darwinexclient.helpers.MetaTraderFileHelper.Companion.writeOrdersWithMagic
 import uk.co.threebugs.darwinexclient.helpers.RestCallHelper.Companion.deleteTradesFromTestAccount
 import uk.co.threebugs.darwinexclient.helpers.RestCallHelper.Companion.getTrades
@@ -171,7 +173,69 @@ class TradeServiceTest : FunSpec() {
             }
 
             writeMarketData(EURUSD)
+
+            val ordersAndAccount = readOrdersFile()
+            ordersAndAccount.orders.size shouldBe 2
+
+            ordersAndAccount.orders[1]?.type = "buy"
+            ordersAndAccount.orders[2]?.type = "buy"
+
+            writeOrdersFile(ordersAndAccount)
+
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for all trades to have status filled..."
+            ) {
+
+                logger.info("Client time ${getTime()}")
+                val filledTrades = getTrades(accountName)
+
+                filledTrades.size shouldBe 2
+
+                val allTradesHaveStatusFilled = filledTrades.all {
+                    logger.info("Found trade status: ${it.status}")
+                    it.status == Status.FILLED
+                }
+
+                writeMarketData(EURUSD)
+
+                if (allTradesHaveStatusFilled)
+                    return@waitForCondition true  // Breaks out of the waiting loop
+
+                false  // Continues the waiting loop
+            }
+
+            writeMarketData(EURUSD)
+
+            writeEmptyOrders()
+
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for all trades to have status closed by user"
+            ) {
+
+                logger.info("Client time ${getTime()}")
+                val closedByUserTrades = getTrades(accountName)
+
+                closedByUserTrades.size shouldBe 2
+
+                val allTradesHaveStatusClosedByUser = closedByUserTrades.all {
+                    logger.info("Found trade status: ${it.status}")
+                    it.status == Status.CLOSED_BY_USER
+                }
+
+                writeMarketData(EURUSD)
+
+                if (allTradesHaveStatusClosedByUser)
+                    return@waitForCondition true  // Breaks out of the waiting loop
+
+                false  // Continues the waiting loop
+            }
+
         }
+
     }
 
 }
