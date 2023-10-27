@@ -18,6 +18,9 @@ class MetaTraderFileHelper {
 
     companion object {
 
+        private val marketDataPath = Path.of("test-ea-files/DWX/DWX_Market_Data.json")
+        private val ordersFile = File("test-ea-files/DWX/DWX_Orders.json")
+
         private val mapper = jacksonObjectMapper().registerModule(JavaTimeModule())
 
         private val accountInfo = AccountInfo(
@@ -51,14 +54,14 @@ class MetaTraderFileHelper {
                 })
         }
 
-        fun writeMarketData(marketDataPath: Path, symbol: String) {
+        fun writeMarketData(symbol: String) {
             mapper.writeValue(
                 marketDataPath.toFile(),
                 mapOf(
                     symbol to generateCurrentInfo()
                 )
             )
-            logger.info("Wrote marketData file: ${marketDataPath}")
+            logger.info("Wrote marketData file: $marketDataPath")
         }
 
 
@@ -83,18 +86,18 @@ class MetaTraderFileHelper {
         }
 
 
-        fun deleteMarketDataFile(path: Path) {
-            if (Files.exists(path)) {
-                logger.info("Deleting marketData file: ${path}")
-                Files.delete(path)
+        fun deleteMarketDataFile() {
+            if (Files.exists(marketDataPath)) {
+                logger.info("Deleting marketData file: $marketDataPath")
+                Files.delete(marketDataPath)
             }
         }
 
-        fun writeEmptyOrders(file: File) {
-            mapper.writeValue(file, Orders(accountInfo, emptyMap()))
+        fun writeEmptyOrders() {
+            mapper.writeValue(ordersFile, Orders(accountInfo, emptyMap()))
         }
 
-        fun writeOrdersWithMagic(magicTrade1: Int?, magicTrade2: Int?, ordersFile: File) {
+        fun writeOrdersWithMagic(magicTrade1: Int?, magicTrade2: Int?) {
             val openTradeOrder = Orders(
                 accountInfo,
                 mapOf(

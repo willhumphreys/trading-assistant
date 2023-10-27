@@ -20,7 +20,6 @@ import uk.co.threebugs.darwinexclient.helpers.RestCallHelper.Companion.stopProce
 import uk.co.threebugs.darwinexclient.helpers.TimeHelper.Companion.getTime
 import uk.co.threebugs.darwinexclient.helpers.TimeHelper.Companion.setTimeToNextMonday
 import uk.co.threebugs.darwinexclient.utils.logger
-import java.io.File
 import java.nio.file.Path
 import java.time.ZonedDateTime
 
@@ -29,22 +28,18 @@ class TradeServiceTest : FunSpec() {
 
     private val accountName = "test"
 
-    private val ordersFile = File("test-ea-files/DWX/DWX_Orders.json")
-    private val ordersStoredFile = File("test-ea-files/DWX/DWX_Orders_Stored.json")
-    private val marketDataPath = Path.of("test-ea-files/DWX/DWX_Market_Data.json")
-
     override suspend fun beforeEach(testCase: TestCase) {
         deleteFilesBeforeTest(Path.of("test-ea-files/DWX"), "DWX_Commands_", ".txt")
         //    deleteFilesBeforeTest(Path.of("test-ea-files/DWX"), "DWX_Orders", ".json")
 
-        writeEmptyOrders(ordersFile)
+        writeEmptyOrders()
 
         //mapper.writeValue(ordersStoredFile, emptyOrders)
 
         deleteTradesFromTestAccount(accountName)
         //deleteSetupsFromTestAccount(client, accountName)
 
-        deleteMarketDataFile(marketDataPath)
+        deleteMarketDataFile()
 
         getTrades(accountName).shouldBeEmpty()
 
@@ -60,7 +55,7 @@ class TradeServiceTest : FunSpec() {
 
     override suspend fun afterEach(testCase: TestCase, result: TestResult) {
 
-        writeEmptyOrders(ordersFile)
+        writeEmptyOrders()
         // mapper.writeValue(ordersStoredFile, emptyOrders)
 
         delay(5000L)
@@ -77,7 +72,7 @@ class TradeServiceTest : FunSpec() {
         test("place 2 eurusd long trades") {
             runBlocking {
 
-                writeMarketData(marketDataPath, "EURUSD")
+                writeMarketData("EURUSD")
 
                 runBlocking {
                     var elapsedTime = 0L
@@ -116,7 +111,7 @@ class TradeServiceTest : FunSpec() {
                 val foundTrades = getTrades(accountName)
                 val (magicTrade1, magicTrade2) = foundTrades.take(2).map { it.id }
 
-                writeMarketData(marketDataPath, "EURUSD")
+                writeMarketData("EURUSD")
 
                 runBlocking {
 
@@ -132,7 +127,7 @@ class TradeServiceTest : FunSpec() {
                 }
 
 
-                writeMarketData(marketDataPath, "EURUSD")
+                writeMarketData("EURUSD")
 
 
                 runBlocking {
@@ -154,7 +149,7 @@ class TradeServiceTest : FunSpec() {
                         sendTrades.any { it.id == magicTrade1 } shouldBe true
                         sendTrades.any { it.id == magicTrade2 } shouldBe true
 
-                        writeMarketData(marketDataPath, "EURUSD")
+                        writeMarketData("EURUSD")
 
                         if (allTradesHaveStatusSent)
                             break
@@ -169,7 +164,7 @@ class TradeServiceTest : FunSpec() {
                     }
                 }
 
-                writeOrdersWithMagic(magicTrade1, magicTrade2, ordersFile)
+                writeOrdersWithMagic(magicTrade1, magicTrade2)
 
                 runBlocking {
                     var elapsedTime = 0L
@@ -187,7 +182,7 @@ class TradeServiceTest : FunSpec() {
                             it.status == Status.PLACED_IN_MT
                         }
 
-                        writeMarketData(marketDataPath, "EURUSD")
+                        writeMarketData("EURUSD")
 
                         if (allTradesHaveStatusPlacedInMT)
                             break
@@ -202,7 +197,7 @@ class TradeServiceTest : FunSpec() {
                     }
                 }
 
-                writeMarketData(marketDataPath, "EURUSD")
+                writeMarketData("EURUSD")
             }
         }
     }
