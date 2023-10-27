@@ -144,7 +144,7 @@ class TradeServiceTest : FunSpec() {
                 false  // Continues the waiting loop
             }
 
-            writeOrdersWithMagic(magicTrade1, magicTrade2)
+            writeOrdersWithMagic(magicTrade1, magicTrade2, "EURUSD")
 
             waitForCondition(
                 timeout = SECONDS_30,

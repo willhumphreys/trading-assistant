@@ -64,18 +64,19 @@ class MetaTraderFileHelper {
             logger.info("Wrote marketData file: $marketDataPath")
         }
 
+        private const val BASE_VALUE = "1.05"
+
+        private fun generateLastThreeDigits(): String {
+            return Random.nextInt(100, 999).toString()
+        }
 
         private fun generateCurrentInfo(): CurrencyInfo {
-            val baseValue = "1.05"
 
-            fun generateLastThreeDigits(): String {
-                return Random.nextInt(100, 999).toString()
-            }
 
-            val ask = BigDecimal("$baseValue${generateLastThreeDigits()}")
-            val bid = BigDecimal("$baseValue${generateLastThreeDigits()}")
-            val last = BigDecimal("$baseValue${generateLastThreeDigits()}")
-            val tickValue = BigDecimal("$baseValue${generateLastThreeDigits()}")
+            val ask = BigDecimal("$BASE_VALUE${generateLastThreeDigits()}")
+            val bid = BigDecimal("$BASE_VALUE${generateLastThreeDigits()}")
+            val last = BigDecimal("$BASE_VALUE${generateLastThreeDigits()}")
+            val tickValue = BigDecimal("$BASE_VALUE${generateLastThreeDigits()}")
 
             return CurrencyInfo(
                 ask = ask,
@@ -97,31 +98,32 @@ class MetaTraderFileHelper {
             mapper.writeValue(ordersFile, Orders(accountInfo, emptyMap()))
         }
 
-        fun writeOrdersWithMagic(magicTrade1: Int?, magicTrade2: Int?) {
+        fun writeOrdersWithMagic(magicTrade1: Int?, magicTrade2: Int?, symbol: String) {
+
             val openTradeOrder = Orders(
                 accountInfo,
                 mapOf(
                     1 to TradeInfo(
                         magic = magicTrade1!!,
-                        lots = BigDecimal("0.01"),
-                        symbol = "EURUSD",
+                        lots = BigDecimal("$BASE_VALUE${generateLastThreeDigits()}"),
+                        symbol = symbol,
                         swap = null,
                         openTime = LocalDateTime.parse("2023-10-30T09:00"),
-                        openPrice = BigDecimal("3.0"),
-                        stopLoss = BigDecimal("2.0"),
-                        takeProfit = BigDecimal("4.0"),
+                        openPrice = BigDecimal("$BASE_VALUE${generateLastThreeDigits()}"),
+                        stopLoss = BigDecimal("$BASE_VALUE${generateLastThreeDigits()}"),
+                        takeProfit = BigDecimal("$BASE_VALUE${generateLastThreeDigits()}"),
                         type = "buylimit",
                         comment = "test",
                     ),
                     2 to TradeInfo(
                         magic = magicTrade2!!,
-                        lots = BigDecimal("0.01"),
-                        symbol = "EURUSD",
+                        lots = BigDecimal("$BASE_VALUE${generateLastThreeDigits()}"),
+                        symbol = symbol,
                         swap = null,
                         openTime = LocalDateTime.parse("2023-10-30T09:00"),
-                        openPrice = BigDecimal("3.0"),
-                        stopLoss = BigDecimal("2.0"),
-                        takeProfit = BigDecimal("4.0"),
+                        openPrice = BigDecimal("$BASE_VALUE${generateLastThreeDigits()}"),
+                        stopLoss = BigDecimal("$BASE_VALUE${generateLastThreeDigits()}"),
+                        takeProfit = BigDecimal("$BASE_VALUE${generateLastThreeDigits()}"),
                         type = "buylimit",
                         comment = "test",
                     )
