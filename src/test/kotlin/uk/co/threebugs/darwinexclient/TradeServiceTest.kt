@@ -5,7 +5,6 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 import uk.co.threebugs.darwinexclient.Status
 import uk.co.threebugs.darwinexclient.helpers.MetaTraderFileHelper.Companion.deleteFilesBeforeTest
 import uk.co.threebugs.darwinexclient.helpers.MetaTraderFileHelper.Companion.deleteMarketDataFile
@@ -97,16 +96,23 @@ class TradeServiceTest : FunSpec() {
 
             writeMarketData(EURUSD)
 
-            runBlocking {
 
-                do {
-                    logger.info("Waiting for EA to write file...")
-                    val time = getTime()
-                    logger.info("Client time $time")
-                    delay(SECONDS_5)
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for the time to be 09:00..."
+            ) {
 
-                } while (time.isBefore(ZonedDateTime.parse("2023-10-30T09:00Z[UTC]").toLocalDateTime()))
+                logger.info("Waiting for EA to write file...")
+                val time = getTime()
+                logger.info("Client time $time")
+
+                if (!time.isBefore(ZonedDateTime.parse("2023-10-30T09:00Z[UTC]").toLocalDateTime()))
+                    return@waitForCondition true  // Breaks out of the waiting loop
+
+                false  // Continues the waiting loop
             }
+
             writeMarketData(EURUSD)
 
 
