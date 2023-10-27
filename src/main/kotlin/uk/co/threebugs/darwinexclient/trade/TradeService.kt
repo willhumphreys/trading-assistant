@@ -188,15 +188,23 @@ class TradeService(
     }
 
     private fun closeTrade(tradeInfo: TradeInfo, trade: Trade) {
+
+        val closingStatus = if (tradeInfo.type.equals("buy") || tradeInfo.type.equals("sell")) {
+            Status.CLOSED_BY_USER
+        } else if (tradeInfo.type.equals("buylimit") || tradeInfo.type.equals("selllimit")) {
+            Status.OUT_OF_TIME
+        } else {
+            Status.CLOSED_BY_USER
+        }
+
         trade.apply {
-            status = Status.CLOSED_BY_USER
+            status = closingStatus
             closedPrice = tradeInfo.takeProfit
             closedDateTime = ZonedDateTime.now()
             profit = tradeInfo.profitAndLoss
         }.also { tradeRepository.save(it) }
 
         slackClient.sendSlackNotification("Order closed: ${trade.setup!!.rank} ${trade.setup!!.symbol} ${trade.setup!!.direction} ${trade.profit}")
-
     }
 
     fun deleteTradesByAccountName(name: String): Int {

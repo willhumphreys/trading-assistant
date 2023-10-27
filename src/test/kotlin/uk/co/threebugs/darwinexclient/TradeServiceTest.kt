@@ -63,7 +63,7 @@ class TradeServiceTest : FunSpec() {
 
     init {
 
-        test("place 2 eurusd long trades") {
+        test("place 2 eurusd long trades and close by user") {
 
             writeMarketData(EURUSD)
 
@@ -235,6 +235,147 @@ class TradeServiceTest : FunSpec() {
             }
 
         }
+
+        test("place 2 eurusd long trades and out of time close") {
+
+            writeMarketData(EURUSD)
+
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for trades with status PENDING to be written to the db..."
+            ) {
+                logger.info("Client time ${getTime()}")
+                val foundTrades = getTrades(accountName)
+
+                if (foundTrades.isNotEmpty()) {
+
+                    foundTrades.forEach {
+                        logger.info("Found trade: $it")
+                        it.status shouldBe Status.PENDING
+                        it.setup shouldNotBe null
+                        it.setup?.symbol shouldBe EURUSD
+                        it.setup shouldNotBe null
+                        it.setup?.isLong() shouldBe true
+                        it.targetPlaceDateTime shouldBe ZonedDateTime.parse("2023-10-30T09:00Z[UTC]")
+                    }
+
+                    return@waitForCondition true  // Breaks out of the waiting loop
+                }
+                false  // Continues the waiting loop
+            }
+
+
+            val foundTrades = getTrades(accountName)
+            val (magicTrade1, magicTrade2) = foundTrades.take(2).map { it.id }
+
+            writeMarketData(EURUSD)
+
+
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for the time to be 09:00..."
+            ) {
+
+                logger.info("Waiting for EA to write file...")
+                val time = getTime()
+                logger.info("Client time $time")
+
+                if (!time.isBefore(ZonedDateTime.parse("2023-10-30T09:00Z[UTC]").toLocalDateTime()))
+                    return@waitForCondition true  // Breaks out of the waiting loop
+
+                false  // Continues the waiting loop
+            }
+
+            writeMarketData(EURUSD)
+
+
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for all trades to be OrderSent..."
+            ) {
+
+                logger.info("Client time ${getTime()}")
+                val tradesWithStatusOrderSent = getTrades(accountName)
+
+                tradesWithStatusOrderSent.size shouldBe 2
+
+                val allTradesHaveStatusSent = tradesWithStatusOrderSent.all {
+                    logger.info("Found trade status: ${it.status}")
+                    it.status == Status.ORDER_SENT
+                }
+
+                tradesWithStatusOrderSent.any { it.id == magicTrade1 } shouldBe true
+                tradesWithStatusOrderSent.any { it.id == magicTrade2 } shouldBe true
+
+                writeMarketData(EURUSD)
+
+                if (allTradesHaveStatusSent) {
+                    return@waitForCondition true  // Breaks out of the waiting loop
+                }
+
+                false  // Continues the waiting loop
+            }
+
+            writeOrdersWithMagic(magicTrade1, magicTrade2, "EURUSD")
+
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for all trades to be placed in MT..."
+            ) {
+
+                logger.info("Client time ${getTime()}")
+                val trades = getTrades(accountName)
+
+                trades.size shouldBe 2
+
+                val tradesHaveCorrectStatus = trades.all {
+                    logger.info("Found trade status: ${it.status}")
+                    it.status == Status.PLACED_IN_MT
+                }
+
+                writeMarketData(EURUSD)
+
+                if (tradesHaveCorrectStatus)
+                    return@waitForCondition true  // Breaks out of the waiting loop
+
+                false  // Continues the waiting loop
+            }
+
+            writeMarketData(EURUSD)
+
+
+            writeEmptyOrders()
+
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for all trades to have status out of time"
+            ) {
+
+                logger.info("Client time ${getTime()}")
+                val trades = getTrades(accountName)
+
+                trades.size shouldBe 2
+
+                val tradesHaveCorrectStatus = trades.all {
+                    logger.info("Found trade status: ${it.status}")
+                    it.status == Status.OUT_OF_TIME
+                }
+
+                writeMarketData(EURUSD)
+
+                if (tradesHaveCorrectStatus)
+                    return@waitForCondition true  // Breaks out of the waiting loop
+
+                false  // Continues the waiting loop
+            }
+
+        }
+
 
     }
 
