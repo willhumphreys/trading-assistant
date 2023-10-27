@@ -1,7 +1,5 @@
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import io.kotest.assertions.fail
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.core.test.TestCase
@@ -11,25 +9,23 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
+import uk.co.threebugs.darwinexclient.MetaTraderFileHelper.Companion.deleteFilesBeforeTest
+import uk.co.threebugs.darwinexclient.MetaTraderFileHelper.Companion.deleteMarketDataFile
+import uk.co.threebugs.darwinexclient.MetaTraderFileHelper.Companion.writeEmptyOrders
+import uk.co.threebugs.darwinexclient.MetaTraderFileHelper.Companion.writeMarketData
+import uk.co.threebugs.darwinexclient.MetaTraderFileHelper.Companion.writeOrdersWithMagic
+import uk.co.threebugs.darwinexclient.RestCallHelper.Companion.deleteTradesFromTestAccount
+import uk.co.threebugs.darwinexclient.RestCallHelper.Companion.getTrades
+import uk.co.threebugs.darwinexclient.RestCallHelper.Companion.startProcessing
+import uk.co.threebugs.darwinexclient.RestCallHelper.Companion.stopProcessing
 import uk.co.threebugs.darwinexclient.Status
-import uk.co.threebugs.darwinexclient.clock.TimeChangeRequest
-import uk.co.threebugs.darwinexclient.clock.TimeDto
-import uk.co.threebugs.darwinexclient.metatrader.AccountInfo
-import uk.co.threebugs.darwinexclient.metatrader.CurrencyInfo
-import uk.co.threebugs.darwinexclient.metatrader.Orders
-import uk.co.threebugs.darwinexclient.metatrader.TradeInfo
-import uk.co.threebugs.darwinexclient.trade.TradeDto
+import uk.co.threebugs.darwinexclient.TimeHelper.Companion.getTime
+import uk.co.threebugs.darwinexclient.TimeHelper.Companion.setTime
 import uk.co.threebugs.darwinexclient.utils.logger
 import java.io.File
-import java.math.BigDecimal
-import java.nio.file.*
-import java.nio.file.attribute.BasicFileAttributes
-import java.time.*
-import java.time.temporal.TemporalAdjusters
+import java.nio.file.Path
+import java.time.ZonedDateTime
 
 
 class TradeServiceTest : FunSpec() {
@@ -38,27 +34,15 @@ class TradeServiceTest : FunSpec() {
     private val mapper = jacksonObjectMapper().registerModule(JavaTimeModule())
     private val accountName = "test"
 
-    private val accountInfo = AccountInfo(
-        number = 123456,
-        leverage = 100,
-        balance = BigDecimal(1000.0),
-        freeMargin = BigDecimal(1000.0),
-        name = "test",
-        currency = "USD",
-        equity = BigDecimal(1000.0)
-    )
-
     private val ordersFile = File("test-ea-files/DWX/DWX_Orders.json")
     private val ordersStoredFile = File("test-ea-files/DWX/DWX_Orders_Stored.json")
     private val marketDataPath = Path.of("test-ea-files/DWX/DWX_Market_Data.json")
-
-    private val emptyOrders = Orders(accountInfo, emptyMap())
 
     override suspend fun beforeEach(testCase: TestCase) {
         deleteFilesBeforeTest(Path.of("test-ea-files/DWX"), "DWX_Commands_", ".txt")
         //    deleteFilesBeforeTest(Path.of("test-ea-files/DWX"), "DWX_Orders", ".json")
 
-        mapper.writeValue(ordersFile, emptyOrders)
+        writeEmptyOrders(ordersFile, mapper)
 
         //mapper.writeValue(ordersStoredFile, emptyOrders)
 
@@ -67,7 +51,7 @@ class TradeServiceTest : FunSpec() {
 
         deleteMarketDataFile(marketDataPath)
 
-        checkTradesIsEmpty(accountName, client, mapper)
+        getTrades(accountName, client, mapper).shouldBeEmpty()
 
         setTime(mapper, client)
 
@@ -81,7 +65,7 @@ class TradeServiceTest : FunSpec() {
 
     override suspend fun afterEach(testCase: TestCase, result: TestResult) {
 
-        mapper.writeValue(ordersFile, emptyOrders)
+        writeEmptyOrders(ordersFile, mapper)
         // mapper.writeValue(ordersStoredFile, emptyOrders)
 
         delay(5000L)
@@ -98,14 +82,7 @@ class TradeServiceTest : FunSpec() {
         test("place 2 eurusd long trades") {
             runBlocking {
 
-                writeMarketDataFile(
-                    mapper, marketDataPath, "EURUSD", CurrencyInfo(
-                        ask = BigDecimal("1.5600"),
-                        bid = BigDecimal("1.5620"),
-                        last = BigDecimal("1.5600"),
-                        tickValue = BigDecimal("1.5600")
-                    )
-                )
+                writeMarketData(mapper, marketDataPath, "EURUSD")
 
                 runBlocking {
                     var elapsedTime = 0L
@@ -144,10 +121,7 @@ class TradeServiceTest : FunSpec() {
                 val foundTrades = getTrades(accountName, client, mapper)
                 val (magicTrade1, magicTrade2) = foundTrades.take(2).map { it.id }
 
-                writeMarketData()
-
-
-
+                writeMarketData(mapper, marketDataPath, "EURUSD")
 
                 runBlocking {
 
@@ -163,7 +137,7 @@ class TradeServiceTest : FunSpec() {
                 }
 
 
-                writeMarketData()
+                writeMarketData(mapper, marketDataPath, "EURUSD")
 
 
                 runBlocking {
@@ -185,7 +159,7 @@ class TradeServiceTest : FunSpec() {
                         sendTrades.any { it.id == magicTrade1 } shouldBe true
                         sendTrades.any { it.id == magicTrade2 } shouldBe true
 
-                        writeMarketData()
+                        writeMarketData(mapper, marketDataPath, "EURUSD")
 
                         if (allTradesHaveStatusSent)
                             break
@@ -200,39 +174,7 @@ class TradeServiceTest : FunSpec() {
                     }
                 }
 
-
-                val openTradeOrder = Orders(
-                    accountInfo,
-                    mapOf(
-                        1 to TradeInfo(
-                            magic = magicTrade1!!,
-                            lots = BigDecimal("0.01"),
-                            symbol = "EURUSD",
-                            swap = null,
-                            openTime = LocalDateTime.parse("2023-10-30T09:00"),
-                            openPrice = BigDecimal("3.0"),
-                            stopLoss = BigDecimal("2.0"),
-                            takeProfit = BigDecimal("4.0"),
-                            type = "buylimit",
-                            comment = "test",
-                        ),
-                        2 to TradeInfo(
-                            magic = magicTrade2!!,
-                            lots = BigDecimal("0.01"),
-                            symbol = "EURUSD",
-                            swap = null,
-                            openTime = LocalDateTime.parse("2023-10-30T09:00"),
-                            openPrice = BigDecimal("3.0"),
-                            stopLoss = BigDecimal("2.0"),
-                            takeProfit = BigDecimal("4.0"),
-                            type = "buylimit",
-                            comment = "test",
-                        )
-
-                    )
-                )
-
-                mapper.writeValue(ordersFile, openTradeOrder)
+                writeOrdersWithMagic(magicTrade1, magicTrade2, mapper, ordersFile)
 
                 runBlocking {
                     var elapsedTime = 0L
@@ -250,7 +192,7 @@ class TradeServiceTest : FunSpec() {
                             it.status == Status.PLACED_IN_MT
                         }
 
-                        writeMarketData()
+                        writeMarketData(mapper, marketDataPath, "EURUSD")
 
                         if (allTradesHaveStatusPlacedInMT)
                             break
@@ -265,220 +207,8 @@ class TradeServiceTest : FunSpec() {
                     }
                 }
 
-                writeMarketDataFile(
-                    mapper, marketDataPath, "EURUSD", CurrencyInfo(
-                        ask = BigDecimal("4.0"),
-                        bid = BigDecimal("4.0"),
-                        last = BigDecimal("4.0"),
-                        tickValue = BigDecimal("4.0")
-                    )
-                )
+                writeMarketData(mapper, marketDataPath, "EURUSD")
             }
-
-//            val result = tradeService.findAll()
-//
-//            result shouldNotBe null
         }
     }
-
-    private fun writeMarketData() {
-        writeMarketDataFile(
-            mapper, marketDataPath, "EURUSD", CurrencyInfo(
-                ask = BigDecimal("3.0"),
-                bid = BigDecimal("3.0"),
-                last = BigDecimal("3.0"),
-                tickValue = BigDecimal("2.0")
-            )
-        )
-    }
-
-    private fun checkTradesIsEmpty(
-        accountName: String,
-        client: OkHttpClient,
-        mapper: ObjectMapper
-    ) {
-        val request = Request.Builder()
-            .url("http://localhost:8081/trades/byAccountName/$accountName")
-            .build()
-
-        val response = client.newCall(request).execute()
-
-        if (response.isSuccessful) {
-            val responseBodyText = response.body?.string() ?: "Empty Response Body"
-
-            val foundTrades = mapper.readValue<List<TradeDto>>(responseBodyText)
-            logger.info("Successfully retrieved trades: $responseBodyText")
-            foundTrades.shouldBeEmpty()
-
-        } else {
-            logger.info("Failed to retrieve trades: ${response.message}")
-            fail("Failed to retrieve trades: ${response.message}")
-        }
-    }
-
-    private fun getTrades(
-        accountName: String,
-        client: OkHttpClient,
-        mapper: ObjectMapper
-    ): List<TradeDto> {
-        val request = Request.Builder()
-            .url("http://localhost:8081/trades/byAccountName/$accountName")
-            .build()
-
-        val response = client.newCall(request).execute()
-
-        if (response.isSuccessful) {
-            val responseBodyText = response.body?.string() ?: "Empty Response Body"
-
-            val foundTrades = mapper.readValue<List<TradeDto>>(responseBodyText)
-            logger.info("Successfully retrieved trades: $responseBodyText")
-
-            return foundTrades
-        }
-        logger.info("Failed to retrieve trades: ${response.message}")
-        fail("Failed to retrieve trades: ${response.message}")
-
-    }
-
-
-    private fun startProcessing(client: OkHttpClient) {
-        val startProcessingRequest = Request.Builder()
-            .url("http://localhost:8081/actions/start")
-            .post("".toRequestBody())
-            .build()
-
-        client.newCall(startProcessingRequest).execute()
-    }
-
-    private fun stopProcessing(client: OkHttpClient) {
-        val startProcessingRequest = Request.Builder()
-            .url("http://localhost:8081/actions/stop")
-            .post("".toRequestBody())
-            .build()
-
-        client.newCall(startProcessingRequest).execute()
-    }
-
-
-    private fun writeMarketDataFile(mapper: ObjectMapper, path: Path, symbol: String, currencyInfo: CurrencyInfo) {
-        mapper.writeValue(
-            path.toFile(),
-            mapOf(
-                symbol to currencyInfo
-            )
-        )
-        logger.info("Wrote marketData file: ${path}")
-    }
-
-    private fun deleteMarketDataFile(path: Path) {
-        if (Files.exists(path)) {
-            logger.info("Deleting marketData file: ${path}")
-            Files.delete(path)
-        }
-    }
-
-    private fun setTime(mapper: ObjectMapper, client: OkHttpClient) {
-        val json =
-            mapper.writeValueAsString(TimeChangeRequest(duration = getDurationBetweenNowAndNextMonday().toMillis()))
-        val body = json.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
-
-        val setTimeRequest = Request.Builder()
-            .url("http://localhost:8081/time")
-            .put(body)
-            .build()
-
-        val setTimeResponse = client.newCall(setTimeRequest).execute()
-
-        getTime(client, mapper)
-    }
-
-    private fun getTime(client: OkHttpClient, mapper: ObjectMapper): LocalDateTime {
-        val getTimeRequest = Request.Builder()
-            .url("http://localhost:8081/time")
-            .build()
-
-
-        val getTimeResponse = client.newCall(getTimeRequest).execute()
-
-        val responseBodyText = getTimeResponse.body?.string() ?: "Empty Response Body"
-
-        val timeDto: TimeDto = mapper.readValue(responseBodyText)
-
-        val instant = Instant.ofEpochMilli(timeDto.time)
-        val localDateTime = LocalDateTime.ofInstant(instant, ZoneOffset.UTC)
-
-        logger.info("Time set to: ${localDateTime}")
-        return localDateTime
-    }
-
-    private fun deleteTradesFromTestAccount(client: OkHttpClient, accountName: String) {
-
-        val request = Request.Builder()
-            .url("http://localhost:8081/trades/byAccountName/$accountName")
-            .delete()
-            .build()
-
-        val response = client.newCall(request).execute()
-
-        if (response.isSuccessful) {
-            val responseBodyText = response.body?.string() ?: "Empty Response Body"
-            val rowsDeleted = responseBodyText.toIntOrNull() ?: "Failed to parse response body to Int"
-            logger.info("Successfully deleted $rowsDeleted trades for account: $accountName")
-        } else {
-            logger.info("Failed to delete trades: ${response.message}")
-            fail("Failed to delete trades: ${response.message}")
-        }
-    }
-
-    private fun deleteSetupsFromTestAccount(client: OkHttpClient, accountName: String) {
-
-        val request = Request.Builder()
-            .url("http://localhost:8081/setups/byAccountName/$accountName")
-            .delete()
-            .build()
-
-        val response = client.newCall(request).execute()
-
-        if (response.isSuccessful) {
-            val responseBodyText = response.body?.string() ?: "Empty Response Body"
-            val rowsDeleted = responseBodyText.toIntOrNull() ?: "Failed to parse response body to Int"
-            logger.info("Successfully deleted $rowsDeleted setups for account: $accountName")
-        } else {
-            logger.info("Failed to delete setups: ${response.message}")
-            fail("Failed to delete setups: ${response.message}")
-        }
-    }
-
-    private fun getDurationBetweenNowAndNextMonday(): Duration {
-
-        val today = LocalDate.now(ZoneOffset.UTC)
-        val nextMonday = today.with(TemporalAdjusters.next(DayOfWeek.MONDAY))
-        val nextMondayAt859 = ZonedDateTime.of(nextMonday.atTime(8, 59, 50), ZoneOffset.UTC)
-        val now = ZonedDateTime.now(ZoneOffset.UTC)
-        return Duration.between(now, nextMondayAt859)
-        //return Clock.offset(Clock.system(ZoneOffset.UTC), durationUntilNextMondayAt859)
-
-    }
-
-    private fun deleteFilesBeforeTest(path: Path, prefix: String, suffix: String) {
-        Files.walkFileTree(
-            path,
-            setOf(FileVisitOption.FOLLOW_LINKS),
-            Integer.MAX_VALUE,
-            object : SimpleFileVisitor<Path>() {
-                override fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
-                    val fileName = file.fileName.toString()
-                    if (fileName.startsWith(prefix) && fileName.endsWith(suffix)) {
-                        logger.info("Deleting file: $fileName")
-                        Files.delete(file)
-                    }
-                    return FileVisitResult.CONTINUE
-                }
-
-                override fun preVisitDirectory(dir: Path, attrs: BasicFileAttributes): FileVisitResult {
-                    return FileVisitResult.CONTINUE
-                }
-            })
-    }
-
 }
