@@ -11,7 +11,7 @@ import uk.co.threebugs.darwinexclient.utils.logger
 import uk.co.threebugs.darwinexclient.websocket.WebSocketController
 import uk.co.threebugs.darwinexclient.websocket.WebSocketMessage
 import java.math.BigDecimal
-import java.time.ZoneOffset
+import java.time.Clock
 import java.time.ZonedDateTime
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -24,6 +24,7 @@ class TradeEventHandler(
     private val tradeService: TradeService,
     private val slackClient: SlackClient,
     private val accountMapper: AccountMapper,
+    private val clock: Clock
 
 ) {
     private val executed = AtomicBoolean(false)
@@ -150,7 +151,7 @@ class TradeEventHandler(
             tradeService.findById(currentValue.magic)?.let { trade ->
                 trade.apply {
                     status = Status.FILLED
-                    filledDateTime = ZonedDateTime.now(ZoneOffset.UTC)
+                    filledDateTime = ZonedDateTime.now(clock)
                 }.also { tradeService.save(it) }
             }
         }

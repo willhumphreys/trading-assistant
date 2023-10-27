@@ -26,7 +26,7 @@
   },
   {
     "name": "test",
-    "setup-group-name": "long",
+    "setup-group-name": "long-test",
     "metatrader-account": "test"
   }
 ]

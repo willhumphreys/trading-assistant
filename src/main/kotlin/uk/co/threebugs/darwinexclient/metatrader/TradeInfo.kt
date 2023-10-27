@@ -6,7 +6,7 @@ import java.math.BigDecimal
 import java.time.LocalDateTime
 
 
-data class TradeInfo (
+data class TradeInfo(
     var magic: Int,
     var lots: BigDecimal? = null,
     var symbol: String? = null,

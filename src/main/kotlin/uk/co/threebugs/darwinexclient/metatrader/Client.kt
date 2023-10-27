@@ -3,6 +3,7 @@ package uk.co.threebugs.darwinexclient.metatrader
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -13,6 +14,7 @@ import uk.co.threebugs.darwinexclient.MetaTraderDir
 import uk.co.threebugs.darwinexclient.account.AccountDto
 import uk.co.threebugs.darwinexclient.account.AccountService
 import uk.co.threebugs.darwinexclient.accountsetupgroups.AccountSetupGroupsService
+import uk.co.threebugs.darwinexclient.actions.ActionsService
 import uk.co.threebugs.darwinexclient.setup.Setup
 import uk.co.threebugs.darwinexclient.setup.SetupFileRepository
 import uk.co.threebugs.darwinexclient.setup.SetupRepository
@@ -42,6 +44,7 @@ class Client(
     private val accountSetupGroupsService: AccountSetupGroupsService,
     private val objectMapper: ObjectMapper,
     private val webSocketController: WebSocketController,
+    private val actionsService: ActionsService,
 ) {
     var openOrders: Orders = Orders(
         accountInfo = AccountInfo(
@@ -54,11 +57,9 @@ class Client(
             equity = BigDecimal.ZERO
         ), orders = mapOf()
     )
-    var marketData: Map<String, CurrencyInfo> = java.util.Map.of()
     var barData = JSONObject()
     var historicData = JSONObject()
     var historicTrades = JSONObject()
-    var ACTIVE = true
     private final val dwxPath: Path
     private final val pathMap: Map<String, Path>
     private var commandID = 0
@@ -80,7 +81,6 @@ class Client(
     private var lastHistoricTradesStr: String? = ""
     private var lastBarData = JSONObject()
     private var lastMarketData: Map<String, CurrencyInfo> = java.util.Map.of()
-    private var START = false
     private final val account: AccountDto
 
     init {
@@ -129,11 +129,9 @@ class Client(
         loadMessages()
 
         thread(name = "openOrdersThread") {
-            try {
-                checkOpenOrders()
-            } catch (e: JsonProcessingException) {
-                throw RuntimeException(e)
-            }
+
+            checkOpenOrders()
+
         }
         thread(name = "checkMessage") { checkMessages() }
         thread(name = "checkMarketData") { checkMarketData() }
@@ -146,7 +144,8 @@ class Client(
 
         // subscribe to tick data:
         subscribeSymbols(symbols)
-        START = true
+
+        actionsService.startUpComplete()
 
 
     }
@@ -205,56 +204,69 @@ class Client(
     */
     @Throws(JsonProcessingException::class)
     private fun checkOpenOrders() {
-        while (ACTIVE) {
+        while (true) {
             Helpers.sleep(sleepDelay)
-            if (!START) continue
+            if (!actionsService.isRunning())
+                continue
 
             val ordersPath =
                 pathMap["pathOrders"] ?: throw NoSuchElementException("Key 'pathOrders' not found")
 
 
-            val data: Orders = objectMapper.readValue(ordersPath.toFile())
-
-            if (data.orders.isEmpty()) continue
-
-            openOrders = data
-
-            // Get the keys (order IDs) from both maps
-            val openOrderIds = openOrders.orders.keys
-            val lastOpenOrderIds = lastOpenOrders.orders.keys
-
-            // Find IDs that are in openOrderIds but not in lastOpenOrderIds
-            val newOrders = openOrderIds - lastOpenOrderIds
-
-            // Find IDs that are in lastOpenOrderIds but not in openOrderIds
-            val closedOrders = lastOpenOrderIds - openOrderIds
-
-            closedOrders.forEach {
-                logger.info("Order removed: $it")
-                lastOpenOrders.orders[it]?.let { it1 -> eventHandler.onClosedOrder(it1) }
+            if (!ordersPath.toFile().exists()) {
+                logger.warn("Orders file does not exist: $ordersPath")
+                continue
             }
 
-            newOrders.forEach {
-                logger.info("Order added: $it")
-                openOrders.orders[it]?.let { it1 -> eventHandler.onNewOrder(it1, it) }
-            }
+            try {
+                val data: Orders = objectMapper.readValue(ordersPath.toFile())
 
-            for ((key, currentOrder) in openOrders.orders) {
+                //   if (data.orders.isEmpty()) continue
 
-                // Check if the key exists in previousDataOrders
-                if (lastOpenOrders.orders.containsKey(key)) {
-                    val previousOrder = lastOpenOrders.orders[key]
+                openOrders = data
 
-                    // Compare the TradeInfo objects
-                    compareTradeInfo(key, currentOrder, previousOrder!!)
-                } else {
-                    // Log new orders that didn't exist in previousDataOrders
-                    logger.info("New order: $key, Value: $currentOrder")
+                // Get the keys (order IDs) from both maps
+                val openOrderIds = openOrders.orders.keys
+                val lastOpenOrderIds = lastOpenOrders.orders.keys
+
+                // Find IDs that are in openOrderIds but not in lastOpenOrderIds
+                val newOrders = openOrderIds - lastOpenOrderIds
+
+                // Find IDs that are in lastOpenOrderIds but not in openOrderIds
+                val closedOrders = lastOpenOrderIds - openOrderIds
+
+                closedOrders.forEach {
+                    logger.info("Order removed: $it")
+                    lastOpenOrders.orders[it]?.let { it1 -> eventHandler.onClosedOrder(it1) }
                 }
-            }
 
-            lastOpenOrders = data
-            Helpers.tryWriteToFile(pathMap["pathOrdersStored"], objectMapper.writeValueAsString(data))
+                newOrders.forEach {
+                    logger.info("Order added: $it")
+                    openOrders.orders[it]?.let { it1 -> eventHandler.onNewOrder(it1, it) }
+                }
+
+                for ((key, currentOrder) in openOrders.orders) {
+
+                    // Check if the key exists in previousDataOrders
+                    if (lastOpenOrders.orders.containsKey(key)) {
+                        val previousOrder = lastOpenOrders.orders[key]
+
+                        // Compare the TradeInfo objects
+                        compareTradeInfo(key, currentOrder, previousOrder!!)
+                    } else {
+                        // Log new orders that didn't exist in previousDataOrders
+                        logger.info("New order: $key, Value: $currentOrder")
+                    }
+                }
+
+                lastOpenOrders = data
+                Helpers.tryWriteToFile(pathMap["pathOrdersStored"], objectMapper.writeValueAsString(data))
+            } catch (e: JsonProcessingException) {
+                logger.error("JsonProcessingException checking open orders", e)
+
+            } catch (e1: MismatchedInputException) {
+                logger.error("MismatchedInputException checking open orders", e1)
+            }
         }
     }
 
@@ -391,9 +403,12 @@ class Client(
     the eventHandler.onMessage() function.
     */
     private fun checkMessages() {
-        while (ACTIVE) {
+        while (true) {
             Helpers.sleep(sleepDelay)
-            if (!START) continue
+            if (!actionsService.isRunning())
+                continue
+
+
             val messagesPath =
                 pathMap["pathMessages"] ?: throw NoSuchElementException("Key 'pathMessages' not found")
             val text = Helpers.tryReadFile(messagesPath)
@@ -430,26 +445,31 @@ class Client(
     the eventHandler.onTick() function.
     */
     private fun checkMarketData() {
-        while (ACTIVE) {
+        while (true) {
             Helpers.sleep(sleepDelay)
-            if (!START) continue
+            if (!actionsService.isRunning())
+                continue
+
             val marketDataPath =
                 pathMap["pathMarketData"] ?: throw NoSuchElementException("Key 'pathMarketData' not found")
 
+            if (!Files.exists(marketDataPath)) {
+                logger.warn("Market data file does not exist: $marketDataPath")
+                continue
+            }
 
             val data: Map<String, CurrencyInfo> = runCatching {
                 objectMapper.readValue(
                     marketDataPath.toFile(),
                     object : TypeReference<Map<String, CurrencyInfo>>() {})
             }.getOrElse { throwable ->
-                logger.error("An error occurred while reading the file: $throwable")
+                logger.error("An error occurred while reading the marketData file. Returning an emptyMap: $throwable")
                 emptyMap()
             }
 
             if (data.isEmpty()) continue
-            marketData = data
 
-            marketData.forEach { (symbol, newCurrencyInfo) ->
+            data.forEach { (symbol, newCurrencyInfo) ->
                 val lastCurrencyInfo = lastMarketData[symbol]
 
                 if (lastCurrencyInfo == null || newCurrencyInfo != lastCurrencyInfo) {
@@ -466,9 +486,11 @@ class Client(
     the eventHandler.onBarData() function.
     */
     private fun checkBarData() {
-        while (ACTIVE) {
+        while (true) {
             Helpers.sleep(sleepDelay)
-            if (!START) continue
+            if (!actionsService.isRunning())
+                continue
+
             val text = Helpers.tryReadFile(
                 pathMap["pathBarData"] ?: throw NoSuchElementException("Key 'pathBarData' not found")
             )
@@ -510,9 +532,11 @@ class Client(
     the eventHandler.onHistoricData() function.
     */
     private fun checkHistoricData() {
-        while (ACTIVE) {
+        while (true) {
             Helpers.sleep(sleepDelay)
-            if (!START) continue
+            if (!actionsService.isRunning()) {
+                continue
+            }
             val historicDataPath =
                 pathMap["pathHistoricData"] ?: throw NoSuchElementException("Key 'pathHistoricData' not found")
             val text = Helpers.tryReadFile(historicDataPath)

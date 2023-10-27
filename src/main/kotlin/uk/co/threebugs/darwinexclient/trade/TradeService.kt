@@ -9,6 +9,7 @@ import uk.co.threebugs.darwinexclient.Status
 import uk.co.threebugs.darwinexclient.account.Account
 import uk.co.threebugs.darwinexclient.accountsetupgroups.AccountSetupGroups
 import uk.co.threebugs.darwinexclient.accountsetupgroups.AccountSetupGroupsRepository
+import uk.co.threebugs.darwinexclient.clock.MutableClock
 import uk.co.threebugs.darwinexclient.metatrader.Client
 import uk.co.threebugs.darwinexclient.metatrader.Order
 import uk.co.threebugs.darwinexclient.metatrader.TradeInfo
@@ -30,7 +31,8 @@ class TradeService(
     private val accountSetupGroupsRepository: AccountSetupGroupsRepository,
     private val tradeMapper: TradeMapper,
     private val timeHelper: TimeHelper,
-    private val slackClient: SlackClient
+    private val slackClient: SlackClient,
+    private val clock: MutableClock
 ) {
     fun findById(id: Int): TradeDto? {
         return tradeRepository.findByIdOrNull(id)?.let { tradeMapper.toDto(it) }
@@ -48,6 +50,10 @@ class TradeService(
 
     fun deleteById(id: Int) {
         tradeRepository.deleteById(id)
+    }
+
+    fun deleteTradesBySetupGroupName(name: String): Int {
+        return tradeRepository.deleteBySetupGroupName(name)
     }
 
     fun findAll(): List<TradeDto> {
@@ -91,7 +97,7 @@ class TradeService(
     fun placeTrades(dwx: Client, symbol: String, bid: BigDecimal, ask: BigDecimal, account: Account) {
         tradeRepository.findByStatusAndSetup_SymbolAndAccount(Status.PENDING, symbol, account)
             .forEach(Consumer { trade: Trade ->
-                val now = ZonedDateTime.now(ZoneOffset.UTC)
+                val now = ZonedDateTime.now(clock)
                 val targetPlaceDateTime = trade.targetPlaceDateTime
                 if (now.isAfter(targetPlaceDateTime)) {
                     tradeRepository.save(placeTrade(dwx, bid, ask, trade))
@@ -191,6 +197,14 @@ class TradeService(
 
         slackClient.sendSlackNotification("Order closed: ${trade.setup!!.rank} ${trade.setup!!.symbol} ${trade.setup!!.direction} ${trade.profit}")
 
+    }
+
+    fun deleteTradesByAccountName(name: String): Int {
+        return tradeRepository.deleteByAccountName(name)
+    }
+
+    fun findByAccountName(name: String): List<TradeDto> {
+        return tradeRepository.findByAccount_Name(name).map { tradeMapper.toDto(it) }
     }
 
     companion object {
