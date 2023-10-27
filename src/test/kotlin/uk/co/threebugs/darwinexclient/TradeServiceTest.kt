@@ -144,14 +144,7 @@ class TradeServiceTest : FunSpec() {
                 val foundTrades = getTrades(accountName, client, mapper)
                 val (magicTrade1, magicTrade2) = foundTrades.take(2).map { it.id }
 
-                writeMarketDataFile(
-                    mapper, marketDataPath, "EURUSD", CurrencyInfo(
-                        ask = BigDecimal("3.0"),
-                        bid = BigDecimal("3.0"),
-                        last = BigDecimal("3.0"),
-                        tickValue = BigDecimal("2.0")
-                    )
-                )
+                writeMarketData()
 
 
 
@@ -170,14 +163,7 @@ class TradeServiceTest : FunSpec() {
                 }
 
 
-                writeMarketDataFile(
-                    mapper, marketDataPath, "EURUSD", CurrencyInfo(
-                        ask = BigDecimal("3.0"),
-                        bid = BigDecimal("3.0"),
-                        last = BigDecimal("3.0"),
-                        tickValue = BigDecimal("2.0")
-                    )
-                )
+                writeMarketData()
 
 
                 runBlocking {
@@ -199,14 +185,7 @@ class TradeServiceTest : FunSpec() {
                         sendTrades.any { it.id == magicTrade1 } shouldBe true
                         sendTrades.any { it.id == magicTrade2 } shouldBe true
 
-                        writeMarketDataFile(
-                            mapper, marketDataPath, "EURUSD", CurrencyInfo(
-                                ask = BigDecimal("3.0").add(BigDecimal(0.00001)),
-                                bid = BigDecimal("3.0").add(BigDecimal(0.00001)),
-                                last = BigDecimal("3.0").add(BigDecimal(0.00001)),
-                                tickValue = BigDecimal("2.0").add(BigDecimal(0.00001))
-                            )
-                        )
+                        writeMarketData()
 
                         if (allTradesHaveStatusSent)
                             break
@@ -271,14 +250,7 @@ class TradeServiceTest : FunSpec() {
                             it.status == Status.PLACED_IN_MT
                         }
 
-                        writeMarketDataFile(
-                            mapper, marketDataPath, "EURUSD", CurrencyInfo(
-                                ask = BigDecimal("3.0").add(BigDecimal("0.00001")),
-                                bid = BigDecimal("3.0").add(BigDecimal("0.00001")),
-                                last = BigDecimal("3.0").add(BigDecimal("0.00001")),
-                                tickValue = BigDecimal("2.0").add(BigDecimal("0.00001"))
-                            )
-                        )
+                        writeMarketData()
 
                         if (allTradesHaveStatusPlacedInMT)
                             break
@@ -307,6 +279,17 @@ class TradeServiceTest : FunSpec() {
 //
 //            result shouldNotBe null
         }
+    }
+
+    private fun writeMarketData() {
+        writeMarketDataFile(
+            mapper, marketDataPath, "EURUSD", CurrencyInfo(
+                ask = BigDecimal("3.0"),
+                bid = BigDecimal("3.0"),
+                last = BigDecimal("3.0"),
+                tickValue = BigDecimal("2.0")
+            )
+        )
     }
 
     private fun checkTradesIsEmpty(
