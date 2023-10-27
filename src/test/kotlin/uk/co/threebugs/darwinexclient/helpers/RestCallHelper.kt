@@ -13,14 +13,14 @@ import uk.co.threebugs.darwinexclient.utils.logger
 class RestCallHelper {
 
     companion object {
-        private const val host = "http://localhost:8081"
+        private const val HOST = "http://localhost:8081"
 
         private val client = OkHttpClient()
         private val mapper = jacksonObjectMapper().registerModule(JavaTimeModule())
 
         fun startProcessing() {
             val startProcessingRequest = Request.Builder()
-                .url("$host/actions/start")
+                .url("$HOST/actions/start")
                 .post("".toRequestBody())
                 .build()
 
@@ -29,7 +29,7 @@ class RestCallHelper {
 
         fun stopProcessing() {
             val startProcessingRequest = Request.Builder()
-                .url("$host/actions/stop")
+                .url("$HOST/actions/stop")
                 .post("".toRequestBody())
                 .build()
 
@@ -39,7 +39,7 @@ class RestCallHelper {
         fun deleteTradesFromTestAccount(accountName: String) {
 
             val request = Request.Builder()
-                .url("$host/trades/byAccountName/$accountName")
+                .url("$HOST/trades/byAccountName/$accountName")
                 .delete()
                 .build()
 
@@ -59,7 +59,7 @@ class RestCallHelper {
             accountName: String
         ): List<TradeDto> {
             val request = Request.Builder()
-                .url("$host/trades/byAccountName/$accountName")
+                .url("$HOST/trades/byAccountName/$accountName")
                 .build()
 
             val response = client.newCall(request).execute()
@@ -76,7 +76,5 @@ class RestCallHelper {
             fail("Failed to retrieve trades: ${response.message}")
 
         }
-
     }
-
 }

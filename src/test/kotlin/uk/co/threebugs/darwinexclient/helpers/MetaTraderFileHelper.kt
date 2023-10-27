@@ -128,11 +128,8 @@ class MetaTraderFileHelper {
 
                 )
             )
-
             mapper.writeValue(ordersFile, openTradeOrder)
         }
-
-
     }
 
 }

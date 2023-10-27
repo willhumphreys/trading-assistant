@@ -16,7 +16,7 @@ import java.time.temporal.TemporalAdjusters
 class TimeHelper {
 
     companion object {
-        private const val host = "http://localhost:8081"
+        private const val HOST = "http://localhost:8081"
         private val client = OkHttpClient()
         private val mapper = jacksonObjectMapper().registerModule(JavaTimeModule())
 
@@ -26,7 +26,7 @@ class TimeHelper {
             val body = json.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
 
             val setTimeRequest = Request.Builder()
-                .url("$host/time")
+                .url("$HOST/time")
                 .put(body)
                 .build()
 
@@ -37,9 +37,8 @@ class TimeHelper {
 
         fun getTime(): LocalDateTime {
             val getTimeRequest = Request.Builder()
-                .url("$host/time")
+                .url("$HOST/time")
                 .build()
-
 
             val getTimeResponse = client.newCall(getTimeRequest).execute()
 
@@ -50,7 +49,7 @@ class TimeHelper {
             val instant = Instant.ofEpochMilli(timeDto.time)
             val localDateTime = LocalDateTime.ofInstant(instant, ZoneOffset.UTC)
 
-            logger.info("Time set to: ${localDateTime}")
+            logger.info("Time set to: $localDateTime")
             return localDateTime
         }
 
