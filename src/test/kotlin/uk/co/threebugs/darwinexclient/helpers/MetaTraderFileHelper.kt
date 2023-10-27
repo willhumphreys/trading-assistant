@@ -1,6 +1,7 @@
-package uk.co.threebugs.darwinexclient
+package uk.co.threebugs.darwinexclient.helpers
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import uk.co.threebugs.darwinexclient.metatrader.AccountInfo
 import uk.co.threebugs.darwinexclient.metatrader.CurrencyInfo
 import uk.co.threebugs.darwinexclient.metatrader.Orders
@@ -15,8 +16,9 @@ import kotlin.random.Random
 
 class MetaTraderFileHelper {
 
-
     companion object {
+
+        private val mapper = jacksonObjectMapper().registerModule(JavaTimeModule())
 
         private val accountInfo = AccountInfo(
             number = 123456,
@@ -49,7 +51,7 @@ class MetaTraderFileHelper {
                 })
         }
 
-        fun writeMarketData(mapper: ObjectMapper, marketDataPath: Path, symbol: String) {
+        fun writeMarketData(marketDataPath: Path, symbol: String) {
             mapper.writeValue(
                 marketDataPath.toFile(),
                 mapOf(
@@ -88,11 +90,11 @@ class MetaTraderFileHelper {
             }
         }
 
-        fun writeEmptyOrders(file: File, mapper: ObjectMapper) {
+        fun writeEmptyOrders(file: File) {
             mapper.writeValue(file, Orders(accountInfo, emptyMap()))
         }
 
-        fun writeOrdersWithMagic(magicTrade1: Int?, magicTrade2: Int?, mapper: ObjectMapper, ordersFile: File) {
+        fun writeOrdersWithMagic(magicTrade1: Int?, magicTrade2: Int?, ordersFile: File) {
             val openTradeOrder = Orders(
                 accountInfo,
                 mapOf(

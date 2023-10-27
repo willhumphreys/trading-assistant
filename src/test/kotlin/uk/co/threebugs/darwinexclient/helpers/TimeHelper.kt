@@ -1,6 +1,7 @@
-package uk.co.threebugs.darwinexclient
+package uk.co.threebugs.darwinexclient.helpers
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
@@ -12,13 +13,14 @@ import uk.co.threebugs.darwinexclient.utils.logger
 import java.time.*
 import java.time.temporal.TemporalAdjusters
 
-private const val host = "http://localhost:8081"
-
 class TimeHelper {
 
     companion object {
+        private const val host = "http://localhost:8081"
+        private val client = OkHttpClient()
+        private val mapper = jacksonObjectMapper().registerModule(JavaTimeModule())
 
-        fun setTime(mapper: ObjectMapper, client: OkHttpClient) {
+        fun setTimeToNextMonday() {
             val json =
                 mapper.writeValueAsString(TimeChangeRequest(duration = getDurationBetweenNowAndNextMonday().toMillis()))
             val body = json.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
@@ -30,10 +32,10 @@ class TimeHelper {
 
             val setTimeResponse = client.newCall(setTimeRequest).execute()
 
-            getTime(client, mapper)
+            getTime()
         }
 
-        fun getTime(client: OkHttpClient, mapper: ObjectMapper): LocalDateTime {
+        fun getTime(): LocalDateTime {
             val getTimeRequest = Request.Builder()
                 .url("$host/time")
                 .build()

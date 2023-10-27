@@ -1,5 +1,3 @@
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.kotest.assertions.fail
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.core.test.TestCase
@@ -9,19 +7,18 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import okhttp3.OkHttpClient
-import uk.co.threebugs.darwinexclient.MetaTraderFileHelper.Companion.deleteFilesBeforeTest
-import uk.co.threebugs.darwinexclient.MetaTraderFileHelper.Companion.deleteMarketDataFile
-import uk.co.threebugs.darwinexclient.MetaTraderFileHelper.Companion.writeEmptyOrders
-import uk.co.threebugs.darwinexclient.MetaTraderFileHelper.Companion.writeMarketData
-import uk.co.threebugs.darwinexclient.MetaTraderFileHelper.Companion.writeOrdersWithMagic
-import uk.co.threebugs.darwinexclient.RestCallHelper.Companion.deleteTradesFromTestAccount
-import uk.co.threebugs.darwinexclient.RestCallHelper.Companion.getTrades
-import uk.co.threebugs.darwinexclient.RestCallHelper.Companion.startProcessing
-import uk.co.threebugs.darwinexclient.RestCallHelper.Companion.stopProcessing
 import uk.co.threebugs.darwinexclient.Status
-import uk.co.threebugs.darwinexclient.TimeHelper.Companion.getTime
-import uk.co.threebugs.darwinexclient.TimeHelper.Companion.setTime
+import uk.co.threebugs.darwinexclient.helpers.MetaTraderFileHelper.Companion.deleteFilesBeforeTest
+import uk.co.threebugs.darwinexclient.helpers.MetaTraderFileHelper.Companion.deleteMarketDataFile
+import uk.co.threebugs.darwinexclient.helpers.MetaTraderFileHelper.Companion.writeEmptyOrders
+import uk.co.threebugs.darwinexclient.helpers.MetaTraderFileHelper.Companion.writeMarketData
+import uk.co.threebugs.darwinexclient.helpers.MetaTraderFileHelper.Companion.writeOrdersWithMagic
+import uk.co.threebugs.darwinexclient.helpers.RestCallHelper.Companion.deleteTradesFromTestAccount
+import uk.co.threebugs.darwinexclient.helpers.RestCallHelper.Companion.getTrades
+import uk.co.threebugs.darwinexclient.helpers.RestCallHelper.Companion.startProcessing
+import uk.co.threebugs.darwinexclient.helpers.RestCallHelper.Companion.stopProcessing
+import uk.co.threebugs.darwinexclient.helpers.TimeHelper.Companion.getTime
+import uk.co.threebugs.darwinexclient.helpers.TimeHelper.Companion.setTimeToNextMonday
 import uk.co.threebugs.darwinexclient.utils.logger
 import java.io.File
 import java.nio.file.Path
@@ -30,8 +27,6 @@ import java.time.ZonedDateTime
 
 class TradeServiceTest : FunSpec() {
 
-    private val client = OkHttpClient()
-    private val mapper = jacksonObjectMapper().registerModule(JavaTimeModule())
     private val accountName = "test"
 
     private val ordersFile = File("test-ea-files/DWX/DWX_Orders.json")
@@ -42,20 +37,20 @@ class TradeServiceTest : FunSpec() {
         deleteFilesBeforeTest(Path.of("test-ea-files/DWX"), "DWX_Commands_", ".txt")
         //    deleteFilesBeforeTest(Path.of("test-ea-files/DWX"), "DWX_Orders", ".json")
 
-        writeEmptyOrders(ordersFile, mapper)
+        writeEmptyOrders(ordersFile)
 
         //mapper.writeValue(ordersStoredFile, emptyOrders)
 
-        deleteTradesFromTestAccount(client, accountName)
+        deleteTradesFromTestAccount(accountName)
         //deleteSetupsFromTestAccount(client, accountName)
 
         deleteMarketDataFile(marketDataPath)
 
-        getTrades(accountName, client, mapper).shouldBeEmpty()
+        getTrades(accountName).shouldBeEmpty()
 
-        setTime(mapper, client)
+        setTimeToNextMonday()
 
-        startProcessing(client)
+        startProcessing()
 
         delay(5000)
 
@@ -65,12 +60,12 @@ class TradeServiceTest : FunSpec() {
 
     override suspend fun afterEach(testCase: TestCase, result: TestResult) {
 
-        writeEmptyOrders(ordersFile, mapper)
+        writeEmptyOrders(ordersFile)
         // mapper.writeValue(ordersStoredFile, emptyOrders)
 
         delay(5000L)
 
-        stopProcessing(client)
+        stopProcessing()
 
         deleteFilesBeforeTest(Path.of("test-ea-files/DWX"), "DWX_Commands_", ".txt")
 
@@ -82,7 +77,7 @@ class TradeServiceTest : FunSpec() {
         test("place 2 eurusd long trades") {
             runBlocking {
 
-                writeMarketData(mapper, marketDataPath, "EURUSD")
+                writeMarketData(marketDataPath, "EURUSD")
 
                 runBlocking {
                     var elapsedTime = 0L
@@ -90,8 +85,8 @@ class TradeServiceTest : FunSpec() {
 
                     do {
                         logger.info("Waiting for EA to write file...")
-                        logger.info("Client time ${getTime(client, mapper)}")
-                        val foundTrades = getTrades(accountName, client, mapper)
+                        logger.info("Client time ${getTime()}")
+                        val foundTrades = getTrades(accountName)
 
                         if (foundTrades.isNotEmpty()) {
 
@@ -118,16 +113,16 @@ class TradeServiceTest : FunSpec() {
                 }
 
 
-                val foundTrades = getTrades(accountName, client, mapper)
+                val foundTrades = getTrades(accountName)
                 val (magicTrade1, magicTrade2) = foundTrades.take(2).map { it.id }
 
-                writeMarketData(mapper, marketDataPath, "EURUSD")
+                writeMarketData(marketDataPath, "EURUSD")
 
                 runBlocking {
 
                     do {
                         logger.info("Waiting for EA to write file...")
-                        val time = getTime(client, mapper)
+                        val time = getTime()
                         logger.info("Client time $time")
                         delay(5000L)
 
@@ -137,7 +132,7 @@ class TradeServiceTest : FunSpec() {
                 }
 
 
-                writeMarketData(mapper, marketDataPath, "EURUSD")
+                writeMarketData(marketDataPath, "EURUSD")
 
 
                 runBlocking {
@@ -146,8 +141,8 @@ class TradeServiceTest : FunSpec() {
 
                     do {
 
-                        logger.info("Client time ${getTime(client, mapper)}")
-                        val sendTrades = getTrades(accountName, client, mapper)
+                        logger.info("Client time ${getTime()}")
+                        val sendTrades = getTrades(accountName)
 
                         sendTrades.size shouldBe 2
 
@@ -159,7 +154,7 @@ class TradeServiceTest : FunSpec() {
                         sendTrades.any { it.id == magicTrade1 } shouldBe true
                         sendTrades.any { it.id == magicTrade2 } shouldBe true
 
-                        writeMarketData(mapper, marketDataPath, "EURUSD")
+                        writeMarketData(marketDataPath, "EURUSD")
 
                         if (allTradesHaveStatusSent)
                             break
@@ -174,7 +169,7 @@ class TradeServiceTest : FunSpec() {
                     }
                 }
 
-                writeOrdersWithMagic(magicTrade1, magicTrade2, mapper, ordersFile)
+                writeOrdersWithMagic(magicTrade1, magicTrade2, ordersFile)
 
                 runBlocking {
                     var elapsedTime = 0L
@@ -182,8 +177,8 @@ class TradeServiceTest : FunSpec() {
 
                     do {
 
-                        logger.info("Client time ${getTime(client, mapper)}")
-                        val placedInMtTrades = getTrades(accountName, client, mapper)
+                        logger.info("Client time ${getTime()}")
+                        val placedInMtTrades = getTrades(accountName)
 
                         placedInMtTrades.size shouldBe 2
 
@@ -192,7 +187,7 @@ class TradeServiceTest : FunSpec() {
                             it.status == Status.PLACED_IN_MT
                         }
 
-                        writeMarketData(mapper, marketDataPath, "EURUSD")
+                        writeMarketData(marketDataPath, "EURUSD")
 
                         if (allTradesHaveStatusPlacedInMT)
                             break
@@ -207,7 +202,7 @@ class TradeServiceTest : FunSpec() {
                     }
                 }
 
-                writeMarketData(mapper, marketDataPath, "EURUSD")
+                writeMarketData(marketDataPath, "EURUSD")
             }
         }
     }

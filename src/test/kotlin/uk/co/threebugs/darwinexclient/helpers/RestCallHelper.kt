@@ -1,6 +1,7 @@
-package uk.co.threebugs.darwinexclient
+package uk.co.threebugs.darwinexclient.helpers
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.kotest.assertions.fail
 import okhttp3.OkHttpClient
@@ -9,12 +10,15 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import uk.co.threebugs.darwinexclient.trade.TradeDto
 import uk.co.threebugs.darwinexclient.utils.logger
 
-private const val host = "http://localhost:8081"
-
 class RestCallHelper {
 
     companion object {
-        fun startProcessing(client: OkHttpClient) {
+        private const val host = "http://localhost:8081"
+
+        private val client = OkHttpClient()
+        private val mapper = jacksonObjectMapper().registerModule(JavaTimeModule())
+
+        fun startProcessing() {
             val startProcessingRequest = Request.Builder()
                 .url("$host/actions/start")
                 .post("".toRequestBody())
@@ -23,7 +27,7 @@ class RestCallHelper {
             client.newCall(startProcessingRequest).execute()
         }
 
-        fun stopProcessing(client: OkHttpClient) {
+        fun stopProcessing() {
             val startProcessingRequest = Request.Builder()
                 .url("$host/actions/stop")
                 .post("".toRequestBody())
@@ -32,7 +36,7 @@ class RestCallHelper {
             client.newCall(startProcessingRequest).execute()
         }
 
-        fun deleteTradesFromTestAccount(client: OkHttpClient, accountName: String) {
+        fun deleteTradesFromTestAccount(accountName: String) {
 
             val request = Request.Builder()
                 .url("$host/trades/byAccountName/$accountName")
@@ -52,9 +56,7 @@ class RestCallHelper {
         }
 
         fun getTrades(
-            accountName: String,
-            client: OkHttpClient,
-            mapper: ObjectMapper
+            accountName: String
         ): List<TradeDto> {
             val request = Request.Builder()
                 .url("$host/trades/byAccountName/$accountName")
