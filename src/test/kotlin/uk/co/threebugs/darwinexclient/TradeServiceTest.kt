@@ -187,30 +187,30 @@ class TradeServiceTest : FunSpec() {
                     do {
 
                         logger.info("Client time ${getTime(client, mapper)}")
-                        val foundTrades = getTrades(accountName, client, mapper)
+                        val sendTrades = getTrades(accountName, client, mapper)
 
-                        if (foundTrades.isNotEmpty()) {
+                        sendTrades.size shouldBe 2
 
-                            val allTradesHaveStatusSent = foundTrades.all {
-                                logger.info("Found trade status: ${it.status}")
-                                it.status == Status.ORDER_SENT
-                            }
-
-                            foundTrades.any { it.id == magicTrade1 } shouldBe true
-                            foundTrades.any { it.id == magicTrade2 } shouldBe true
-
-                            writeMarketDataFile(
-                                mapper, marketDataPath, "EURUSD", CurrencyInfo(
-                                    ask = BigDecimal("3.0").add(BigDecimal(0.00001)),
-                                    bid = BigDecimal("3.0").add(BigDecimal(0.00001)),
-                                    last = BigDecimal("3.0").add(BigDecimal(0.00001)),
-                                    tickValue = BigDecimal("2.0").add(BigDecimal(0.00001))
-                                )
-                            )
-
-                            if (allTradesHaveStatusSent)
-                                break
+                        val allTradesHaveStatusSent = sendTrades.all {
+                            logger.info("Found trade status: ${it.status}")
+                            it.status == Status.ORDER_SENT
                         }
+
+                        sendTrades.any { it.id == magicTrade1 } shouldBe true
+                        sendTrades.any { it.id == magicTrade2 } shouldBe true
+
+                        writeMarketDataFile(
+                            mapper, marketDataPath, "EURUSD", CurrencyInfo(
+                                ask = BigDecimal("3.0").add(BigDecimal(0.00001)),
+                                bid = BigDecimal("3.0").add(BigDecimal(0.00001)),
+                                last = BigDecimal("3.0").add(BigDecimal(0.00001)),
+                                tickValue = BigDecimal("2.0").add(BigDecimal(0.00001))
+                            )
+                        )
+
+                        if (allTradesHaveStatusSent)
+                            break
+
 
                         delay(5000L)
                         elapsedTime += 5000L
@@ -262,27 +262,27 @@ class TradeServiceTest : FunSpec() {
                     do {
 
                         logger.info("Client time ${getTime(client, mapper)}")
-                        val foundTrades = getTrades(accountName, client, mapper)
+                        val placedInMtTrades = getTrades(accountName, client, mapper)
 
-                        if (foundTrades.isNotEmpty()) {
+                        placedInMtTrades.size shouldBe 2
 
-                            val allTradesHaveStatusPlacedInMT = foundTrades.all {
-                                logger.info("Found trade status: ${it.status}")
-                                it.status == Status.PLACED_IN_MT
-                            }
-
-                            writeMarketDataFile(
-                                mapper, marketDataPath, "EURUSD", CurrencyInfo(
-                                    ask = BigDecimal("3.0").add(BigDecimal("0.00001")),
-                                    bid = BigDecimal("3.0").add(BigDecimal("0.00001")),
-                                    last = BigDecimal("3.0").add(BigDecimal("0.00001")),
-                                    tickValue = BigDecimal("2.0").add(BigDecimal("0.00001"))
-                                )
-                            )
-
-                            if (allTradesHaveStatusPlacedInMT)
-                                break
+                        val allTradesHaveStatusPlacedInMT = placedInMtTrades.all {
+                            logger.info("Found trade status: ${it.status}")
+                            it.status == Status.PLACED_IN_MT
                         }
+
+                        writeMarketDataFile(
+                            mapper, marketDataPath, "EURUSD", CurrencyInfo(
+                                ask = BigDecimal("3.0").add(BigDecimal("0.00001")),
+                                bid = BigDecimal("3.0").add(BigDecimal("0.00001")),
+                                last = BigDecimal("3.0").add(BigDecimal("0.00001")),
+                                tickValue = BigDecimal("2.0").add(BigDecimal("0.00001"))
+                            )
+                        )
+
+                        if (allTradesHaveStatusPlacedInMT)
+                            break
+
 
                         delay(5000L)
                         elapsedTime += 5000L
