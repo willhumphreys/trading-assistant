@@ -18,6 +18,7 @@ import uk.co.threebugs.darwinexclient.helpers.RestCallHelper.Companion.getTrades
 import uk.co.threebugs.darwinexclient.helpers.RestCallHelper.Companion.startProcessing
 import uk.co.threebugs.darwinexclient.helpers.RestCallHelper.Companion.stopProcessing
 import uk.co.threebugs.darwinexclient.helpers.TimeHelper.Companion.getTime
+import uk.co.threebugs.darwinexclient.helpers.TimeHelper.Companion.setTimeToNearlyCloseTime
 import uk.co.threebugs.darwinexclient.helpers.TimeHelper.Companion.setTimeToNextMonday
 import uk.co.threebugs.darwinexclient.helpers.TimeOutHelper.Companion.waitForCondition
 import uk.co.threebugs.darwinexclient.utils.logger
@@ -56,7 +57,7 @@ class TradeServiceTest : FunSpec() {
 
         stopProcessing()
 
-        deleteFilesBeforeTest(Path.of("test-ea-files/DWX"), "DWX_Commands_", ".txt")
+        //deleteFilesBeforeTest(Path.of("test-ea-files/DWX"), "DWX_Commands_", ".txt")
 
         super.afterEach(testCase, result)
     }
@@ -109,7 +110,7 @@ class TradeServiceTest : FunSpec() {
                 val time = getTime()
                 logger.info("Client time $time")
 
-                if (!time.isBefore(ZonedDateTime.parse("2023-10-30T09:00Z[UTC]").toLocalDateTime()))
+                if (!time.isBefore(ZonedDateTime.parse("2023-10-30T09:00Z[UTC]")))
                     return@waitForCondition true  // Breaks out of the waiting loop
 
                 false  // Continues the waiting loop
@@ -282,7 +283,7 @@ class TradeServiceTest : FunSpec() {
                 val time = getTime()
                 logger.info("Client time $time")
 
-                if (!time.isBefore(ZonedDateTime.parse("2023-10-30T09:00Z[UTC]").toLocalDateTime()))
+                if (!time.isBefore(ZonedDateTime.parse("2023-10-30T09:00Z[UTC]")))
                     return@waitForCondition true  // Breaks out of the waiting loop
 
                 false  // Continues the waiting loop
@@ -376,6 +377,183 @@ class TradeServiceTest : FunSpec() {
 
         }
 
+        test("place 2 eurusd long trades and close at time") {
+
+            writeMarketData(EURUSD)
+
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for trades with status PENDING to be written to the db..."
+            ) {
+                logger.info("Client time ${getTime()}")
+                val foundTrades = getTrades(accountName)
+
+                if (foundTrades.isNotEmpty()) {
+
+                    foundTrades.forEach {
+                        logger.info("Found trade: $it")
+                        it.status shouldBe Status.PENDING
+                        it.setup shouldNotBe null
+                        it.setup?.symbol shouldBe EURUSD
+                        it.setup shouldNotBe null
+                        it.setup?.isLong() shouldBe true
+                        it.targetPlaceDateTime shouldBe ZonedDateTime.parse("2023-10-30T09:00Z[UTC]")
+                    }
+
+                    return@waitForCondition true  // Breaks out of the waiting loop
+                }
+                false  // Continues the waiting loop
+            }
+
+
+            val foundTrades = getTrades(accountName)
+            val (magicTrade1, magicTrade2) = foundTrades.take(2).map { it.id }
+
+            writeMarketData(EURUSD)
+
+
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for the time to be 09:00..."
+            ) {
+
+                logger.info("Waiting for EA to write file...")
+                val time = getTime()
+                logger.info("Client time $time")
+
+                if (!time.isBefore(ZonedDateTime.parse("2023-10-30T09:00Z[UTC]")))
+                    return@waitForCondition true  // Breaks out of the waiting loop
+
+                false  // Continues the waiting loop
+            }
+
+            writeMarketData(EURUSD)
+
+
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for all trades to be OrderSent..."
+            ) {
+
+                logger.info("Client time ${getTime()}")
+                val tradesWithStatusOrderSent = getTrades(accountName)
+
+                tradesWithStatusOrderSent.size shouldBe 2
+
+                val allTradesHaveStatusSent = tradesWithStatusOrderSent.all {
+                    logger.info("Found trade status: ${it.status}")
+                    it.status == Status.ORDER_SENT
+                }
+
+                tradesWithStatusOrderSent.any { it.id == magicTrade1 } shouldBe true
+                tradesWithStatusOrderSent.any { it.id == magicTrade2 } shouldBe true
+
+                writeMarketData(EURUSD)
+
+                if (allTradesHaveStatusSent) {
+                    return@waitForCondition true  // Breaks out of the waiting loop
+                }
+
+                false  // Continues the waiting loop
+            }
+
+            writeOrdersWithMagic(magicTrade1, magicTrade2, "EURUSD")
+
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for all trades to be placed in MT..."
+            ) {
+
+                logger.info("Client time ${getTime()}")
+                val placedInMtTrades = getTrades(accountName)
+
+                placedInMtTrades.size shouldBe 2
+
+                val allTradesHaveStatusPlacedInMT = placedInMtTrades.all {
+                    logger.info("Found trade status: ${it.status}")
+                    it.status == Status.PLACED_IN_MT
+                }
+
+                writeMarketData(EURUSD)
+
+                if (allTradesHaveStatusPlacedInMT)
+                    return@waitForCondition true  // Breaks out of the waiting loop
+
+                false  // Continues the waiting loop
+            }
+
+            writeMarketData(EURUSD)
+
+            val ordersAndAccount = readOrdersFile()
+            ordersAndAccount.orders.size shouldBe 2
+
+            ordersAndAccount.orders[1]?.type = "buy"
+            ordersAndAccount.orders[2]?.type = "buy"
+
+            writeOrdersFile(ordersAndAccount)
+
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for all trades to have status filled..."
+            ) {
+
+                logger.info("Client time ${getTime()}")
+                val filledTrades = getTrades(accountName)
+
+                filledTrades.size shouldBe 2
+
+                val allTradesHaveStatusFilled = filledTrades.all {
+                    logger.info("Found trade status: ${it.status}")
+                    it.status == Status.FILLED
+                }
+
+                writeMarketData(EURUSD)
+
+                if (allTradesHaveStatusFilled)
+                    return@waitForCondition true  // Breaks out of the waiting loop
+
+                false  // Continues the waiting loop
+            }
+
+            writeMarketData(EURUSD)
+
+            val filledTrades = getTrades(accountName)
+
+            filledTrades.size shouldBe 2
+
+            setTimeToNearlyCloseTime(filledTrades[1])
+
+
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for all trades to have status closed by magic sent"
+            ) {
+
+                logger.info("Client time ${getTime()}")
+                val closedByUserTrades = getTrades(accountName)
+
+                //closedByUserTrades.size shouldBe 2
+
+                val allTradesHaveStatusClosedByUser = closedByUserTrades.any {
+                    logger.info("Found trade status: ${it.status}")
+                    it.status == Status.CLOSED_BY_MAGIC_SENT
+                }
+
+                writeMarketData(EURUSD)
+
+                if (allTradesHaveStatusClosedByUser)
+                    return@waitForCondition true  // Breaks out of the waiting loop
+
+                false  // Continues the waiting loop
+            }
+
+        }
 
     }
 

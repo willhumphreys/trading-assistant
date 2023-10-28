@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 import java.time.Duration
+import java.time.LocalDateTime
 
 data class TimeChangeRequest(val duration: Long)
 data class TimeDto(val time: Long)
@@ -19,7 +20,7 @@ class TimeController(private val mutableClock: MutableClock) {
         return try {
             val duration = Duration.ofMillis(request.duration)
             mutableClock.setOffset(duration)
-            ResponseEntity.ok("Time updated successfully.")
+            ResponseEntity.ok("Time updated successfully to: ${LocalDateTime.now(mutableClock)}.")
         } catch (e: Exception) {
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body("Failed to update time.")

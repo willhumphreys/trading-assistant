@@ -20,7 +20,6 @@ import uk.co.threebugs.darwinexclient.utils.TimeHelper
 import uk.co.threebugs.darwinexclient.utils.logger
 import java.math.BigDecimal
 import java.time.ZoneId
-import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.util.function.Consumer
 
@@ -81,7 +80,7 @@ class TradeService(
         val setups = setupRepository.findEnabledSetups(symbol, accountSetupGroup.setupGroups!!)
         setups.forEach { setup ->
             val targetPlaceTime: ZonedDateTime =
-                SetupFileRepository.getNextEventTime(setup.dayOfWeek!!, setup.hourOfDay!!)
+                SetupFileRepository.getNextEventTime(setup.dayOfWeek!!, setup.hourOfDay!!, clock)
             val existingTrade =
                 tradeRepository.findBySetupAndTargetPlaceDateTimeAndAccount(setup, targetPlaceTime, account)
             if (existingTrade == null) {
@@ -151,14 +150,19 @@ class TradeService(
     fun closeTradesAtTime(dwx: Client, symbol: String, account: Account) {
         tradeRepository.findByStatusAndSetup_SymbolAndAccount(Status.FILLED, symbol, account).stream()
             .filter { trade: Trade ->
-                trade.targetPlaceDateTime!!.plusHours(trade.setup!!.tradeDuration!!.toLong())
-                    .isBefore(ZonedDateTime.now(ZoneOffset.UTC))
+
+                val closeDateTime = trade.targetPlaceDateTime!!.plusHours(trade.setup!!.tradeDuration!!.toLong())
+                val currentDateTime = ZonedDateTime.now(clock)
+
+                logger.info("closeDateTime: $closeDateTime currentDateTime: $currentDateTime")
+
+                closeDateTime.isBefore(currentDateTime)
             }.forEach { trade: Trade ->
                 dwx.closeOrdersByMagic(trade.id!!)
-                trade.status = Status.CLOSED_BY_TIME
-                trade.closedDateTime = ZonedDateTime.now()
+                trade.status = Status.CLOSED_BY_MAGIC_SENT
+                //trade.closedDateTime = ZonedDateTime.now()
                 tradeRepository.save(trade)
-                slackClient.sendSlackNotification("Order closed: ${trade.setup!!.rank} ${trade.setup!!.symbol} ${trade.setup!!.direction} ${trade.profit}")
+                slackClient.sendSlackNotification("Order closed by magic: ${trade.setup!!.rank} ${trade.setup!!.symbol} ${trade.setup!!.direction} ${trade.profit}")
             }
     }
 
@@ -200,7 +204,7 @@ class TradeService(
         trade.apply {
             status = closingStatus
             closedPrice = tradeInfo.takeProfit
-            closedDateTime = ZonedDateTime.now()
+            closedDateTime = ZonedDateTime.now(clock)
             profit = tradeInfo.profitAndLoss
         }.also { tradeRepository.save(it) }
 

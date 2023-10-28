@@ -9,5 +9,6 @@ enum class Status {
     CLOSED_BY_STOP,
     CLOSED_BY_LIMIT,
     CLOSED_BY_TIME,
+    CLOSED_BY_MAGIC_SENT,
     CLOSED_BY_USER
 }

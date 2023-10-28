@@ -9,6 +9,7 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import uk.co.threebugs.darwinexclient.clock.TimeChangeRequest
 import uk.co.threebugs.darwinexclient.clock.TimeDto
+import uk.co.threebugs.darwinexclient.trade.TradeDto
 import uk.co.threebugs.darwinexclient.utils.logger
 import java.time.*
 import java.time.temporal.TemporalAdjusters
@@ -21,8 +22,17 @@ class TimeHelper {
         private val mapper = jacksonObjectMapper().registerModule(JavaTimeModule())
 
         fun setTimeToNextMonday() {
-            val json =
-                mapper.writeValueAsString(TimeChangeRequest(duration = getDurationBetweenNowAndNextMonday().toMillis()))
+            setTime { getDurationBetweenNowAndNextMonday() }
+        }
+
+        fun setTimeToNearlyCloseTime(trade: TradeDto) {
+            setTime { getDurationBetweenClientNowAndNearlyCloseTime(trade) }
+        }
+
+        private fun setTime(durationProvider: () -> Duration) {
+            val duration = durationProvider()
+
+            val json = mapper.writeValueAsString(TimeChangeRequest(duration = duration.toMillis()))
             val body = json.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
 
             val setTimeRequest = Request.Builder()
@@ -32,10 +42,13 @@ class TimeHelper {
 
             val setTimeResponse = client.newCall(setTimeRequest).execute()
 
+            logger.info(setTimeResponse.body?.string() ?: "Empty Response Body")
+
             getTime()
         }
 
-        fun getTime(): LocalDateTime {
+
+        fun getTime(): ZonedDateTime {
             val getTimeRequest = Request.Builder()
                 .url("$HOST/time")
                 .build()
@@ -47,9 +60,9 @@ class TimeHelper {
             val timeDto: TimeDto = mapper.readValue(responseBodyText)
 
             val instant = Instant.ofEpochMilli(timeDto.time)
-            val localDateTime = LocalDateTime.ofInstant(instant, ZoneOffset.UTC)
+            val localDateTime = ZonedDateTime.ofInstant(instant, ZoneOffset.UTC)
 
-            logger.info("Time set to: $localDateTime")
+            logger.info("Client time is: $localDateTime")
             return localDateTime
         }
 
@@ -61,6 +74,30 @@ class TimeHelper {
             val now = ZonedDateTime.now(ZoneOffset.UTC)
             return Duration.between(now, nextMondayAt859)
             //return Clock.offset(Clock.system(ZoneOffset.UTC), durationUntilNextMondayAt859)
+
+        }
+
+        private fun getDurationBetweenClientNowAndNearlyCloseTime(trade: TradeDto): Duration {
+
+            val clientTime = getTime()
+            val durationBetweenNowAndClientTime = Duration.between(
+                ZonedDateTime.now(ZoneOffset.UTC),
+                clientTime
+            )
+
+            logger.info("Duration between now and client time: $durationBetweenNowAndClientTime")
+
+            val durationBetweenClientTimeAndTradeCloseTime = Duration.between(
+                clientTime,
+                trade.targetPlaceDateTime!!.plusHours(trade.setup!!.tradeDuration!!.toLong()).minusSeconds(10)
+            )
+
+            logger.info("Duration between client time and trade close time: $durationBetweenClientTimeAndTradeCloseTime")
+            val totalDuration = durationBetweenNowAndClientTime.plus(durationBetweenClientTimeAndTradeCloseTime)
+
+            logger.info("Total duration: $totalDuration")
+
+            return totalDuration
 
         }
     }

@@ -5,8 +5,8 @@ import uk.co.threebugs.darwinexclient.setupgroup.SetupGroup
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
+import java.time.Clock
 import java.time.DayOfWeek
-import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.temporal.TemporalAdjusters
 import java.util.stream.Collectors
@@ -54,9 +54,12 @@ class SetupFileRepository {
             return "%d-%s-%d-%s".format(rank, symbol, placedDateTime.toEpochSecond(), getLongShort(stop, limit))
         }
 
-        fun getNextEventTime(dayOfWeek: Int, hourOfDay: Int): ZonedDateTime {
-            val now = ZonedDateTime.now(ZoneOffset.UTC)
-            var nextEventTime = ZonedDateTime.now(ZoneOffset.UTC).with(TemporalAdjusters.nextOrSame(DayOfWeek.of(dayOfWeek))).withHour(hourOfDay).withMinute(0).withSecond(0).withNano(0)
+        fun getNextEventTime(dayOfWeek: Int, hourOfDay: Int, clock: Clock): ZonedDateTime {
+            //val now = ZonedDateTime.now(clock)
+            val now = ZonedDateTime.now()
+            var nextEventTime =
+                ZonedDateTime.now(clock).with(TemporalAdjusters.nextOrSame(DayOfWeek.of(dayOfWeek))).withHour(hourOfDay)
+                    .withMinute(0).withSecond(0).withNano(0)
             if (nextEventTime.isBefore(now) || nextEventTime.isEqual(now)) {
                 nextEventTime = nextEventTime.plusWeeks(1)
             }
