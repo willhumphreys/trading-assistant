@@ -22,6 +22,7 @@ import uk.co.threebugs.darwinexclient.helpers.TimeHelper.Companion.setTimeToNear
 import uk.co.threebugs.darwinexclient.helpers.TimeHelper.Companion.setTimeToNextMonday
 import uk.co.threebugs.darwinexclient.helpers.TimeOutHelper.Companion.waitForCondition
 import uk.co.threebugs.darwinexclient.utils.logger
+import java.nio.file.Files
 import java.nio.file.Path
 import java.time.ZonedDateTime
 
@@ -172,6 +173,14 @@ class TradeServiceTest : FunSpec() {
 
                 false  // Continues the waiting loop
             }
+
+            Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_0.txt")) shouldBe true
+            Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_1.txt")) shouldBe true
+
+            Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_0.txt"))
+                .contains("OPEN_ORDER|EURUSD,buylimit,") shouldBe true
+            Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_1.txt"))
+                .contains("OPEN_ORDER|EURUSD,buylimit,") shouldBe true
 
             writeMarketData(EURUSD)
 
@@ -346,6 +355,14 @@ class TradeServiceTest : FunSpec() {
                 false  // Continues the waiting loop
             }
 
+            Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_0.txt")) shouldBe true
+            Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_1.txt")) shouldBe true
+
+            Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_0.txt"))
+                .contains("OPEN_ORDER|EURUSD,buylimit,") shouldBe true
+            Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_1.txt"))
+                .contains("OPEN_ORDER|EURUSD,buylimit,") shouldBe true
+
             writeMarketData(EURUSD)
 
 
@@ -486,6 +503,16 @@ class TradeServiceTest : FunSpec() {
                 false  // Continues the waiting loop
             }
 
+
+            Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_0.txt")) shouldBe true
+            Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_1.txt")) shouldBe true
+
+            Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_0.txt"))
+                .contains("OPEN_ORDER|EURUSD,buylimit,") shouldBe true
+            Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_1.txt"))
+                .contains("OPEN_ORDER|EURUSD,buylimit,") shouldBe true
+
+
             writeMarketData(EURUSD)
 
             val ordersAndAccount = readOrdersFile()
@@ -538,23 +565,46 @@ class TradeServiceTest : FunSpec() {
                 logger.info("Client time ${getTime()}")
                 val closedByUserTrades = getTrades(accountName)
 
-                //closedByUserTrades.size shouldBe 2
 
-                val allTradesHaveStatusClosedByUser = closedByUserTrades.any {
-                    logger.info("Found trade status: ${it.status}")
-                    it.status == Status.CLOSED_BY_MAGIC_SENT
+                val closedByMagicSentCount = closedByUserTrades.count { it.status == Status.CLOSED_BY_MAGIC_SENT }
+                logger.info("Number of trades with status CLOSED_BY_MAGIC_SENT: $closedByMagicSentCount")
+
+                if (closedByMagicSentCount == 2) {
+                    return@waitForCondition true
                 }
+                writeMarketData(EURUSD)
+
+                false
+            }
+
+            Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_2.txt")) shouldBe true
+            Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_3.txt")) shouldBe true
+
+            Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_2.txt"))
+                .contains("|CLOSE_ORDERS_BY_MAGIC|") shouldBe true
+            Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_3.txt"))
+                .contains("|CLOSE_ORDERS_BY_MAGIC|") shouldBe true
+
+            writeMarketData(EURUSD)
+
+            writeEmptyOrders()
+
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for all trades to have status closed by time"
+            ) {
+
+                logger.info("Client time ${getTime()}")
+                val closedByUserTrades = getTrades(accountName).count { it.status == Status.CLOSED_BY_TIME }
 
                 writeMarketData(EURUSD)
 
-                if (allTradesHaveStatusClosedByUser)
+                if (closedByUserTrades == 2)
                     return@waitForCondition true  // Breaks out of the waiting loop
 
                 false  // Continues the waiting loop
             }
-
         }
-
     }
-
 }

@@ -193,13 +193,17 @@ class TradeService(
 
     private fun closeTrade(tradeInfo: TradeInfo, trade: Trade) {
 
-        val closingStatus = if (tradeInfo.type.equals("buy") || tradeInfo.type.equals("sell")) {
-            Status.CLOSED_BY_USER
-        } else if (tradeInfo.type.equals("buylimit") || tradeInfo.type.equals("selllimit")) {
-            Status.OUT_OF_TIME
-        } else {
-            Status.CLOSED_BY_USER
-        }
+        val closingStatus =
+
+            if (trade.status == Status.CLOSED_BY_MAGIC_SENT) {
+                Status.CLOSED_BY_TIME
+            } else if (tradeInfo.type.equals("buy") || tradeInfo.type.equals("sell")) {
+                Status.CLOSED_BY_USER
+            } else if (tradeInfo.type.equals("buylimit") || tradeInfo.type.equals("selllimit")) {
+                Status.OUT_OF_TIME
+            } else {
+                Status.CLOSED_BY_USER
+            }
 
         trade.apply {
             status = closingStatus
