@@ -152,9 +152,8 @@ class TradeEventHandler(
 
     fun onTradeStateChange(currentValue: TradeInfo, previousValue: TradeInfo) {
 
-        if ((previousValue.type.equals("buylimit") && currentValue.type.equals("buy")) || (previousValue.type.equals("selllimit") && currentValue.type.equals(
-                "sell"
-            ))
+        if ((previousValue.type.equals("buylimit") && currentValue.type.equals("buy")) ||
+            (previousValue.type.equals("selllimit") && currentValue.type.equals("sell"))
         ) {
             tradeService.findById(currentValue.magic)?.let { trade ->
                 trade.apply {

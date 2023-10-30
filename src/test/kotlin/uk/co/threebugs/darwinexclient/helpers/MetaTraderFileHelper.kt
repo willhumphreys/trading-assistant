@@ -98,7 +98,7 @@ class MetaTraderFileHelper {
             mapper.writeValue(ordersFile, Orders(accountInfo, emptyMap()))
         }
 
-        fun writeOrdersWithMagic(magicTrade1: Int?, magicTrade2: Int?, symbol: String) {
+        fun writeOrdersWithMagic(magicTrade1: Int?, magicTrade2: Int?, symbol: String, type: String) {
 
             val openTradeOrder = Orders(
                 accountInfo,
@@ -112,7 +112,7 @@ class MetaTraderFileHelper {
                         openPrice = BigDecimal("$BASE_VALUE${generateLastThreeDigits(500, 600)}"),
                         stopLoss = BigDecimal("$BASE_VALUE${generateLastThreeDigits(100, 400)}"),
                         takeProfit = BigDecimal("$BASE_VALUE${generateLastThreeDigits(700, 999)}"),
-                        type = "buylimit",
+                        type = type,
                         comment = "test",
                     ),
                     2 to TradeInfo(
@@ -124,7 +124,7 @@ class MetaTraderFileHelper {
                         openPrice = BigDecimal("$BASE_VALUE${generateLastThreeDigits(500, 600)}"),
                         stopLoss = BigDecimal("$BASE_VALUE${generateLastThreeDigits(100, 400)}"),
                         takeProfit = BigDecimal("$BASE_VALUE${generateLastThreeDigits(700, 999)}"),
-                        type = "buylimit",
+                        type = type,
                         comment = "test",
                     )
 

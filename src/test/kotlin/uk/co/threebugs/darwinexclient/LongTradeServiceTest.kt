@@ -60,10 +60,12 @@ class LongTradeServiceTest : FunSpec() {
 
     init {
         // This will be your higher-order function that takes a setupGroupsName parameter
-        fun createTestWithSetupGroupsName(setupGroupsName: String) {
+        fun createTestWithSetupGroupsName(setup: TestSetup) {
 
-            test("place 2 eurusd trades and close by user: $setupGroupsName") {
-                beforeEach(setupGroupsName)
+            val buySell = if (setup.isLong) "buy" else "sell"
+
+            test("place 2 eurusd trades and close by user: ${setup.setupGroupsName}") {
+                beforeEach(setup.setupGroupsName)
 
                 writeMarketData(EURUSD)
 
@@ -76,7 +78,7 @@ class LongTradeServiceTest : FunSpec() {
                 ) {
                     logger.info("Client time ${getTime()}")
                     val foundTrades =
-                        getTradesWithSetupGroupsName(setupGroupsName).filter { it.status == Status.PENDING }
+                        getTradesWithSetupGroupsName(setup.setupGroupsName).filter { it.status == Status.PENDING }
 
                     if (foundTrades.isNotEmpty()) {
 
@@ -86,7 +88,7 @@ class LongTradeServiceTest : FunSpec() {
                             it.setup shouldNotBe null
                             it.setup?.symbol shouldBe EURUSD
                             it.setup shouldNotBe null
-                            it.setup?.isLong() shouldBe true
+                            it.setup?.isLong() shouldBe setup.isLong
                             it.targetPlaceDateTime!!.toOffsetDateTime() shouldBe nextMondayAt9.toOffsetDateTime()
                         }
 
@@ -96,7 +98,7 @@ class LongTradeServiceTest : FunSpec() {
                 }
 
 
-                val foundTrades = getTradesWithSetupGroupsName(setupGroupsName)
+                val foundTrades = getTradesWithSetupGroupsName(setup.setupGroupsName)
                 val (magicTrade1, magicTrade2) = foundTrades.take(2).map { it.id }
 
                 writeMarketData(EURUSD)
@@ -128,7 +130,7 @@ class LongTradeServiceTest : FunSpec() {
                 ) {
 
                     logger.info("Client time ${getTime()}")
-                    val tradesWithStatusOrderSent = getTradesWithSetupGroupsName(setupGroupsName)
+                    val tradesWithStatusOrderSent = getTradesWithSetupGroupsName(setup.setupGroupsName)
 
 
                     val tradesWithSentCount = tradesWithStatusOrderSent.count { it.status == Status.ORDER_SENT }
@@ -145,7 +147,7 @@ class LongTradeServiceTest : FunSpec() {
                     false  // Continues the waiting loop
                 }
 
-                writeOrdersWithMagic(magicTrade1, magicTrade2, "EURUSD")
+                writeOrdersWithMagic(magicTrade1, magicTrade2, "EURUSD", "${buySell}limit")
 
                 waitForCondition(
                     timeout = SECONDS_30,
@@ -154,7 +156,7 @@ class LongTradeServiceTest : FunSpec() {
                 ) {
 
                     logger.info("Client time ${getTime()}")
-                    val placedInMtTrades = getTradesWithSetupGroupsName(setupGroupsName)
+                    val placedInMtTrades = getTradesWithSetupGroupsName(setup.setupGroupsName)
 
                     placedInMtTrades.size shouldBe 4
 
@@ -178,17 +180,17 @@ class LongTradeServiceTest : FunSpec() {
                 Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_1.txt")) shouldBe true
 
                 Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_0.txt"))
-                    .contains("OPEN_ORDER|EURUSD,buylimit,") shouldBe true
+                    .contains("OPEN_ORDER|EURUSD,${buySell}limit,") shouldBe true
                 Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_1.txt"))
-                    .contains("OPEN_ORDER|EURUSD,buylimit,") shouldBe true
+                    .contains("OPEN_ORDER|EURUSD,${buySell}limit,") shouldBe true
 
                 writeMarketData(EURUSD)
 
                 val ordersAndAccount = readOrdersFile()
                 ordersAndAccount.orders.size shouldBe 2
 
-                ordersAndAccount.orders[1]?.type = "buy"
-                ordersAndAccount.orders[2]?.type = "buy"
+                ordersAndAccount.orders[1]?.type = buySell
+                ordersAndAccount.orders[2]?.type = buySell
 
                 writeOrdersFile(ordersAndAccount)
 
@@ -199,7 +201,7 @@ class LongTradeServiceTest : FunSpec() {
                 ) {
 
                     logger.info("Client time ${getTime()}")
-                    val tradesWithSetupGroupsName = getTradesWithSetupGroupsName(setupGroupsName)
+                    val tradesWithSetupGroupsName = getTradesWithSetupGroupsName(setup.setupGroupsName)
 
                     tradesWithSetupGroupsName.size shouldBe 4
 
@@ -226,7 +228,7 @@ class LongTradeServiceTest : FunSpec() {
                 ) {
 
                     logger.info("Client time ${getTime()}")
-                    val tradesWithSetupGroupName = getTradesWithSetupGroupsName(setupGroupsName)
+                    val tradesWithSetupGroupName = getTradesWithSetupGroupsName(setup.setupGroupsName)
 
                     tradesWithSetupGroupName.size shouldBe 4
 
@@ -244,8 +246,8 @@ class LongTradeServiceTest : FunSpec() {
 
             }
 
-            test("place 2 eurusd trades and out of time close $setupGroupsName") {
-                beforeEach(setupGroupsName)
+            test("place 2 eurusd trades and out of time close $setup") {
+                beforeEach(setup.setupGroupsName)
                 writeMarketData(EURUSD)
 
                 val nextMondayAt9 = TimeHelper.getNextMondayAt9()
@@ -256,7 +258,7 @@ class LongTradeServiceTest : FunSpec() {
                 ) {
                     logger.info("Client time ${getTime()}")
                     val foundTrades =
-                        getTradesWithSetupGroupsName(setupGroupsName).filter { it.status == Status.PENDING }
+                        getTradesWithSetupGroupsName(setup.setupGroupsName).filter { it.status == Status.PENDING }
 
                     if (foundTrades.isNotEmpty()) {
 
@@ -266,7 +268,7 @@ class LongTradeServiceTest : FunSpec() {
                             it.setup shouldNotBe null
                             it.setup?.symbol shouldBe EURUSD
                             it.setup shouldNotBe null
-                            it.setup?.isLong() shouldBe true
+                            it.setup?.isLong() shouldBe setup.isLong
                             it.targetPlaceDateTime!!.toOffsetDateTime().toString() shouldBe nextMondayAt9
                                 .toString()
 
@@ -278,7 +280,7 @@ class LongTradeServiceTest : FunSpec() {
                 }
 
 
-                val foundTrades = getTradesWithSetupGroupsName(setupGroupsName)
+                val foundTrades = getTradesWithSetupGroupsName(setup.setupGroupsName)
                 val (magicTrade1, magicTrade2) = foundTrades.take(2).map { it.id }
 
                 writeMarketData(EURUSD)
@@ -310,7 +312,7 @@ class LongTradeServiceTest : FunSpec() {
                 ) {
 
                     logger.info("Client time ${getTime()}")
-                    val tradesWithStatusOrderSent = getTradesWithSetupGroupsName(setupGroupsName)
+                    val tradesWithStatusOrderSent = getTradesWithSetupGroupsName(setup.setupGroupsName)
 
                     val tradesWithOrderSentCount = tradesWithStatusOrderSent.count {
                         it.status == Status.ORDER_SENT
@@ -328,7 +330,7 @@ class LongTradeServiceTest : FunSpec() {
                     false  // Continues the waiting loop
                 }
 
-                writeOrdersWithMagic(magicTrade1, magicTrade2, "EURUSD")
+                writeOrdersWithMagic(magicTrade1, magicTrade2, "EURUSD", "${buySell}limit")
 
                 waitForCondition(
                     timeout = SECONDS_30,
@@ -337,7 +339,7 @@ class LongTradeServiceTest : FunSpec() {
                 ) {
 
                     logger.info("Client time ${getTime()}")
-                    val trades = getTradesWithSetupGroupsName(setupGroupsName)
+                    val trades = getTradesWithSetupGroupsName(setup.setupGroupsName)
 
                     trades.size shouldBe 4
 
@@ -359,9 +361,9 @@ class LongTradeServiceTest : FunSpec() {
                 Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_1.txt")) shouldBe true
 
                 Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_0.txt"))
-                    .contains("OPEN_ORDER|EURUSD,buylimit,") shouldBe true
+                    .contains("OPEN_ORDER|EURUSD,${buySell}limit,") shouldBe true
                 Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_1.txt"))
-                    .contains("OPEN_ORDER|EURUSD,buylimit,") shouldBe true
+                    .contains("OPEN_ORDER|EURUSD,${buySell}limit,") shouldBe true
 
                 writeMarketData(EURUSD)
 
@@ -375,7 +377,7 @@ class LongTradeServiceTest : FunSpec() {
                 ) {
 
                     logger.info("Client time ${getTime()}")
-                    val trades = getTradesWithSetupGroupsName(setupGroupsName)
+                    val trades = getTradesWithSetupGroupsName(setup.setupGroupsName)
 
                     val tradesHaveCorrectStatus = trades.count {
                         it.status == Status.OUT_OF_TIME
@@ -391,8 +393,8 @@ class LongTradeServiceTest : FunSpec() {
 
             }
 
-            test("place 2 eurusd long trades and close at time $setupGroupsName") {
-                beforeEach(setupGroupsName)
+            test("place 2 eurusd long trades and close at time $setup") {
+                beforeEach(setup.setupGroupsName)
                 writeMarketData(EURUSD)
 
                 val nextMondayAt9 = TimeHelper.getNextMondayAt9()
@@ -402,7 +404,7 @@ class LongTradeServiceTest : FunSpec() {
                     logMessage = "Waiting for trades with status PENDING to be written to the db..."
                 ) {
                     logger.info("Client time ${getTime()}")
-                    val foundTrades = getTradesWithSetupGroupsName(setupGroupsName)
+                    val foundTrades = getTradesWithSetupGroupsName(setup.setupGroupsName)
 
                     if (foundTrades.isNotEmpty()) {
 
@@ -412,7 +414,7 @@ class LongTradeServiceTest : FunSpec() {
                             it.setup shouldNotBe null
                             it.setup?.symbol shouldBe EURUSD
                             it.setup shouldNotBe null
-                            it.setup?.isLong() shouldBe true
+                            it.setup?.isLong() shouldBe setup.isLong
                             it.targetPlaceDateTime!!.toOffsetDateTime().toString() shouldBe nextMondayAt9
                                 .toString()
                         }
@@ -422,8 +424,7 @@ class LongTradeServiceTest : FunSpec() {
                     false  // Continues the waiting loop
                 }
 
-
-                val foundTrades = getTradesWithSetupGroupsName(setupGroupsName)
+                val foundTrades = getTradesWithSetupGroupsName(setup.setupGroupsName)
                 val (magicTrade1, magicTrade2) = foundTrades.take(2).map { it.id }
 
                 writeMarketData(EURUSD)
@@ -455,7 +456,7 @@ class LongTradeServiceTest : FunSpec() {
                 ) {
 
                     logger.info("Client time ${getTime()}")
-                    val tradesWithStatusOrderSent = getTradesWithSetupGroupsName(setupGroupsName)
+                    val tradesWithStatusOrderSent = getTradesWithSetupGroupsName(setup.setupGroupsName)
 
                     val allTradesHaveStatusSent = tradesWithStatusOrderSent.count {
                         it.status == Status.ORDER_SENT
@@ -473,7 +474,7 @@ class LongTradeServiceTest : FunSpec() {
                     false  // Continues the waiting loop
                 }
 
-                writeOrdersWithMagic(magicTrade1, magicTrade2, "EURUSD")
+                writeOrdersWithMagic(magicTrade1, magicTrade2, "EURUSD", "${buySell}limit")
 
                 waitForCondition(
                     timeout = SECONDS_30,
@@ -482,7 +483,7 @@ class LongTradeServiceTest : FunSpec() {
                 ) {
 
                     logger.info("Client time ${getTime()}")
-                    val placedInMtTrades = getTradesWithSetupGroupsName(setupGroupsName)
+                    val placedInMtTrades = getTradesWithSetupGroupsName(setup.setupGroupsName)
 
                     placedInMtTrades.size shouldBe 4
 
@@ -505,17 +506,17 @@ class LongTradeServiceTest : FunSpec() {
                 Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_2.txt")) shouldBe false
 
                 Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_0.txt"))
-                    .contains("OPEN_ORDER|EURUSD,buylimit,") shouldBe true
+                    .contains("OPEN_ORDER|EURUSD,${buySell}limit,") shouldBe true
                 Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_1.txt"))
-                    .contains("OPEN_ORDER|EURUSD,buylimit,") shouldBe true
+                    .contains("OPEN_ORDER|EURUSD,${buySell}limit,") shouldBe true
 
                 writeMarketData(EURUSD)
 
                 val ordersAndAccount = readOrdersFile()
                 ordersAndAccount.orders.size shouldBe 2
 
-                ordersAndAccount.orders[1]?.type = "buy"
-                ordersAndAccount.orders[2]?.type = "buy"
+                ordersAndAccount.orders[1]?.type = buySell
+                ordersAndAccount.orders[2]?.type = buySell
 
                 writeOrdersFile(ordersAndAccount)
 
@@ -526,7 +527,7 @@ class LongTradeServiceTest : FunSpec() {
                 ) {
 
                     logger.info("Client time ${getTime()}")
-                    val filledTrades = getTradesWithSetupGroupsName(setupGroupsName)
+                    val filledTrades = getTradesWithSetupGroupsName(setup.setupGroupsName)
 
                     filledTrades.size shouldBe 4
 
@@ -544,7 +545,7 @@ class LongTradeServiceTest : FunSpec() {
 
                 writeMarketData(EURUSD)
 
-                val filledTrades = getTradesWithSetupGroupsName(setupGroupsName)
+                val filledTrades = getTradesWithSetupGroupsName(setup.setupGroupsName)
 
                 filledTrades.size shouldBe 4
 
@@ -558,7 +559,7 @@ class LongTradeServiceTest : FunSpec() {
                 ) {
 
                     logger.info("Client time ${getTime()}")
-                    val closedByUserTrades = getTradesWithSetupGroupsName(setupGroupsName)
+                    val closedByUserTrades = getTradesWithSetupGroupsName(setup.setupGroupsName)
 
 
                     val closedByMagicSentCount = closedByUserTrades.count { it.status == Status.CLOSED_BY_MAGIC_SENT }
@@ -575,9 +576,9 @@ class LongTradeServiceTest : FunSpec() {
                 delay(5000)
 
                 Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_0.txt"))
-                    .contains("|OPEN_ORDER|EURUSD,buylimit") shouldBe true
+                    .contains("|OPEN_ORDER|EURUSD,${buySell}limit") shouldBe true
                 Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_1.txt"))
-                    .contains("|OPEN_ORDER|EURUSD,buylimit") shouldBe true
+                    .contains("|OPEN_ORDER|EURUSD,${buySell}limit") shouldBe true
 
                 Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_2.txt"))
                     .contains("|CLOSE_ORDERS_BY_MAGIC|") shouldBe true
@@ -598,7 +599,7 @@ class LongTradeServiceTest : FunSpec() {
 
                     logger.info("Client time ${getTime()}")
                     val closedByUserTrades =
-                        getTradesWithSetupGroupsName(setupGroupsName).count { it.status == Status.CLOSED_BY_TIME }
+                        getTradesWithSetupGroupsName(setup.setupGroupsName).count { it.status == Status.CLOSED_BY_TIME }
 
                     writeMarketData(EURUSD)
 
@@ -611,10 +612,15 @@ class LongTradeServiceTest : FunSpec() {
 
         }
 
+        val longSetup = TestSetup("long-test", true)
+        val shortSetup = TestSetup("short-test", false)
+
         // Run your test with different setupGroupsNames
-        listOf("long-test").forEach { setupGroupsName ->
-            createTestWithSetupGroupsName(setupGroupsName)
+        listOf(shortSetup).forEach { setup ->
+            createTestWithSetupGroupsName(setup)
         }
     }
+
+    data class TestSetup(val setupGroupsName: String, val isLong: Boolean)
 
 }
