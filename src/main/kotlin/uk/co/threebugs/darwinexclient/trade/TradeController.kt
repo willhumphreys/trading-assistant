@@ -34,10 +34,10 @@ class TradeController (
         tradeService.deleteById(id)
     }
 
-    @DeleteMapping("/bySetupGroupName/{name}")
-    fun deleteTradesBySetupGroupName(@PathVariable name: String): ResponseEntity<Unit> {
+    @DeleteMapping("/bySetupGroupsName/{name}")
+    fun deleteTradesBySetupGroupsName(@PathVariable name: String): ResponseEntity<Unit> {
         return try {
-            tradeService.deleteTradesBySetupGroupName(name)
+            tradeService.deleteTradesBySetupGroupsName(name)
             ResponseEntity.ok().build()
         } catch (e: Exception) {
             // Log the error
@@ -60,6 +60,16 @@ class TradeController (
     fun getTradesByAccountName(@PathVariable name: String): ResponseEntity<List<TradeDto>> {
         return try {
             return ResponseEntity.ok().body(tradeService.findByAccountName(name))
+        } catch (e: Exception) {
+            // Log the error
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+        }
+    }
+
+    @GetMapping("/bySetupGroupsName/{name}")
+    fun getTradesBySetupGroupsName(@PathVariable name: String): ResponseEntity<List<TradeDto>> {
+        return try {
+            return ResponseEntity.ok().body(tradeService.findBySetupGroupsName(name))
         } catch (e: Exception) {
             // Log the error
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()

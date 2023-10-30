@@ -39,7 +39,7 @@ interface TradeRepository : JpaRepository<Trade, Int>, QueryByExampleExecutor<Tr
     )
 """, nativeQuery = true
     )
-    fun deleteBySetupGroupName(@Param("name") name: String): Int
+    fun deleteBySetupGroupsName(@Param("name") name: String): Int
 
     @Transactional
     @Modifying
@@ -56,5 +56,15 @@ interface TradeRepository : JpaRepository<Trade, Int>, QueryByExampleExecutor<Tr
 """, nativeQuery = true
     )
     fun deleteByAccountName(@Param("name") name: String): Int
+
+    @Query(
+        "SELECT t " +
+                "FROM Trade t " +
+                "JOIN t.setup s " +
+                "JOIN s.setupGroup sg " +
+                "JOIN sg.setupGroups sgs " +
+                "WHERE sgs.name = :name"
+    )
+    fun findBySetupGroupsName(name: String): List<Trade>
 
 }

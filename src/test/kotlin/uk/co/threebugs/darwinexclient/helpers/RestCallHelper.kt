@@ -55,7 +55,27 @@ class RestCallHelper {
             }
         }
 
-        fun getTrades(
+        fun deleteTradesFromSetupGroupsName(setupGroupsName: String) {
+
+            val request = Request.Builder()
+                .url("$HOST/trades/bySetupGroupsName/$setupGroupsName")
+                .delete()
+                .build()
+
+            val response = client.newCall(request).execute()
+
+            if (response.isSuccessful) {
+                val responseBodyText = response.body?.string() ?: "Empty Response Body"
+                val rowsDeleted = responseBodyText.toIntOrNull() ?: "Failed to parse response body to Int"
+                logger.info("Successfully deleted $rowsDeleted trades for setupGroupsName: $setupGroupsName")
+            } else {
+                logger.info("Failed to delete trades: ${response.message}")
+                fail("Failed to delete trades: ${response.message}")
+            }
+        }
+
+
+        fun getTradesWithAccountName(
             accountName: String
         ): List<TradeDto> {
             val request = Request.Builder()
@@ -76,5 +96,28 @@ class RestCallHelper {
             fail("Failed to retrieve trades: ${response.message}")
 
         }
+
+        fun getTradesWithSetupGroupsName(
+            setupGroupsName: String
+        ): List<TradeDto> {
+            val request = Request.Builder()
+                .url("$HOST/trades/bySetupGroupsName/$setupGroupsName")
+                .build()
+
+            val response = client.newCall(request).execute()
+
+            if (response.isSuccessful) {
+                val responseBodyText = response.body?.string() ?: "Empty Response Body"
+
+                val foundTrades = mapper.readValue<List<TradeDto>>(responseBodyText)
+                logger.info("Successfully retrieved trades: $responseBodyText")
+
+                return foundTrades
+            }
+            logger.info("Failed to retrieve trades: ${response.message}")
+            fail("Failed to retrieve trades: ${response.message}")
+
+        }
     }
+
 }

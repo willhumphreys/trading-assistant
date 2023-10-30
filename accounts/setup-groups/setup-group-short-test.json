@@ -1,9 +1,9 @@
 {
-  "name": "long-test",
+  "name": "short-test",
   "scriptsDirectory": "accounts/setups/",
   "setupGroups": [
     {
-      "path": "eurusd_bestTrades_long.csv",
+      "path": "eurusd_bestTrades_short.csv",
       "symbol": "EURUSD",
       "enabled": true
     }

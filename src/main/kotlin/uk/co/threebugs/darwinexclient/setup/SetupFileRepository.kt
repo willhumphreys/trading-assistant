@@ -55,10 +55,9 @@ class SetupFileRepository {
         }
 
         fun getNextEventTime(dayOfWeek: Int, hourOfDay: Int, clock: Clock): ZonedDateTime {
-            //val now = ZonedDateTime.now(clock)
-            val now = ZonedDateTime.now()
+            val now = ZonedDateTime.now(clock)
             var nextEventTime =
-                ZonedDateTime.now(clock).with(TemporalAdjusters.nextOrSame(DayOfWeek.of(dayOfWeek))).withHour(hourOfDay)
+                now.with(TemporalAdjusters.nextOrSame(DayOfWeek.of(dayOfWeek))).withHour(hourOfDay)
                     .withMinute(0).withSecond(0).withNano(0)
             if (nextEventTime.isBefore(now) || nextEventTime.isEqual(now)) {
                 nextEventTime = nextEventTime.plusWeeks(1)

@@ -5,6 +5,8 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.delay
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import uk.co.threebugs.darwinexclient.Status
 import uk.co.threebugs.darwinexclient.helpers.MetaTraderFileHelper.Companion.deleteFilesBeforeTest
 import uk.co.threebugs.darwinexclient.helpers.MetaTraderFileHelper.Companion.deleteMarketDataFile
@@ -13,10 +15,11 @@ import uk.co.threebugs.darwinexclient.helpers.MetaTraderFileHelper.Companion.wri
 import uk.co.threebugs.darwinexclient.helpers.MetaTraderFileHelper.Companion.writeMarketData
 import uk.co.threebugs.darwinexclient.helpers.MetaTraderFileHelper.Companion.writeOrdersFile
 import uk.co.threebugs.darwinexclient.helpers.MetaTraderFileHelper.Companion.writeOrdersWithMagic
-import uk.co.threebugs.darwinexclient.helpers.RestCallHelper.Companion.deleteTradesFromTestAccount
-import uk.co.threebugs.darwinexclient.helpers.RestCallHelper.Companion.getTrades
+import uk.co.threebugs.darwinexclient.helpers.RestCallHelper.Companion.deleteTradesFromSetupGroupsName
+import uk.co.threebugs.darwinexclient.helpers.RestCallHelper.Companion.getTradesWithSetupGroupsName
 import uk.co.threebugs.darwinexclient.helpers.RestCallHelper.Companion.startProcessing
 import uk.co.threebugs.darwinexclient.helpers.RestCallHelper.Companion.stopProcessing
+import uk.co.threebugs.darwinexclient.helpers.TimeHelper
 import uk.co.threebugs.darwinexclient.helpers.TimeHelper.Companion.getTime
 import uk.co.threebugs.darwinexclient.helpers.TimeHelper.Companion.setTimeToNearlyCloseTime
 import uk.co.threebugs.darwinexclient.helpers.TimeHelper.Companion.setTimeToNextMonday
@@ -24,24 +27,40 @@ import uk.co.threebugs.darwinexclient.helpers.TimeOutHelper.Companion.waitForCon
 import uk.co.threebugs.darwinexclient.utils.logger
 import java.nio.file.Files
 import java.nio.file.Path
-import java.time.ZonedDateTime
+import java.util.*
 
 
 private const val SECONDS_30 = 30000L
 private const val SECONDS_5 = 5000L
 private const val EURUSD = "EURUSD"
 
-class TradeServiceTest : FunSpec() {
+class LongTradeServiceTest : FunSpec() {
 
-    private val accountName = "test"
+    private val setupGroupsName = "long-test"
+
+    companion object {
+        val originalTimeZone: TimeZone = TimeZone.getDefault()
+
+        @BeforeAll
+        @JvmStatic
+        internal fun setUp() {
+            TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
+        }
+
+        @AfterAll
+        @JvmStatic
+        internal fun tearDown() {
+            TimeZone.setDefault(originalTimeZone)
+        }
+    }
 
     override suspend fun beforeEach(testCase: TestCase) {
         deleteFilesBeforeTest(Path.of("test-ea-files/DWX"), "DWX_Commands_", ".txt")
 
         writeEmptyOrders()
-        deleteTradesFromTestAccount(accountName)
+        deleteTradesFromSetupGroupsName(setupGroupsName)
         deleteMarketDataFile()
-        getTrades(accountName).shouldBeEmpty()
+        getTradesWithSetupGroupsName(setupGroupsName).shouldBeEmpty()
         setTimeToNextMonday()
         startProcessing()
         delay(5000)
@@ -69,13 +88,15 @@ class TradeServiceTest : FunSpec() {
 
             writeMarketData(EURUSD)
 
+            val nextMondayAt9 = TimeHelper.getNextMondayAt9()
+
             waitForCondition(
                 timeout = SECONDS_30,
                 interval = SECONDS_5,
                 logMessage = "Waiting for trades with status PENDING to be written to the db..."
             ) {
                 logger.info("Client time ${getTime()}")
-                val foundTrades = getTrades(accountName)
+                val foundTrades = getTradesWithSetupGroupsName(setupGroupsName).filter { it.status == Status.PENDING }
 
                 if (foundTrades.isNotEmpty()) {
 
@@ -86,7 +107,7 @@ class TradeServiceTest : FunSpec() {
                         it.setup?.symbol shouldBe EURUSD
                         it.setup shouldNotBe null
                         it.setup?.isLong() shouldBe true
-                        it.targetPlaceDateTime shouldBe ZonedDateTime.parse("2023-10-30T09:00Z[UTC]")
+                        it.targetPlaceDateTime!!.toOffsetDateTime() shouldBe nextMondayAt9.toOffsetDateTime()
                     }
 
                     return@waitForCondition true  // Breaks out of the waiting loop
@@ -95,7 +116,7 @@ class TradeServiceTest : FunSpec() {
             }
 
 
-            val foundTrades = getTrades(accountName)
+            val foundTrades = getTradesWithSetupGroupsName(setupGroupsName)
             val (magicTrade1, magicTrade2) = foundTrades.take(2).map { it.id }
 
             writeMarketData(EURUSD)
@@ -111,7 +132,7 @@ class TradeServiceTest : FunSpec() {
                 val time = getTime()
                 logger.info("Client time $time")
 
-                if (!time.isBefore(ZonedDateTime.parse("2023-10-30T09:00Z[UTC]")))
+                if (!time.isBefore(nextMondayAt9))
                     return@waitForCondition true  // Breaks out of the waiting loop
 
                 false  // Continues the waiting loop
@@ -127,21 +148,17 @@ class TradeServiceTest : FunSpec() {
             ) {
 
                 logger.info("Client time ${getTime()}")
-                val tradesWithStatusOrderSent = getTrades(accountName)
+                val tradesWithStatusOrderSent = getTradesWithSetupGroupsName(setupGroupsName)
 
-                tradesWithStatusOrderSent.size shouldBe 2
 
-                val allTradesHaveStatusSent = tradesWithStatusOrderSent.all {
-                    logger.info("Found trade status: ${it.status}")
-                    it.status == Status.ORDER_SENT
-                }
+                val tradesWithSentCount = tradesWithStatusOrderSent.count { it.status == Status.ORDER_SENT }
 
                 tradesWithStatusOrderSent.any { it.id == magicTrade1 } shouldBe true
                 tradesWithStatusOrderSent.any { it.id == magicTrade2 } shouldBe true
 
                 writeMarketData(EURUSD)
 
-                if (allTradesHaveStatusSent) {
+                if (tradesWithSentCount == 2) {
                     return@waitForCondition true  // Breaks out of the waiting loop
                 }
 
@@ -157,18 +174,19 @@ class TradeServiceTest : FunSpec() {
             ) {
 
                 logger.info("Client time ${getTime()}")
-                val placedInMtTrades = getTrades(accountName)
+                val placedInMtTrades = getTradesWithSetupGroupsName(setupGroupsName)
 
-                placedInMtTrades.size shouldBe 2
+                placedInMtTrades.size shouldBe 4
 
-                val allTradesHaveStatusPlacedInMT = placedInMtTrades.all {
-                    logger.info("Found trade status: ${it.status}")
+                val tradesWithStatusPlacedInMTCount = placedInMtTrades.count {
                     it.status == Status.PLACED_IN_MT
                 }
 
+                placedInMtTrades.count { it.status == Status.PENDING } shouldBe 2
+
                 writeMarketData(EURUSD)
 
-                if (allTradesHaveStatusPlacedInMT)
+                if (tradesWithStatusPlacedInMTCount == 2)
                     return@waitForCondition true  // Breaks out of the waiting loop
 
                 false  // Continues the waiting loop
@@ -199,18 +217,17 @@ class TradeServiceTest : FunSpec() {
             ) {
 
                 logger.info("Client time ${getTime()}")
-                val filledTrades = getTrades(accountName)
+                val tradesWithSetupGroupsName = getTradesWithSetupGroupsName(setupGroupsName)
 
-                filledTrades.size shouldBe 2
+                tradesWithSetupGroupsName.size shouldBe 4
 
-                val allTradesHaveStatusFilled = filledTrades.all {
-                    logger.info("Found trade status: ${it.status}")
-                    it.status == Status.FILLED
-                }
+                val tradesWithStatusFilledCount = tradesWithSetupGroupsName.count { it.status == Status.FILLED }
 
                 writeMarketData(EURUSD)
 
-                if (allTradesHaveStatusFilled)
+                tradesWithSetupGroupsName.count { it.status == Status.PENDING } shouldBe 2
+
+                if (tradesWithStatusFilledCount == 2)
                     return@waitForCondition true  // Breaks out of the waiting loop
 
                 false  // Continues the waiting loop
@@ -227,18 +244,17 @@ class TradeServiceTest : FunSpec() {
             ) {
 
                 logger.info("Client time ${getTime()}")
-                val closedByUserTrades = getTrades(accountName)
+                val tradesWithSetupGroupName = getTradesWithSetupGroupsName(setupGroupsName)
 
-                closedByUserTrades.size shouldBe 2
+                tradesWithSetupGroupName.size shouldBe 4
 
-                val allTradesHaveStatusClosedByUser = closedByUserTrades.all {
-                    logger.info("Found trade status: ${it.status}")
+                val closedByUserCount = tradesWithSetupGroupName.count {
                     it.status == Status.CLOSED_BY_USER
                 }
 
                 writeMarketData(EURUSD)
 
-                if (allTradesHaveStatusClosedByUser)
+                if (closedByUserCount == 2)
                     return@waitForCondition true  // Breaks out of the waiting loop
 
                 false  // Continues the waiting loop
@@ -250,13 +266,14 @@ class TradeServiceTest : FunSpec() {
 
             writeMarketData(EURUSD)
 
+            val nextMondayAt9 = TimeHelper.getNextMondayAt9()
             waitForCondition(
                 timeout = SECONDS_30,
                 interval = SECONDS_5,
                 logMessage = "Waiting for trades with status PENDING to be written to the db..."
             ) {
                 logger.info("Client time ${getTime()}")
-                val foundTrades = getTrades(accountName)
+                val foundTrades = getTradesWithSetupGroupsName(setupGroupsName).filter { it.status == Status.PENDING }
 
                 if (foundTrades.isNotEmpty()) {
 
@@ -267,7 +284,9 @@ class TradeServiceTest : FunSpec() {
                         it.setup?.symbol shouldBe EURUSD
                         it.setup shouldNotBe null
                         it.setup?.isLong() shouldBe true
-                        it.targetPlaceDateTime shouldBe ZonedDateTime.parse("2023-10-30T09:00Z[UTC]")
+                        it.targetPlaceDateTime!!.toOffsetDateTime().toString() shouldBe nextMondayAt9
+                            .toString()
+
                     }
 
                     return@waitForCondition true  // Breaks out of the waiting loop
@@ -276,7 +295,7 @@ class TradeServiceTest : FunSpec() {
             }
 
 
-            val foundTrades = getTrades(accountName)
+            val foundTrades = getTradesWithSetupGroupsName(setupGroupsName)
             val (magicTrade1, magicTrade2) = foundTrades.take(2).map { it.id }
 
             writeMarketData(EURUSD)
@@ -292,7 +311,7 @@ class TradeServiceTest : FunSpec() {
                 val time = getTime()
                 logger.info("Client time $time")
 
-                if (!time.isBefore(ZonedDateTime.parse("2023-10-30T09:00Z[UTC]")))
+                if (!time.isBefore(nextMondayAt9))
                     return@waitForCondition true  // Breaks out of the waiting loop
 
                 false  // Continues the waiting loop
@@ -308,12 +327,9 @@ class TradeServiceTest : FunSpec() {
             ) {
 
                 logger.info("Client time ${getTime()}")
-                val tradesWithStatusOrderSent = getTrades(accountName)
+                val tradesWithStatusOrderSent = getTradesWithSetupGroupsName(setupGroupsName)
 
-                tradesWithStatusOrderSent.size shouldBe 2
-
-                val allTradesHaveStatusSent = tradesWithStatusOrderSent.all {
-                    logger.info("Found trade status: ${it.status}")
+                val tradesWithOrderSentCount = tradesWithStatusOrderSent.count {
                     it.status == Status.ORDER_SENT
                 }
 
@@ -322,7 +338,7 @@ class TradeServiceTest : FunSpec() {
 
                 writeMarketData(EURUSD)
 
-                if (allTradesHaveStatusSent) {
+                if (tradesWithOrderSentCount == 2) {
                     return@waitForCondition true  // Breaks out of the waiting loop
                 }
 
@@ -338,18 +354,17 @@ class TradeServiceTest : FunSpec() {
             ) {
 
                 logger.info("Client time ${getTime()}")
-                val trades = getTrades(accountName)
+                val trades = getTradesWithSetupGroupsName(setupGroupsName)
 
-                trades.size shouldBe 2
+                trades.size shouldBe 4
 
-                val tradesHaveCorrectStatus = trades.all {
-                    logger.info("Found trade status: ${it.status}")
+                val tradesHaveCorrectStatus = trades.count {
                     it.status == Status.PLACED_IN_MT
                 }
 
                 writeMarketData(EURUSD)
 
-                if (tradesHaveCorrectStatus)
+                if (tradesHaveCorrectStatus == 2)
                     return@waitForCondition true  // Breaks out of the waiting loop
 
                 false  // Continues the waiting loop
@@ -375,18 +390,15 @@ class TradeServiceTest : FunSpec() {
             ) {
 
                 logger.info("Client time ${getTime()}")
-                val trades = getTrades(accountName)
+                val trades = getTradesWithSetupGroupsName(setupGroupsName)
 
-                trades.size shouldBe 2
-
-                val tradesHaveCorrectStatus = trades.all {
-                    logger.info("Found trade status: ${it.status}")
+                val tradesHaveCorrectStatus = trades.count {
                     it.status == Status.OUT_OF_TIME
                 }
 
                 writeMarketData(EURUSD)
 
-                if (tradesHaveCorrectStatus)
+                if (tradesHaveCorrectStatus == 2)
                     return@waitForCondition true  // Breaks out of the waiting loop
 
                 false  // Continues the waiting loop
@@ -398,13 +410,14 @@ class TradeServiceTest : FunSpec() {
 
             writeMarketData(EURUSD)
 
+            val nextMondayAt9 = TimeHelper.getNextMondayAt9()
             waitForCondition(
                 timeout = SECONDS_30,
                 interval = SECONDS_5,
                 logMessage = "Waiting for trades with status PENDING to be written to the db..."
             ) {
                 logger.info("Client time ${getTime()}")
-                val foundTrades = getTrades(accountName)
+                val foundTrades = getTradesWithSetupGroupsName(setupGroupsName)
 
                 if (foundTrades.isNotEmpty()) {
 
@@ -415,7 +428,8 @@ class TradeServiceTest : FunSpec() {
                         it.setup?.symbol shouldBe EURUSD
                         it.setup shouldNotBe null
                         it.setup?.isLong() shouldBe true
-                        it.targetPlaceDateTime shouldBe ZonedDateTime.parse("2023-10-30T09:00Z[UTC]")
+                        it.targetPlaceDateTime!!.toOffsetDateTime().toString() shouldBe nextMondayAt9
+                            .toString()
                     }
 
                     return@waitForCondition true  // Breaks out of the waiting loop
@@ -424,7 +438,7 @@ class TradeServiceTest : FunSpec() {
             }
 
 
-            val foundTrades = getTrades(accountName)
+            val foundTrades = getTradesWithSetupGroupsName(setupGroupsName)
             val (magicTrade1, magicTrade2) = foundTrades.take(2).map { it.id }
 
             writeMarketData(EURUSD)
@@ -440,7 +454,7 @@ class TradeServiceTest : FunSpec() {
                 val time = getTime()
                 logger.info("Client time $time")
 
-                if (!time.isBefore(ZonedDateTime.parse("2023-10-30T09:00Z[UTC]")))
+                if (!time.isBefore(nextMondayAt9))
                     return@waitForCondition true  // Breaks out of the waiting loop
 
                 false  // Continues the waiting loop
@@ -456,12 +470,9 @@ class TradeServiceTest : FunSpec() {
             ) {
 
                 logger.info("Client time ${getTime()}")
-                val tradesWithStatusOrderSent = getTrades(accountName)
+                val tradesWithStatusOrderSent = getTradesWithSetupGroupsName(setupGroupsName)
 
-                tradesWithStatusOrderSent.size shouldBe 2
-
-                val allTradesHaveStatusSent = tradesWithStatusOrderSent.all {
-                    logger.info("Found trade status: ${it.status}")
+                val allTradesHaveStatusSent = tradesWithStatusOrderSent.count {
                     it.status == Status.ORDER_SENT
                 }
 
@@ -470,7 +481,7 @@ class TradeServiceTest : FunSpec() {
 
                 writeMarketData(EURUSD)
 
-                if (allTradesHaveStatusSent) {
+                if (allTradesHaveStatusSent == 2) {
                     return@waitForCondition true  // Breaks out of the waiting loop
                 }
 
@@ -486,18 +497,17 @@ class TradeServiceTest : FunSpec() {
             ) {
 
                 logger.info("Client time ${getTime()}")
-                val placedInMtTrades = getTrades(accountName)
+                val placedInMtTrades = getTradesWithSetupGroupsName(setupGroupsName)
 
-                placedInMtTrades.size shouldBe 2
+                placedInMtTrades.size shouldBe 4
 
-                val allTradesHaveStatusPlacedInMT = placedInMtTrades.all {
-                    logger.info("Found trade status: ${it.status}")
+                val allTradesHaveStatusPlacedInMT = placedInMtTrades.count {
                     it.status == Status.PLACED_IN_MT
                 }
 
                 writeMarketData(EURUSD)
 
-                if (allTradesHaveStatusPlacedInMT)
+                if (allTradesHaveStatusPlacedInMT == 2)
                     return@waitForCondition true  // Breaks out of the waiting loop
 
                 false  // Continues the waiting loop
@@ -506,12 +516,12 @@ class TradeServiceTest : FunSpec() {
 
             Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_0.txt")) shouldBe true
             Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_1.txt")) shouldBe true
+            Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_2.txt")) shouldBe false
 
             Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_0.txt"))
                 .contains("OPEN_ORDER|EURUSD,buylimit,") shouldBe true
             Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_1.txt"))
                 .contains("OPEN_ORDER|EURUSD,buylimit,") shouldBe true
-
 
             writeMarketData(EURUSD)
 
@@ -530,18 +540,17 @@ class TradeServiceTest : FunSpec() {
             ) {
 
                 logger.info("Client time ${getTime()}")
-                val filledTrades = getTrades(accountName)
+                val filledTrades = getTradesWithSetupGroupsName(setupGroupsName)
 
-                filledTrades.size shouldBe 2
+                filledTrades.size shouldBe 4
 
-                val allTradesHaveStatusFilled = filledTrades.all {
-                    logger.info("Found trade status: ${it.status}")
+                val allTradesHaveStatusFilled = filledTrades.count {
                     it.status == Status.FILLED
                 }
 
                 writeMarketData(EURUSD)
 
-                if (allTradesHaveStatusFilled)
+                if (allTradesHaveStatusFilled == 2)
                     return@waitForCondition true  // Breaks out of the waiting loop
 
                 false  // Continues the waiting loop
@@ -549,9 +558,9 @@ class TradeServiceTest : FunSpec() {
 
             writeMarketData(EURUSD)
 
-            val filledTrades = getTrades(accountName)
+            val filledTrades = getTradesWithSetupGroupsName(setupGroupsName)
 
-            filledTrades.size shouldBe 2
+            filledTrades.size shouldBe 4
 
             setTimeToNearlyCloseTime(filledTrades[1])
 
@@ -563,7 +572,7 @@ class TradeServiceTest : FunSpec() {
             ) {
 
                 logger.info("Client time ${getTime()}")
-                val closedByUserTrades = getTrades(accountName)
+                val closedByUserTrades = getTradesWithSetupGroupsName(setupGroupsName)
 
 
                 val closedByMagicSentCount = closedByUserTrades.count { it.status == Status.CLOSED_BY_MAGIC_SENT }
@@ -577,13 +586,21 @@ class TradeServiceTest : FunSpec() {
                 false
             }
 
-            Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_2.txt")) shouldBe true
-            Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_3.txt")) shouldBe true
-
+            Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_0.txt"))
+                .contains("|OPEN_ORDER|EURUSD,buylimit") shouldBe true
+            Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_1.txt"))
+                .contains("|OPEN_ORDER|EURUSD,buylimit") shouldBe true
             Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_2.txt"))
-                .contains("|CLOSE_ORDERS_BY_MAGIC|") shouldBe true
+                .contains("|OPEN_ORDER|EURUSD,buylimit") shouldBe true
             Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_3.txt"))
+                .contains("|OPEN_ORDER|EURUSD,buylimit") shouldBe true
+
+            Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_4.txt"))
                 .contains("|CLOSE_ORDERS_BY_MAGIC|") shouldBe true
+            Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_5.txt"))
+                .contains("|CLOSE_ORDERS_BY_MAGIC|") shouldBe true
+
+            Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_6.txt")) shouldBe false
 
             writeMarketData(EURUSD)
 
@@ -596,7 +613,8 @@ class TradeServiceTest : FunSpec() {
             ) {
 
                 logger.info("Client time ${getTime()}")
-                val closedByUserTrades = getTrades(accountName).count { it.status == Status.CLOSED_BY_TIME }
+                val closedByUserTrades =
+                    getTradesWithSetupGroupsName(setupGroupsName).count { it.status == Status.CLOSED_BY_TIME }
 
                 writeMarketData(EURUSD)
 

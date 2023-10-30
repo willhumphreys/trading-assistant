@@ -87,8 +87,9 @@ class Client(
         objectMapper.registerModule(KotlinModule())
         objectMapper.registerModule(JavaTimeModule())
         val accountDtos = loadMetaTraderInstalls(Paths.get("accounts", "metatrader_dirs.json"))
-        val setupGroupsPath = Paths.get("accounts", "setup-groups")
         val symbols = arrayOf("EURUSD", "GBPUSD", "USDCAD", "NZDUSD", "AUDUSD", "USDJPY", "USDCHF")
+
+        val setupGroupsPath = Paths.get("accounts", "setup-groups")
         try {
             Files.list(setupGroupsPath).use { paths ->
                 paths.forEach { setupsPath: Path ->
@@ -151,23 +152,20 @@ class Client(
     }
 
     private fun loadMetaTraderInstalls(path: Path): List<AccountDto> {
-        try {
-            val metaTraderDirs = objectMapper.readValue(path.toFile(), object : TypeReference<List<MetaTraderDir>>() {})
-
-            return metaTraderDirs.map { metaTraderDir ->
-                val foundAccount = accountService.findByName(metaTraderDir.name!!)
-
-                if (foundAccount == null) {
-                    logger.info("MetaTraderDir {} not found in database", metaTraderDir.name)
-                    accountService.save(
-                        AccountDto(
-                            metatraderAdvisorPath = Path.of(metaTraderDir.dirPath!!),
-                            name = metaTraderDir.name
+        return try {
+            val metaTraderDirs = objectMapper.readValue<List<MetaTraderDir>>(path.toFile())
+            metaTraderDirs.map { metaTraderDir ->
+                accountService.findByName(metaTraderDir.name!!)
+                    ?.also { logger.info("MetaTraderDir ${metaTraderDir.name} found in database") }
+                    ?: run {
+                        logger.info("MetaTraderDir ${metaTraderDir.name} not found in database")
+                        accountService.save(
+                            AccountDto(
+                                metatraderAdvisorPath = Path.of(metaTraderDir.dirPath!!),
+                                name = metaTraderDir.name
+                            )
                         )
-                    )
-                } else {
-                    foundAccount
-                }
+                    }
             }
         } catch (e: Exception) {
             logger.error("Error loading MetaTrader directories from JSON file", e)

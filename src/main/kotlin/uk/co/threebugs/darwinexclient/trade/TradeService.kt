@@ -51,8 +51,8 @@ class TradeService(
         tradeRepository.deleteById(id)
     }
 
-    fun deleteTradesBySetupGroupName(name: String): Int {
-        return tradeRepository.deleteBySetupGroupName(name)
+    fun deleteTradesBySetupGroupsName(name: String): Int {
+        return tradeRepository.deleteBySetupGroupsName(name)
     }
 
     fun findAll(): List<TradeDto> {
@@ -221,6 +221,10 @@ class TradeService(
 
     fun findByAccountName(name: String): List<TradeDto> {
         return tradeRepository.findByAccount_Name(name).map { tradeMapper.toDto(it) }
+    }
+
+    fun findBySetupGroupsName(name: String): List<TradeDto>? {
+        return tradeRepository.findBySetupGroupsName(name).map { tradeMapper.toDto(it) }
     }
 
     companion object {

@@ -25,8 +25,13 @@
     "metatrader-account": "long-dev-linux"
   },
   {
-    "name": "test",
+    "name": "test-long",
     "setup-group-name": "long-test",
+    "metatrader-account": "test"
+  },
+  {
+    "name": "test-short",
+    "setup-group-name": "short-test",
     "metatrader-account": "test"
   }
 ]
