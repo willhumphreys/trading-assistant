@@ -6,7 +6,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.co.threebugs.darwinexclient.SlackClient
 import uk.co.threebugs.darwinexclient.Status
-import uk.co.threebugs.darwinexclient.account.Account
+import uk.co.threebugs.darwinexclient.account.AccountMapper
 import uk.co.threebugs.darwinexclient.accountsetupgroups.AccountSetupGroups
 import uk.co.threebugs.darwinexclient.accountsetupgroups.AccountSetupGroupsRepository
 import uk.co.threebugs.darwinexclient.clock.MutableClock
@@ -21,17 +21,19 @@ import uk.co.threebugs.darwinexclient.utils.logger
 import java.math.BigDecimal
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.util.function.Consumer
 
 @Service
 class TradeService(
     private val tradeRepository: TradeRepository,
-    private val setupRepository: SetupRepository,
     private val accountSetupGroupsRepository: AccountSetupGroupsRepository,
     private val tradeMapper: TradeMapper,
     private val timeHelper: TimeHelper,
     private val slackClient: SlackClient,
-    private val clock: MutableClock
+    private val clock: MutableClock,
+    private val setupRepository: SetupRepository,
+    private val accountMapper: AccountMapper,
 ) {
     fun findById(id: Int): TradeDto? {
         return tradeRepository.findByIdOrNull(id)?.let { tradeMapper.toDto(it) }
@@ -65,26 +67,24 @@ class TradeService(
         return tradeRepository.findAll(example, sort).map { tradeMapper.toDto(it) }
     }
 
-    fun createTradesToPlaceFromEnabledSetups(symbol: String, account: Account) {
-        val accountSetupGroups = accountSetupGroupsRepository.findByAccount(account)
-        accountSetupGroups.forEach { accountSetupGroup ->
-            createAndPlaceTradesForEnabledSetupsInSetupGroup(symbol, account, accountSetupGroup)
-        }
-    }
+    fun createTradesToPlaceFromEnabledSetups(symbol: String, accountSetupGroups: AccountSetupGroups) {
 
-    private fun createAndPlaceTradesForEnabledSetupsInSetupGroup(
-        symbol: String,
-        account: Account,
-        accountSetupGroup: AccountSetupGroups
-    ) {
-        val setups = setupRepository.findEnabledSetups(symbol, accountSetupGroup.setupGroups!!)
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+
+
+        val setups = setupRepository.findEnabledSetups(symbol, accountSetupGroups.setupGroups!!)
         setups.forEach { setup ->
             val targetPlaceTime: ZonedDateTime =
                 SetupFileRepository.getNextEventTime(setup.dayOfWeek!!, setup.hourOfDay!!, clock)
+            logger.info("clockNow: ${ZonedDateTime.now()} targetPlaceTime: ${formatter.format(targetPlaceTime)}" + " setup: ${setup.id}" + " accountSetupGroups: ${accountSetupGroups.id}")
             val existingTrade =
-                tradeRepository.findBySetupAndTargetPlaceDateTimeAndAccount(setup, targetPlaceTime, account)
+                tradeRepository.findBySetupAndTargetPlaceDateTimeAndAccountSetupGroups(
+                    accountSetupGroups.id!!,
+                    setup.id!!,
+                    formatter.format(targetPlaceTime)
+                )
             if (existingTrade == null) {
-                val trade = tradeMapper.toEntity(setup, targetPlaceTime, account).apply {
+                val trade = tradeMapper.toEntity(setup, targetPlaceTime, accountSetupGroups.account!!).apply {
                     status = Status.PENDING
                 }
                 tradeRepository.save(trade)
@@ -93,8 +93,15 @@ class TradeService(
         }
     }
 
-    fun placeTrades(dwx: Client, symbol: String, bid: BigDecimal, ask: BigDecimal, account: Account) {
-        tradeRepository.findByStatusAndSetup_SymbolAndAccount(Status.PENDING, symbol, account)
+
+    fun placeTrades(
+        dwx: Client,
+        symbol: String,
+        bid: BigDecimal,
+        ask: BigDecimal,
+        accountSetupGroups: AccountSetupGroups
+    ) {
+        tradeRepository.findByAccountSetupGroupsSymbolAndStatus(accountSetupGroups.id!!, symbol, Status.PENDING.name)
             .forEach(Consumer { trade: Trade ->
                 val now = ZonedDateTime.now(clock)
                 val targetPlaceDateTime = trade.targetPlaceDateTime
@@ -147,8 +154,9 @@ class TradeService(
         return trade
     }
 
-    fun closeTradesAtTime(dwx: Client, symbol: String, account: Account) {
-        tradeRepository.findByStatusAndSetup_SymbolAndAccount(Status.FILLED, symbol, account).stream()
+    fun closeTradesAtTime(dwx: Client, symbol: String, accountSetupGroups: AccountSetupGroups) {
+        tradeRepository.findByAccountSetupGroupsSymbolAndStatus(accountSetupGroups.id!!, symbol, Status.FILLED.name)
+            .stream()
             .filter { trade: Trade ->
 
                 val closeDateTime = trade.targetPlaceDateTime!!.plusHours(trade.setup!!.tradeDuration!!.toLong())

@@ -35,10 +35,10 @@ class TradeController (
     }
 
     @DeleteMapping("/bySetupGroupsName/{name}")
-    fun deleteTradesBySetupGroupsName(@PathVariable name: String): ResponseEntity<Unit> {
+    fun deleteTradesBySetupGroupsName(@PathVariable name: String): ResponseEntity<Int> {
         return try {
-            tradeService.deleteTradesBySetupGroupsName(name)
-            ResponseEntity.ok().build()
+            val rowsDeleted = tradeService.deleteTradesBySetupGroupsName(name)
+            ResponseEntity.ok(rowsDeleted)
         } catch (e: Exception) {
             // Log the error
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()

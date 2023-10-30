@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component
 import uk.co.threebugs.darwinexclient.MetaTraderDir
 import uk.co.threebugs.darwinexclient.account.AccountDto
 import uk.co.threebugs.darwinexclient.account.AccountService
+import uk.co.threebugs.darwinexclient.accountsetupgroups.AccountSetupGroupsDto
 import uk.co.threebugs.darwinexclient.accountsetupgroups.AccountSetupGroupsService
 import uk.co.threebugs.darwinexclient.actions.ActionsService
 import uk.co.threebugs.darwinexclient.setup.Setup
@@ -35,7 +36,7 @@ import kotlin.concurrent.thread
 class Client(
     private val eventHandler: TradeEventHandler,
     private val accountService: AccountService,
-    @param:Value("\${metatrader-name}") private val metaTraderName: String,
+    @param:Value("\${account-setup-groups-name}") private val accountSetupGroupsName: String,
     @param:Value("\${sleep-delay}") private val sleepDelay: Int,
     @param:Value("\${max-retry-command-seconds}") private val maxRetryCommandSeconds: Int,
     private val setupGroupService: SetupGroupService,
@@ -81,7 +82,9 @@ class Client(
     private var lastHistoricTradesStr: String? = ""
     private var lastBarData = JSONObject()
     private var lastMarketData: Map<String, CurrencyInfo> = java.util.Map.of()
-    private final val account: AccountDto
+
+    //private final val account: AccountDto
+    private final val accountSetupGroupsDto: AccountSetupGroupsDto
 
     init {
         objectMapper.registerModule(KotlinModule())
@@ -103,11 +106,11 @@ class Client(
         }
         val accounts =
             accountSetupGroupsService.loadAccountSetupGroups(Paths.get("accounts", "account-setup-groups.json"))
-        val accountSetupGroupsDto = accountSetupGroupsService.findByName(metaTraderName)
-            ?: throw RuntimeException("Failed to find account setup groups: $metaTraderName")
+        accountSetupGroupsDto = accountSetupGroupsService.findByName(accountSetupGroupsName)
+            ?: throw RuntimeException("Failed to find account setup groups: $accountSetupGroupsName")
 
-        account = accountSetupGroupsDto.account!!
-        val metaTraderDirPath = account.metatraderAdvisorPath!!
+
+        val metaTraderDirPath = accountSetupGroupsDto.account!!.metatraderAdvisorPath!!
         val f = metaTraderDirPath.toFile()
         if (!f.exists()) {
             logger.info("ERROR: MetaTraderDirPath does not exist!")
@@ -471,7 +474,7 @@ class Client(
                 val lastCurrencyInfo = lastMarketData[symbol]
 
                 if (lastCurrencyInfo == null || newCurrencyInfo != lastCurrencyInfo) {
-                    eventHandler.onTick(this, symbol, newCurrencyInfo.bid, newCurrencyInfo.ask, account)
+                    eventHandler.onTick(this, symbol, newCurrencyInfo.bid, newCurrencyInfo.ask, accountSetupGroupsDto)
                 }
             }
 

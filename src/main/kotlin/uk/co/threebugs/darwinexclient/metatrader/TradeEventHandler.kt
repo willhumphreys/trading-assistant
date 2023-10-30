@@ -4,8 +4,9 @@ import org.json.JSONObject
 import org.springframework.stereotype.Component
 import uk.co.threebugs.darwinexclient.SlackClient
 import uk.co.threebugs.darwinexclient.Status
-import uk.co.threebugs.darwinexclient.account.AccountDto
 import uk.co.threebugs.darwinexclient.account.AccountMapper
+import uk.co.threebugs.darwinexclient.accountsetupgroups.AccountSetupGroupsDto
+import uk.co.threebugs.darwinexclient.accountsetupgroups.AccountSetupGroupsMapper
 import uk.co.threebugs.darwinexclient.trade.TradeService
 import uk.co.threebugs.darwinexclient.utils.logger
 import uk.co.threebugs.darwinexclient.websocket.WebSocketController
@@ -24,6 +25,7 @@ class TradeEventHandler(
     private val tradeService: TradeService,
     private val slackClient: SlackClient,
     private val accountMapper: AccountMapper,
+    private val accountSetupGroupsMapper: AccountSetupGroupsMapper,
     private val clock: Clock
 
 ) {
@@ -52,7 +54,13 @@ class TradeEventHandler(
     //    }
     // use synchronized so that price updates and execution updates are not processed one after the other.
     @Synchronized
-    fun onTick(dwx: Client, symbol: String, bid: BigDecimal, ask: BigDecimal, accountDto: AccountDto) {
+    fun onTick(
+        dwx: Client,
+        symbol: String,
+        bid: BigDecimal,
+        ask: BigDecimal,
+        accountSetupGroupsDto: AccountSetupGroupsDto
+    ) {
 
         webSocketController.sendMessage(
             WebSocketMessage(id = 0, field = "tick", value = "$symbol, $bid, $ask"),
@@ -73,10 +81,10 @@ class TradeEventHandler(
 //                           .build());
 //
 //        }
-        val account = accountMapper.toEntity(accountDto)
-        tradeService.createTradesToPlaceFromEnabledSetups(symbol, account)
-        tradeService.placeTrades(dwx, symbol, bid, ask, account)
-        tradeService.closeTradesAtTime(dwx, symbol, account)
+        val accountSetupGroups = accountSetupGroupsMapper.toEntity(accountSetupGroupsDto)
+        tradeService.createTradesToPlaceFromEnabledSetups(symbol, accountSetupGroups)
+        tradeService.placeTrades(dwx, symbol, bid, ask, accountSetupGroups)
+        tradeService.closeTradesAtTime(dwx, symbol, accountSetupGroups)
     }
 
     @Synchronized
