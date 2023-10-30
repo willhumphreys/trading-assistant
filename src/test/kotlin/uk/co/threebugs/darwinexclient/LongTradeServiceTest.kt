@@ -5,8 +5,6 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.delay
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeAll
 import uk.co.threebugs.darwinexclient.Status
 import uk.co.threebugs.darwinexclient.helpers.MetaTraderFileHelper.Companion.deleteFilesBeforeTest
 import uk.co.threebugs.darwinexclient.helpers.MetaTraderFileHelper.Companion.deleteMarketDataFile
@@ -27,7 +25,6 @@ import uk.co.threebugs.darwinexclient.helpers.TimeOutHelper.Companion.waitForCon
 import uk.co.threebugs.darwinexclient.utils.logger
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.*
 
 
 private const val SECONDS_30 = 30000L
@@ -37,22 +34,6 @@ private const val EURUSD = "EURUSD"
 class LongTradeServiceTest : FunSpec() {
 
     private val setupGroupsName = "long-test"
-
-    companion object {
-        val originalTimeZone: TimeZone = TimeZone.getDefault()
-
-        @BeforeAll
-        @JvmStatic
-        internal fun setUp() {
-            TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
-        }
-
-        @AfterAll
-        @JvmStatic
-        internal fun tearDown() {
-            TimeZone.setDefault(originalTimeZone)
-        }
-    }
 
     override suspend fun beforeEach(testCase: TestCase) {
         deleteFilesBeforeTest(Path.of("test-ea-files/DWX"), "DWX_Commands_", ".txt")
