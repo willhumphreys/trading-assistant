@@ -76,7 +76,7 @@ class TradeService(
         setups.forEach { setup ->
             val targetPlaceTime: ZonedDateTime =
                 SetupFileRepository.getNextEventTime(setup.dayOfWeek!!, setup.hourOfDay!!, clock)
-            logger.info("clockNow: ${ZonedDateTime.now()} targetPlaceTime: ${formatter.format(targetPlaceTime)}" + " setup: ${setup.id}" + " accountSetupGroups: ${accountSetupGroups.id}")
+            //logger.info("clockNow: ${ZonedDateTime.now()} targetPlaceTime: ${formatter.format(targetPlaceTime)}" + " setup: ${setup.id}" + " accountSetupGroups: ${accountSetupGroups.id}")
             val existingTrade =
                 tradeRepository.findBySetupAndTargetPlaceDateTimeAndAccountSetupGroups(
                     accountSetupGroups.id!!,
@@ -162,7 +162,7 @@ class TradeService(
                 val closeDateTime = trade.targetPlaceDateTime!!.plusHours(trade.setup!!.tradeDuration!!.toLong())
                 val currentDateTime = ZonedDateTime.now(clock)
 
-                logger.info("closeDateTime: $closeDateTime currentDateTime: $currentDateTime")
+                //logger.info("closeDateTime: $closeDateTime currentDateTime: $currentDateTime")
 
                 closeDateTime.isBefore(currentDateTime)
             }.forEach { trade: Trade ->

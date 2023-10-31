@@ -24,6 +24,7 @@ import uk.co.threebugs.darwinexclient.setupgroup.SetupGroupService
 import uk.co.threebugs.darwinexclient.utils.logger
 import uk.co.threebugs.darwinexclient.websocket.WebSocketController
 import uk.co.threebugs.darwinexclient.websocket.WebSocketMessage
+import java.io.FileNotFoundException
 import java.io.IOException
 import java.math.BigDecimal
 import java.nio.file.Files
@@ -203,7 +204,6 @@ class Client(
     /*Regularly checks the file for open orders and triggers
     the eventHandler.onOrderEvent() function.
     */
-    @Throws(JsonProcessingException::class)
     private fun checkOpenOrders() {
         while (true) {
             Helpers.sleep(sleepDelay)
@@ -267,6 +267,8 @@ class Client(
 
             } catch (e1: MismatchedInputException) {
                 logger.error("MismatchedInputException checking open orders", e1)
+            } catch (e2: FileNotFoundException) {
+                logger.error("File not found", e2)
             }
         }
     }
