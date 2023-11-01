@@ -16,6 +16,8 @@ data class Trade (
 
     var createdDateTime: ZonedDateTime? = null,
 
+    var lastUpdatedDateTime: ZonedDateTime? = null,
+
     //@Column(name = "type", columnDefinition = "ENUM('BUY', 'SELL', 'HOLD')")
     @Enumerated(EnumType.STRING)
     var status: Status? = null,

@@ -1,26 +1,37 @@
 package uk.co.threebugs.darwinexclient.trade
 
-import org.mapstruct.Context
-import org.mapstruct.Mapper
-import org.mapstruct.Mapping
+import org.mapstruct.*
 import uk.co.threebugs.darwinexclient.account.Account
 import uk.co.threebugs.darwinexclient.setup.Setup
 import java.nio.file.Path
 import java.time.Clock
 import java.time.ZonedDateTime
 
+
 @Mapper(componentModel = "spring")
 abstract class TradeMapper {
     abstract fun toDto(trade: Trade): TradeDto
 
     @Mapping(target = "id", source = "tradeDto.id")
-    @Mapping(target = "createdDateTime", expression = "java( ZonedDateTime.now(clock) )")
+    @Mapping(target = "createdDateTime", source = "tradeDto.createdDateTime")
     abstract fun toEntity(tradeDto: TradeDto, setup: Setup, @Context clock: Clock): Trade
 
-    @Mapping(target = "createdDateTime", expression = "java( ZonedDateTime.now(clock) )")
+    @AfterMapping
+    fun setCreatedDateTime(@MappingTarget trade: Trade, @Context clock: Clock) {
+        if (trade.createdDateTime == null) {
+            trade.createdDateTime = ZonedDateTime.now(clock)
+        }
+    }
+
+    @AfterMapping
+    fun updateLastUpdatedDateTime(@MappingTarget trade: Trade, @Context clock: Clock) {
+        trade.lastUpdatedDateTime = ZonedDateTime.now(clock)
+    }
+
+    @Mapping(target = "createdDateTime", source = "tradeDto.createdDateTime")
     abstract fun toEntity(tradeDto: TradeDto, @Context clock: Clock): Trade
 
-    @Mapping(target = "createdDateTime", expression = "java( ZonedDateTime.now(clock) )")
+    @Mapping(target = "createdDateTime", ignore = true)
     @Mapping(target = "metatraderId", ignore = true)
     @Mapping(target = "profit", ignore = true)
     @Mapping(target = "status", ignore = true)
