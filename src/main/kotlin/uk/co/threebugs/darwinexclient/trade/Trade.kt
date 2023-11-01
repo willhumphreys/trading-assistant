@@ -44,11 +44,8 @@ data class Trade (
 )
 
 {
-    @PrePersist
-    fun prePersist() {
-        createdDateTime = ZonedDateTime.now()
-    }
-val newTradeMessage: String
+
+    val newTradeMessage: String
     get() = "New Trade: ${setup?.rank} ${setup?.symbol} ${setup?.direction} in account: ${account?.name}"
 
 }

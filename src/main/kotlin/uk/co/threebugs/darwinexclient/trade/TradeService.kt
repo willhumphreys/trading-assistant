@@ -6,13 +6,12 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.co.threebugs.darwinexclient.SlackClient
 import uk.co.threebugs.darwinexclient.Status
-import uk.co.threebugs.darwinexclient.account.AccountMapper
 import uk.co.threebugs.darwinexclient.accountsetupgroups.AccountSetupGroups
-import uk.co.threebugs.darwinexclient.accountsetupgroups.AccountSetupGroupsRepository
 import uk.co.threebugs.darwinexclient.clock.MutableClock
 import uk.co.threebugs.darwinexclient.metatrader.Client
 import uk.co.threebugs.darwinexclient.metatrader.Order
 import uk.co.threebugs.darwinexclient.metatrader.TradeInfo
+import uk.co.threebugs.darwinexclient.setup.Setup
 import uk.co.threebugs.darwinexclient.setup.SetupFileRepository
 import uk.co.threebugs.darwinexclient.setup.SetupRepository
 import uk.co.threebugs.darwinexclient.utils.Constants
@@ -27,13 +26,11 @@ import java.util.function.Consumer
 @Service
 class TradeService(
     private val tradeRepository: TradeRepository,
-    private val accountSetupGroupsRepository: AccountSetupGroupsRepository,
     private val tradeMapper: TradeMapper,
     private val timeHelper: TimeHelper,
     private val slackClient: SlackClient,
     private val clock: MutableClock,
     private val setupRepository: SetupRepository,
-    private val accountMapper: AccountMapper,
 ) {
     fun findById(id: Int): TradeDto? {
         return tradeRepository.findByIdOrNull(id)?.let { tradeMapper.toDto(it) }
@@ -41,12 +38,16 @@ class TradeService(
 
 
     fun save(tradeDto: TradeDto): TradeDto {
-        val setup = setupRepository.findByIdOrNull(tradeDto.setup!!.id)
-            ?: throw IllegalArgumentException("Setup not found for ID: ${tradeDto.setup!!.id}")
+        val setup = findSetupById(tradeDto.setup!!.id!!)
 
-        var record = tradeMapper.toEntity(tradeDto, setup)
-        record = tradeRepository.save(record)
-        return tradeMapper.toDto(record)
+        return tradeMapper.toEntity(tradeDto, setup, clock)
+            .let(tradeRepository::save)
+            .let(tradeMapper::toDto)
+    }
+
+    private fun findSetupById(id: Int): Setup {
+        return setupRepository.findByIdOrNull(id)
+            ?: throw IllegalArgumentException("Setup not found for ID: $id")
     }
 
     fun deleteById(id: Int) {
@@ -62,7 +63,7 @@ class TradeService(
     }
 
     fun findTrades(exampleRecord: TradeDto, sort: Sort): List<TradeDto?> {
-        val example = Example.of(tradeMapper.toEntity(exampleRecord))
+        val example = Example.of(tradeMapper.toEntity(exampleRecord, clock))
 
         return tradeRepository.findAll(example, sort).map { tradeMapper.toDto(it) }
     }
@@ -84,7 +85,7 @@ class TradeService(
                     formatter.format(targetPlaceTime)
                 )
             if (existingTrade == null) {
-                val trade = tradeMapper.toEntity(setup, targetPlaceTime, accountSetupGroups.account!!).apply {
+                val trade = tradeMapper.toEntity(setup, targetPlaceTime, accountSetupGroups.account!!, clock).apply {
                     status = Status.PENDING
                 }
                 tradeRepository.save(trade)

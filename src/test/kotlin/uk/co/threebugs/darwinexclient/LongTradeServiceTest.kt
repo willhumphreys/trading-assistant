@@ -411,6 +411,7 @@ class LongTradeServiceTest : FunSpec() {
                         foundTrades.forEach {
                             logger.info("Found trade: $it")
                             it.status shouldBe Status.PENDING
+                            it.createdDateTime shouldNotBe null
                             it.setup shouldNotBe null
                             it.setup?.symbol shouldBe EURUSD
                             it.setup shouldNotBe null
@@ -581,11 +582,34 @@ class LongTradeServiceTest : FunSpec() {
                     .contains("|OPEN_ORDER|EURUSD,${buySell}limit") shouldBe true
 
                 Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_2.txt"))
-                    .contains("|CLOSE_ORDERS_BY_MAGIC|") shouldBe true
+                    .contains("|OPEN_ORDER|EURUSD,${buySell}limit") shouldBe true
                 Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_3.txt"))
+                    .contains("|OPEN_ORDER|EURUSD,${buySell}limit") shouldBe true
+
+
+                Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_4.txt"))
+                    .contains("|CLOSE_ORDERS_BY_MAGIC|") shouldBe true
+                Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_5.txt"))
                     .contains("|CLOSE_ORDERS_BY_MAGIC|") shouldBe true
 
-                Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_4.txt")) shouldBe false
+                Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_6.txt")) shouldBe false
+
+                val foundNextTrades =
+                    getTradesWithSetupGroupsName(setup.setupGroupsName).filter { it.status == Status.PENDING }
+
+                if (foundNextTrades.isNotEmpty()) {
+
+                    foundNextTrades.forEach {
+                        logger.info("Found trade: $it")
+                        it.createdDateTime shouldNotBe null
+                        it.status shouldBe Status.PENDING
+                        it.setup shouldNotBe null
+                        it.setup?.symbol shouldBe EURUSD
+                        it.setup shouldNotBe null
+                        it.setup?.isLong() shouldBe setup.isLong
+                        it.targetPlaceDateTime!!.toOffsetDateTime() shouldBe nextMondayAt9.toOffsetDateTime()
+                    }
+                }
 
                 writeMarketData(EURUSD)
 
@@ -616,7 +640,7 @@ class LongTradeServiceTest : FunSpec() {
         val shortSetup = TestSetup("short-test", false)
 
         // Run your test with different setupGroupsNames
-        listOf(shortSetup).forEach { setup ->
+        listOf(longSetup).forEach { setup ->
             createTestWithSetupGroupsName(setup)
         }
     }

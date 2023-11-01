@@ -66,7 +66,7 @@ class TimeHelper {
             val instant = Instant.ofEpochMilli(timeDto.time)
             val localDateTime = ZonedDateTime.ofInstant(instant, UTC)
 
-            logger.info("Client time is: $localDateTime")
+            //logger.info("Client time is: $localDateTime")
             return localDateTime
         }
 
