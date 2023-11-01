@@ -89,7 +89,6 @@ class TimeHelper {
             return ZonedDateTime.now(UTC).with(TemporalAdjusters.next(DayOfWeek.MONDAY)).withHour(9).withMinute(0)
                 .withSecond(0).withNano(0)
         }
-
         private fun getDurationBetweenClientNowAndNearlyCloseTime(trade: TradeDto): Duration {
 
             val clientTime = getTime()

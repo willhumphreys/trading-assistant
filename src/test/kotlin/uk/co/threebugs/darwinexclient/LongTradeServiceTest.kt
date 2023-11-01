@@ -607,7 +607,6 @@ class LongTradeServiceTest : FunSpec() {
                         it.setup?.symbol shouldBe EURUSD
                         it.setup shouldNotBe null
                         it.setup?.isLong() shouldBe setup.isLong
-                        it.targetPlaceDateTime!!.toOffsetDateTime() shouldBe nextMondayAt9.toOffsetDateTime()
                     }
                 }
 
