@@ -63,6 +63,7 @@ export interface Trade {
     status: Status;
     setup: Setup;
     createdDateTime: string;
+    lastUpdatedDateTime: string;
     targetPlaceDateTime: string;
     placedDateTime: string;
     placedPrice: number | null;

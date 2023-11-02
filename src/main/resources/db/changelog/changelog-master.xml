@@ -11,5 +11,4 @@
     <include file="classpath:db/changelog/004_add_trade_table.xml"/>
     <include file="classpath:db/changelog/005_add_account_setup_groups.xml"/>
     <include file="classpath:db/changelog/007_add_new_magic_status.xml"/>
-    <include file="classpath:db/changelog/008_add_lastUpdatedToTrade.xml"/>
 </databaseChangeLog>

@@ -9,14 +9,11 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import uk.co.threebugs.darwinexclient.clock.TimeChangeRequest
 import uk.co.threebugs.darwinexclient.clock.TimeDto
-import uk.co.threebugs.darwinexclient.trade.TradeDto
 import uk.co.threebugs.darwinexclient.utils.logger
-import java.time.DayOfWeek
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneOffset.UTC
 import java.time.ZonedDateTime
-import java.time.temporal.TemporalAdjusters
 
 class TimeHelper {
 
@@ -25,13 +22,21 @@ class TimeHelper {
         private val client = OkHttpClient()
         private val mapper = jacksonObjectMapper().registerModule(JavaTimeModule())
 
-        fun setTimeToNextMonday() {
-            setTime { getDurationBetweenNowAndNextMonday() }
+
+        fun setClockToSpecificDateTime(dateTime: ZonedDateTime) {
+            setTime {
+                val now = ZonedDateTime.now(UTC)
+                Duration.between(now, dateTime)
+            }
         }
 
-        fun setTimeToNearlyCloseTime(trade: TradeDto) {
-            setTime { getDurationBetweenClientNowAndNearlyCloseTime(trade) }
-        }
+        //        fun setTimeToNextMonday() {
+//            setTime { getDurationBetweenNowAndNextMonday() }
+//        }
+
+//        fun setTimeToNearlyCloseTime(trade: TradeDto) {
+//            setTime { getDurationBetweenClientNowAndNearlyCloseTime(trade) }
+//        }
 
         private fun setTime(durationProvider: () -> Duration) {
             val duration = durationProvider()
@@ -70,47 +75,47 @@ class TimeHelper {
             return localDateTime
         }
 
-        private fun getDurationBetweenNowAndNextMonday(): Duration {
+//        private fun getDurationBetweenNowAndNextMonday(): Duration {
+//
+//            val nextMondayAt859 = getNextMondayAt859()
+//            val now = ZonedDateTime.now(UTC)
+//            return Duration.between(now, nextMondayAt859)
+//            //return Clock.offset(Clock.system(ZoneOffset.UTC), durationUntilNextMondayAt859)
+//
+//        }
 
-            val nextMondayAt859 = getNextMondayAt859()
-            val now = ZonedDateTime.now(UTC)
-            return Duration.between(now, nextMondayAt859)
-            //return Clock.offset(Clock.system(ZoneOffset.UTC), durationUntilNextMondayAt859)
+//        private fun getNextMondayAt859(): ZonedDateTime {
+//            val today = ZonedDateTime.now(UTC)
+//            return today.with(TemporalAdjusters.next(DayOfWeek.MONDAY)).withHour(8).withMinute(59).withSecond(40)
+//                .withNano(0)
+//        }
 
-        }
-
-        fun getNextMondayAt859(): ZonedDateTime {
-            val today = ZonedDateTime.now(UTC)
-            return today.with(TemporalAdjusters.next(DayOfWeek.MONDAY)).withHour(8).withMinute(59).withSecond(40)
-                .withNano(0)
-        }
-
-        fun getNextMondayAt9(): ZonedDateTime {
-            return ZonedDateTime.now(UTC).with(TemporalAdjusters.next(DayOfWeek.MONDAY)).withHour(9).withMinute(0)
-                .withSecond(0).withNano(0)
-        }
-        private fun getDurationBetweenClientNowAndNearlyCloseTime(trade: TradeDto): Duration {
-
-            val clientTime = getTime()
-            val durationBetweenNowAndClientTime = Duration.between(
-                ZonedDateTime.now(UTC),
-                clientTime
-            )
-
-            logger.info("Duration between now and client time: $durationBetweenNowAndClientTime")
-
-            val durationBetweenClientTimeAndTradeCloseTime = Duration.between(
-                clientTime,
-                trade.targetPlaceDateTime!!.plusHours(trade.setup!!.tradeDuration!!.toLong()).minusSeconds(10)
-            )
-
-            logger.info("Duration between client time and trade close time: $durationBetweenClientTimeAndTradeCloseTime")
-            val totalDuration = durationBetweenNowAndClientTime.plus(durationBetweenClientTimeAndTradeCloseTime)
-
-            logger.info("Total duration: $totalDuration")
-
-            return totalDuration
-
-        }
+//        fun getNextMondayAt9(): ZonedDateTime {
+//            return ZonedDateTime.now(UTC).with(TemporalAdjusters.next(DayOfWeek.MONDAY)).withHour(9).withMinute(0)
+//                .withSecond(0).withNano(0)
+//        }
+//        private fun getDurationBetweenClientNowAndNearlyCloseTime(trade: TradeDto): Duration {
+//
+//            val clientTime = getTime()
+//            val durationBetweenNowAndClientTime = Duration.between(
+//                ZonedDateTime.now(UTC),
+//                clientTime
+//            )
+//
+//            logger.info("Duration between now and client time: $durationBetweenNowAndClientTime")
+//
+//            val durationBetweenClientTimeAndTradeCloseTime = Duration.between(
+//                clientTime,
+//                trade.targetPlaceDateTime!!.plusHours(trade.setup!!.tradeDuration!!.toLong()).minusSeconds(10)
+//            )
+//
+//            logger.info("Duration between client time and trade close time: $durationBetweenClientTimeAndTradeCloseTime")
+//            val totalDuration = durationBetweenNowAndClientTime.plus(durationBetweenClientTimeAndTradeCloseTime)
+//
+//            logger.info("Total duration: $totalDuration")
+//
+//            return totalDuration
+//
+//        }
     }
 }

@@ -151,6 +151,7 @@ class TradeService(
         )
 
         trade.status = Status.ORDER_SENT
+        trade.lastUpdatedDateTime = ZonedDateTime.now(clock)
         slackClient.sendSlackNotification("Order placed: " + trade.setup!!.concatenateFields())
         return trade
     }
@@ -169,6 +170,7 @@ class TradeService(
             }.forEach { trade: Trade ->
                 dwx.closeOrdersByMagic(trade.id!!)
                 trade.status = Status.CLOSED_BY_MAGIC_SENT
+                trade.lastUpdatedDateTime = ZonedDateTime.now(clock)
                 //trade.closedDateTime = ZonedDateTime.now()
                 tradeRepository.save(trade)
                 slackClient.sendSlackNotification("Order closed by magic: ${trade.setup!!.rank} ${trade.setup!!.symbol} ${trade.setup!!.direction} ${trade.profit}")
@@ -182,6 +184,7 @@ class TradeService(
                     placedPrice = tradeInfo.openPrice
                     placedDateTime = ZonedDateTime.of(tradeInfo.openTime, ZoneId.of("Europe/Zurich"))
                     status = Status.PLACED_IN_MT
+                    lastUpdatedDateTime = ZonedDateTime.now(clock)
                     this.metatraderId = metatraderId
                 }.also {
                     tradeRepository.save(it)
@@ -219,6 +222,7 @@ class TradeService(
             closedPrice = tradeInfo.takeProfit
             closedDateTime = ZonedDateTime.now(clock)
             profit = tradeInfo.profitAndLoss
+            lastUpdatedDateTime = ZonedDateTime.now(clock)
         }.also { tradeRepository.save(it) }
 
         slackClient.sendSlackNotification("Order closed: ${trade.setup!!.rank} ${trade.setup!!.symbol} ${trade.setup!!.direction} ${trade.profit}")

@@ -12,6 +12,9 @@
             <column name="created_date_time" type="timestamp">
                 <constraints nullable="false"/>
             </column>
+            <column name="last_updated_date_time" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
             <column name="status" type="ENUM(
     'PENDING',
     'ORDER_SENT',

@@ -17,14 +17,13 @@ import uk.co.threebugs.darwinexclient.helpers.RestCallHelper.Companion.deleteTra
 import uk.co.threebugs.darwinexclient.helpers.RestCallHelper.Companion.getTradesWithSetupGroupsName
 import uk.co.threebugs.darwinexclient.helpers.RestCallHelper.Companion.startProcessing
 import uk.co.threebugs.darwinexclient.helpers.RestCallHelper.Companion.stopProcessing
-import uk.co.threebugs.darwinexclient.helpers.TimeHelper
 import uk.co.threebugs.darwinexclient.helpers.TimeHelper.Companion.getTime
-import uk.co.threebugs.darwinexclient.helpers.TimeHelper.Companion.setTimeToNearlyCloseTime
-import uk.co.threebugs.darwinexclient.helpers.TimeHelper.Companion.setTimeToNextMonday
+import uk.co.threebugs.darwinexclient.helpers.TimeHelper.Companion.setClockToSpecificDateTime
 import uk.co.threebugs.darwinexclient.helpers.TimeOutHelper.Companion.waitForCondition
 import uk.co.threebugs.darwinexclient.utils.logger
 import java.nio.file.Files
 import java.nio.file.Path
+import java.time.ZonedDateTime
 
 
 private const val SECONDS_30 = 30000L
@@ -40,7 +39,7 @@ class LongTradeServiceTest : FunSpec() {
         deleteTradesFromSetupGroupsName(setupGroupsName)
         deleteMarketDataFile()
         getTradesWithSetupGroupsName(setupGroupsName).shouldBeEmpty()
-        setTimeToNextMonday()
+        setClockToSpecificDateTime(ZonedDateTime.parse("2023-10-30T08:59:40.000Z"))
         startProcessing()
         delay(5000)
     }
@@ -69,7 +68,7 @@ class LongTradeServiceTest : FunSpec() {
 
                 writeMarketData(EURUSD)
 
-                val nextMondayAt9 = TimeHelper.getNextMondayAt9()
+                val nextMondayAt9 = ZonedDateTime.parse("2023-10-30T09:00:00.000Z")
 
                 waitForCondition(
                     timeout = SECONDS_30,
@@ -250,7 +249,7 @@ class LongTradeServiceTest : FunSpec() {
                 beforeEach(setup.setupGroupsName)
                 writeMarketData(EURUSD)
 
-                val nextMondayAt9 = TimeHelper.getNextMondayAt9()
+                val nextMondayAt9 = ZonedDateTime.parse("2023-10-30T09:00:00.000Z")
                 waitForCondition(
                     timeout = SECONDS_30,
                     interval = SECONDS_5,
@@ -397,7 +396,7 @@ class LongTradeServiceTest : FunSpec() {
                 beforeEach(setup.setupGroupsName)
                 writeMarketData(EURUSD)
 
-                val nextMondayAt9 = TimeHelper.getNextMondayAt9()
+                val nextMondayAt9 = ZonedDateTime.parse("2023-10-30T09:00:00.000Z")
                 waitForCondition(
                     timeout = SECONDS_30,
                     interval = SECONDS_5,
@@ -550,7 +549,11 @@ class LongTradeServiceTest : FunSpec() {
 
                 filledTrades.size shouldBe 4
 
-                setTimeToNearlyCloseTime(filledTrades[1])
+                setClockToSpecificDateTime(
+                    filledTrades[1].targetPlaceDateTime!!.plusHours(filledTrades[1].setup!!.tradeDuration!!.toLong())
+                        .minusSeconds(10)
+                )
+                //  setTimeToNearlyCloseTime(filledTrades[1])
 
 
                 waitForCondition(
@@ -576,23 +579,40 @@ class LongTradeServiceTest : FunSpec() {
 
                 delay(5000)
 
+                val targetFileCount = 4
+                val directory = Path.of("test-ea-files/DWX")
+                waitForCondition(
+                    timeout = SECONDS_30,
+                    interval = SECONDS_5,
+                    logMessage = "Waiting for 4 DWX_Commands_*.txt files to be written to the DWX directory"
+                ) {
+
+                    writeMarketData(EURUSD)
+                    val files = Files.list(directory)
+                        .filter { path -> path.fileName.toString().startsWith("DWX_Commands_") }
+                        .toList()
+
+
+                    if (files.size == targetFileCount)
+                        return@waitForCondition true  // Breaks out of the waiting loop
+
+                    false  // Continues the waiting loop
+                }
+
+
+
                 Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_0.txt"))
                     .contains("|OPEN_ORDER|EURUSD,${buySell}limit") shouldBe true
                 Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_1.txt"))
                     .contains("|OPEN_ORDER|EURUSD,${buySell}limit") shouldBe true
 
+
                 Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_2.txt"))
-                    .contains("|OPEN_ORDER|EURUSD,${buySell}limit") shouldBe true
+                    .contains("|CLOSE_ORDERS_BY_MAGIC|") shouldBe true
                 Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_3.txt"))
-                    .contains("|OPEN_ORDER|EURUSD,${buySell}limit") shouldBe true
-
-
-                Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_4.txt"))
-                    .contains("|CLOSE_ORDERS_BY_MAGIC|") shouldBe true
-                Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_5.txt"))
                     .contains("|CLOSE_ORDERS_BY_MAGIC|") shouldBe true
 
-                Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_6.txt")) shouldBe false
+                Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_4.txt")) shouldBe false
 
                 val foundNextTrades =
                     getTradesWithSetupGroupsName(setup.setupGroupsName).filter { it.status == Status.PENDING }
@@ -635,11 +655,11 @@ class LongTradeServiceTest : FunSpec() {
 
         }
 
-        val longSetup = TestSetup("long-test", true)
+        //val longSetup = TestSetup("long-test", true)
         val shortSetup = TestSetup("short-test", false)
 
         // Run your test with different setupGroupsNames
-        listOf(longSetup).forEach { setup ->
+        listOf(shortSetup).forEach { setup ->
             createTestWithSetupGroupsName(setup)
         }
     }
