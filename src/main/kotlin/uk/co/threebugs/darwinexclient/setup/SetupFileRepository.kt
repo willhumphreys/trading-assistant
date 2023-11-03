@@ -2,6 +2,7 @@ package uk.co.threebugs.darwinexclient.setup
 
 import org.springframework.stereotype.Repository
 import uk.co.threebugs.darwinexclient.setupgroup.SetupGroup
+import uk.co.threebugs.darwinexclient.utils.logger
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
@@ -61,6 +62,9 @@ class SetupFileRepository {
                     .withMinute(0).withSecond(0).withNano(0)
             if (nextEventTime.isBefore(now) || nextEventTime.isEqual(now)) {
                 nextEventTime = nextEventTime.plusWeeks(1)
+                if (nextEventTime.dayOfMonth == 6) {
+                    logger.info("Next event time is the first Sunday of the month, so adding 1 week")
+                }
             }
             return nextEventTime
         }

@@ -58,6 +58,7 @@ export default function TradesTable({trades, handleHeaderClick}: Props) {
         {name: 'tradeDuration', entity: 'setup'},
         {name: 'outOfTime', entity: 'setup'},
         //   {name: 'createdDateTime', entity: ''},
+        {name: 'lastUpdatedDateTime', entity: ''},
         {name: 'targetPlaceDateTime', entity: ''},
         {name: 'placedDateTime', entity: ''},
         {name: 'placedPrice', entity: ''},
@@ -105,6 +106,7 @@ export default function TradesTable({trades, handleHeaderClick}: Props) {
                 <td>{trade.setup.tradeDuration}</td>
                 <td>{trade.setup.outOfTime}</td>
                 {/*<td>{trade.createdDateTime}</td>*/}
+                <td>{trade.lastUpdatedDateTime}</td>
                 <td>{trade.targetPlaceDateTime}</td>
                 <td>{trade.placedDateTime}</td>
                 <td>{trade.placedPrice}</td>

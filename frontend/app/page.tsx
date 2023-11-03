@@ -33,6 +33,7 @@ export default function FetchTradesClient() {
         },
         status: '',
         createdDateTime: '',
+        lastUpdatedDateTime: '',
         placedDateTime: '',
         targetPlaceDateTime: '',
         placedPrice: '',

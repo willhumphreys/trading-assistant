@@ -40,7 +40,7 @@ class Setup (
         get() = stop!! < limit!!
 
     fun concatenateFields(): String {
-        return "id: $id- setupGroup: ${setupGroup?.id}- symbol: $symbol- rank: $rank- dayOfWeek: $dayOfWeek- hourOfDay: $hourOfDay- stop: $stop- limit: $limit- tickOffset: $tickOffset- tradeDuration: $tradeDuration- outOfTime: $outOfTime- isLong: $direction"
+        return "setupId: $id- setupGroup: ${setupGroup?.id}- symbol: $symbol- rank: $rank- isLong: $direction setupGroups: ${setupGroup!!.setupGroups!!.id}"
                 .replace(",", "-")
     }
 

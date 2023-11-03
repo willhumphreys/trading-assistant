@@ -4,6 +4,7 @@ import org.springframework.data.domain.Sort
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import uk.co.threebugs.darwinexclient.search.TradeSearchDto
 
 @RestController
 @RequestMapping("/trades")
@@ -18,9 +19,10 @@ class TradeController (
 
     @PostMapping("/searchByExample")
     fun findWithExample(
-        @RequestBody exampleRecord: TradeDto,
+        @RequestBody exampleRecord: TradeSearchDto,
             @RequestParam(name = "sortColumn", required = false) sortColumn: String?,
-            @RequestParam(name = "sortDirection", required = false) sortDirection: Sort.Direction?): List<TradeDto?> {
+        @RequestParam(name = "sortDirection", required = false) sortDirection: Sort.Direction?
+    ): List<TradeSearchDto?> {
         var sort = Sort.unsorted()
         if (sortColumn != null && sortDirection != null) {
             sort = Sort.by(sortDirection, sortColumn)

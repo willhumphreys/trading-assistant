@@ -97,6 +97,7 @@ export interface Query {
     };
     status: string;
     createdDateTime: string;
+    lastUpdatedDateTime: string;
     targetPlaceDateTime: string;
     placedDateTime: string;
     placedPrice: string;

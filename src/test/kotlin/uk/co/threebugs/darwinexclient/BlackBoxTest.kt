@@ -30,7 +30,7 @@ private const val SECONDS_30 = 30000L
 private const val SECONDS_5 = 5000L
 private const val EURUSD = "EURUSD"
 
-class LongTradeServiceTest : FunSpec() {
+class BlackBoxTest : FunSpec() {
 
     private suspend fun beforeEach(setupGroupsName: String) {
         deleteFilesBeforeTest(Path.of("test-ea-files/DWX"), "DWX_Commands_", ".txt")
@@ -101,7 +101,6 @@ class LongTradeServiceTest : FunSpec() {
                 val (magicTrade1, magicTrade2) = foundTrades.take(2).map { it.id }
 
                 writeMarketData(EURUSD)
-
 
                 waitForCondition(
                     timeout = SECONDS_30,
@@ -243,6 +242,7 @@ class LongTradeServiceTest : FunSpec() {
                     false  // Continues the waiting loop
                 }
 
+                Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_2.txt")) shouldBe false
             }
 
             test("place 2 eurusd trades and out of time close $setup") {
@@ -390,6 +390,7 @@ class LongTradeServiceTest : FunSpec() {
                     false  // Continues the waiting loop
                 }
 
+                Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_2.txt")) shouldBe false
             }
 
             test("place 2 eurusd long trades and close at time $setup") {
@@ -579,7 +580,7 @@ class LongTradeServiceTest : FunSpec() {
 
                 delay(5000)
 
-                val targetFileCount = 4
+                val targetFileCount = 6
                 val directory = Path.of("test-ea-files/DWX")
                 waitForCondition(
                     timeout = SECONDS_30,
@@ -606,13 +607,17 @@ class LongTradeServiceTest : FunSpec() {
                 Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_1.txt"))
                     .contains("|OPEN_ORDER|EURUSD,${buySell}limit") shouldBe true
 
-
                 Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_2.txt"))
-                    .contains("|CLOSE_ORDERS_BY_MAGIC|") shouldBe true
+                    .contains("|OPEN_ORDER|EURUSD,${buySell}limit") shouldBe true
                 Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_3.txt"))
+                    .contains("|OPEN_ORDER|EURUSD,${buySell}limit") shouldBe true
+
+                Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_4.txt"))
+                    .contains("|CLOSE_ORDERS_BY_MAGIC|") shouldBe true
+                Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_5.txt"))
                     .contains("|CLOSE_ORDERS_BY_MAGIC|") shouldBe true
 
-                Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_4.txt")) shouldBe false
+                Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_6.txt")) shouldBe false
 
                 val foundNextTrades =
                     getTradesWithSetupGroupsName(setup.setupGroupsName).filter { it.status == Status.PENDING }
@@ -655,11 +660,11 @@ class LongTradeServiceTest : FunSpec() {
 
         }
 
-        //val longSetup = TestSetup("long-test", true)
+        val longSetup = TestSetup("long-test", true)
         val shortSetup = TestSetup("short-test", false)
 
         // Run your test with different setupGroupsNames
-        listOf(shortSetup).forEach { setup ->
+        listOf(longSetup).forEach { setup ->
             createTestWithSetupGroupsName(setup)
         }
     }

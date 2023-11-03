@@ -4,7 +4,6 @@ import org.json.JSONObject
 import org.springframework.stereotype.Component
 import uk.co.threebugs.darwinexclient.SlackClient
 import uk.co.threebugs.darwinexclient.Status
-import uk.co.threebugs.darwinexclient.account.AccountMapper
 import uk.co.threebugs.darwinexclient.accountsetupgroups.AccountSetupGroupsDto
 import uk.co.threebugs.darwinexclient.accountsetupgroups.AccountSetupGroupsMapper
 import uk.co.threebugs.darwinexclient.trade.TradeService
@@ -24,8 +23,7 @@ class TradeEventHandler(
     private val webSocketController: WebSocketController,
     private val tradeService: TradeService,
     private val slackClient: SlackClient,
-    private val accountMapper: AccountMapper,
-    private val accountSetupGroupsMapper: AccountSetupGroupsMapper,
+    val accountSetupGroupsMapper: AccountSetupGroupsMapper,
     private val clock: Clock
 
 ) {
@@ -67,20 +65,6 @@ class TradeEventHandler(
             "/topic/ticks"
         )
 
-//        if (executed.compareAndSet(false, true)) {
-//                    dwx.openOrder(Order.builder()
-//                           .symbol("EURUSD")
-//                           .orderType("buylimit")
-//                           .lots(0.01)
-//                           .price(new BigDecimal("1.05750"))
-//                           .stopLoss(new BigDecimal("1.05500"))
-//                           .takeProfit(new BigDecimal("1.05800"))
-//                           .magic(100)
-//                           .comment("test")
-//                           .expiration(TradeService.addSecondsToCurrentTime(8))
-//                           .build());
-//
-//        }
         val accountSetupGroups = accountSetupGroupsMapper.toEntity(accountSetupGroupsDto)
         tradeService.createTradesToPlaceFromEnabledSetups(symbol, accountSetupGroups)
         tradeService.placeTrades(dwx, symbol, bid, ask, accountSetupGroups)

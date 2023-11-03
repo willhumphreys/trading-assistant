@@ -11,6 +11,7 @@ import uk.co.threebugs.darwinexclient.clock.MutableClock
 import uk.co.threebugs.darwinexclient.metatrader.Client
 import uk.co.threebugs.darwinexclient.metatrader.Order
 import uk.co.threebugs.darwinexclient.metatrader.TradeInfo
+import uk.co.threebugs.darwinexclient.search.TradeSearchDto
 import uk.co.threebugs.darwinexclient.setup.Setup
 import uk.co.threebugs.darwinexclient.setup.SetupFileRepository
 import uk.co.threebugs.darwinexclient.setup.SetupRepository
@@ -62,10 +63,10 @@ class TradeService(
         return tradeRepository.findAll().filterNotNull().map { tradeMapper.toDto(it) }
     }
 
-    fun findTrades(exampleRecord: TradeDto, sort: Sort): List<TradeDto?> {
+    fun findTrades(exampleRecord: TradeSearchDto, sort: Sort): List<TradeSearchDto?> {
         val example = Example.of(tradeMapper.toEntity(exampleRecord, clock))
 
-        return tradeRepository.findAll(example, sort).map { tradeMapper.toDto(it) }
+        return tradeRepository.findAll(example, sort).map { tradeMapper.toSearchDto(it) }
     }
 
     fun createTradesToPlaceFromEnabledSetups(symbol: String, accountSetupGroups: AccountSetupGroups) {
@@ -146,7 +147,7 @@ class TradeService(
                 takeProfit = takeProfit,
                 magic = magic,
                 expiration = timeHelper.addSecondsToCurrentTime(trade.setup!!.outOfTime!!.toLong()),
-                comment = trade.setup!!.concatenateFields()
+                comment = "${trade.targetPlaceDateTime} ${trade.setup!!.concatenateFields()}"
             )
         )
 
