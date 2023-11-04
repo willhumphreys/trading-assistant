@@ -11,9 +11,9 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import org.json.JSONObject
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import uk.co.threebugs.darwinexclient.MetaTraderDir
 import uk.co.threebugs.darwinexclient.account.AccountDto
 import uk.co.threebugs.darwinexclient.account.AccountService
+import uk.co.threebugs.darwinexclient.account.MetaTraderDir
 import uk.co.threebugs.darwinexclient.accountsetupgroups.AccountSetupGroupsDto
 import uk.co.threebugs.darwinexclient.accountsetupgroups.AccountSetupGroupsService
 import uk.co.threebugs.darwinexclient.actions.ActionsService
@@ -169,13 +169,13 @@ class Client(
         return try {
             val metaTraderDirs = objectMapper.readValue<List<MetaTraderDir>>(path.toFile())
             metaTraderDirs.map { metaTraderDir ->
-                accountService.findByName(metaTraderDir.name!!)
+                accountService.findByName(metaTraderDir.name)
                     ?.also { logger.info("MetaTraderDir ${metaTraderDir.name} found in database") }
                     ?: run {
                         logger.info("MetaTraderDir ${metaTraderDir.name} not found in database")
                         accountService.save(
                             AccountDto(
-                                metatraderAdvisorPath = Path.of(metaTraderDir.dirPath!!),
+                                metatraderAdvisorPath = Path.of(metaTraderDir.dirPath),
                                 name = metaTraderDir.name
                             )
                         )
