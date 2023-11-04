@@ -21,7 +21,7 @@ class SlackClient private constructor(@param:Value("\${slack.webhook.url}") priv
                 val params = StringEntity("{\"text\":\"$message\"}")
                 request.addHeader("Content-type", "application/json")
                 request.entity = params
-                val response = httpClient.execute<Any?>(request) { classicHttpResponse: ClassicHttpResponse? -> null }
+                httpClient.execute<Any?>(request) { classicHttpResponse: ClassicHttpResponse? -> null }
             }
         } catch (e: IOException) {
             logger.error("Error sending Slack notification", e)

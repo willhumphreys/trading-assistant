@@ -6,8 +6,9 @@ import java.nio.file.Path
 
 data class SetupGroupDto(
     var id: Int? = null,
-    var setupGroups: SetupGroupsDto? = null,
-    var path: Path? = null,
-    var symbol: String? = null,
-    var enabled: Boolean? = null)
+    val setupGroups: SetupGroupsDto,
+    val path: Path,
+    val symbol: String,
+    val enabled: Boolean
+)
 

@@ -7,17 +7,17 @@ import java.time.ZonedDateTime
 data class SetupDto (
     var id: Int? = null,
     var createdDateTime: ZonedDateTime? = null,
-    var setupGroup: SetupGroupDto? = null,
-    var symbol: String? = null,
-    var rank: Int? = null,
-    var dayOfWeek: Int? = null,
-    var hourOfDay: Int? = null,
-    var stop: Int? = null,
-    var limit: Int? = null,
-    var tickOffset: Int? = null,
-    var tradeDuration: Int? = null,
-    var outOfTime: Int? = null
+    val setupGroup: SetupGroupDto,
+    val symbol: String,
+    val rank: Int,
+    val dayOfWeek: Int,
+    val hourOfDay: Int,
+    val stop: Int,
+    val limit: Int,
+    val tickOffset: Int,
+    val tradeDuration: Int,
+    val outOfTime: Int
 ) {
     @JsonIgnore
-    fun isLong(): Boolean = stop!! < limit!!
+    fun isLong(): Boolean = stop < limit
 }

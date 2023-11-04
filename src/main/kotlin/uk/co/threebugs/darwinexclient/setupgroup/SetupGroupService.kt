@@ -32,7 +32,8 @@ class SetupGroupService (
                         SetupGroupDto(
                                 path = scriptsDirectory.resolve(setupGroup.path),
                                 symbol = setupGroup.symbol,
-                                enabled = setupGroup.enabled
+                            enabled = setupGroup.enabled,
+                            setupGroups = setupGroupsMapper.toDto(setupGroups)
                         )
                     }
                     .map { setupGroupDto: SetupGroupDto ->

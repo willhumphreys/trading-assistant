@@ -5,7 +5,7 @@ import java.nio.file.Path
 
 data class SetupGroupsDto(
     var id: Int? = null,
-    var name: String? = null,
-    var scriptsDirectory: Path? = null
+    val name: String,
+    val scriptsDirectory: Path
 )
 
