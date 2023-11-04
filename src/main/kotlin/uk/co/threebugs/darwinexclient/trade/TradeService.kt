@@ -28,6 +28,7 @@ import java.util.function.Consumer
 class TradeService(
     private val tradeRepository: TradeRepository,
     private val tradeMapper: TradeMapper,
+    private val tradeSearchMapper: TradeSearchMapper,
     private val timeHelper: TimeHelper,
     private val slackClient: SlackClient,
     private val clock: MutableClock,
@@ -37,9 +38,8 @@ class TradeService(
         return tradeRepository.findByIdOrNull(id)?.let { tradeMapper.toDto(it) }
     }
 
-
     fun save(tradeDto: TradeDto): TradeDto {
-        val setup = findSetupById(tradeDto.setup!!.id!!)
+        val setup = findSetupById(tradeDto.setup.id!!)
 
         return tradeMapper.toEntity(tradeDto, setup, clock)
             .let(tradeRepository::save)
@@ -66,7 +66,7 @@ class TradeService(
     fun findTrades(exampleRecord: TradeSearchDto, sort: Sort): List<TradeSearchDto?> {
         val example = Example.of(tradeMapper.toEntity(exampleRecord, clock))
 
-        return tradeRepository.findAll(example, sort).map { tradeMapper.toSearchDto(it) }
+        return tradeRepository.findAll(example, sort).map { tradeSearchMapper.toDto(it) }
     }
 
     fun createTradesToPlaceFromEnabledSetups(symbol: String, accountSetupGroups: AccountSetupGroups) {

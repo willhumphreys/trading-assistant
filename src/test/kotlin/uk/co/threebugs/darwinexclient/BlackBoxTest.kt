@@ -85,9 +85,9 @@ class BlackBoxTest : FunSpec() {
                             logger.info("Found trade: $it")
                             it.status shouldBe Status.PENDING
                             it.setup shouldNotBe null
-                            it.setup?.symbol shouldBe EURUSD
+                            it.setup.symbol shouldBe EURUSD
                             it.setup shouldNotBe null
-                            it.setup?.isLong() shouldBe setup.isLong
+                            it.setup.isLong() shouldBe setup.isLong
                             it.targetPlaceDateTime!!.toOffsetDateTime() shouldBe nextMondayAt9.toOffsetDateTime()
                         }
 
@@ -265,9 +265,9 @@ class BlackBoxTest : FunSpec() {
                             logger.info("Found trade: $it")
                             it.status shouldBe Status.PENDING
                             it.setup shouldNotBe null
-                            it.setup?.symbol shouldBe EURUSD
+                            it.setup.symbol shouldBe EURUSD
                             it.setup shouldNotBe null
-                            it.setup?.isLong() shouldBe setup.isLong
+                            it.setup.isLong() shouldBe setup.isLong
                             it.targetPlaceDateTime!!.toOffsetDateTime().toString() shouldBe nextMondayAt9
                                 .toString()
 
@@ -413,9 +413,9 @@ class BlackBoxTest : FunSpec() {
                             it.status shouldBe Status.PENDING
                             it.createdDateTime shouldNotBe null
                             it.setup shouldNotBe null
-                            it.setup?.symbol shouldBe EURUSD
+                            it.setup.symbol shouldBe EURUSD
                             it.setup shouldNotBe null
-                            it.setup?.isLong() shouldBe setup.isLong
+                            it.setup.isLong() shouldBe setup.isLong
                             it.targetPlaceDateTime!!.toOffsetDateTime().toString() shouldBe nextMondayAt9
                                 .toString()
                         }
@@ -551,7 +551,7 @@ class BlackBoxTest : FunSpec() {
                 filledTrades.size shouldBe 4
 
                 setClockToSpecificDateTime(
-                    filledTrades[1].targetPlaceDateTime!!.plusHours(filledTrades[1].setup!!.tradeDuration!!.toLong())
+                    filledTrades[1].targetPlaceDateTime!!.plusHours(filledTrades[1].setup.tradeDuration!!.toLong())
                         .minusSeconds(10)
                 )
                 //  setTimeToNearlyCloseTime(filledTrades[1])
@@ -629,9 +629,9 @@ class BlackBoxTest : FunSpec() {
                         it.createdDateTime shouldNotBe null
                         it.status shouldBe Status.PENDING
                         it.setup shouldNotBe null
-                        it.setup?.symbol shouldBe EURUSD
+                        it.setup.symbol shouldBe EURUSD
                         it.setup shouldNotBe null
-                        it.setup?.isLong() shouldBe setup.isLong
+                        it.setup.isLong() shouldBe setup.isLong
                     }
                 }
 

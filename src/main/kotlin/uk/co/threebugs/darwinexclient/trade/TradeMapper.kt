@@ -13,22 +13,19 @@ import java.time.ZonedDateTime
 abstract class TradeMapper {
     abstract fun toDto(trade: Trade): TradeDto
 
-    abstract fun toSearchDto(trade: Trade): TradeSearchDto
-
     @Mapping(target = "id", source = "tradeDto.id")
     @Mapping(target = "createdDateTime", source = "tradeDto.createdDateTime")
     abstract fun toEntity(tradeDto: TradeDto, setup: Setup, @Context clock: Clock): Trade
 
     @AfterMapping
-    fun setCreatedDateTime(@MappingTarget trade: Trade, tradeDto: TradeDto, @Context clock: Clock) {
+    fun setCreatedDateTime(@MappingTarget trade: Trade, @Context clock: Clock) {
         if (trade.createdDateTime == null) {
             trade.createdDateTime = ZonedDateTime.now(clock)
         }
     }
 
-    // This AfterMapping also applies only to TradeDto objects
     @AfterMapping
-    fun updateLastUpdatedDateTime(@MappingTarget trade: Trade, tradeDto: TradeDto, @Context clock: Clock) {
+    fun updateLastUpdatedDateTime(@MappingTarget trade: Trade, @Context clock: Clock) {
         trade.lastUpdatedDateTime = ZonedDateTime.now(clock)
     }
 
