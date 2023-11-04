@@ -51,5 +51,46 @@
 
     </changeSet>
 
+    <changeSet id="create_setup_groups_audit_table" author="will">
+        <createTable tableName="setup_groups_aud">
+            <column name="id" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rev" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="revtype" type="tinyint"/>
+            <column name="name" type="varchar(255)"/>
+            <column name="scripts_directory" type="varchar(255)"/>
+        </createTable>
+        <addPrimaryKey tableName="setup_groups_aud" columnNames="id, rev"/>
+        <addForeignKeyConstraint constraintName="FK_setup_groups_aud_rev"
+                                 baseTableName="setup_groups_aud"
+                                 baseColumnNames="rev"
+                                 referencedTableName="revinfo"
+                                 referencedColumnNames="rev"/>
+    </changeSet>
+
+    <changeSet id="create_setup_group_audit_table" author="will">
+        <createTable tableName="setup_group_aud">
+            <column name="id" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rev" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="revtype" type="tinyint"/>
+            <column name="setup_groups_id" type="int"/>
+            <column name="path" type="varchar(500)"/>
+            <column name="symbol" type="varchar(255)"/>
+            <column name="enabled" type="boolean"/>
+        </createTable>
+        <addPrimaryKey tableName="setup_group_aud" columnNames="id, rev"/>
+        <addForeignKeyConstraint constraintName="FK_setup_group_aud_rev"
+                                 baseTableName="setup_group_aud"
+                                 baseColumnNames="rev"
+                                 referencedTableName="revinfo"
+                                 referencedColumnNames="rev"/>
+    </changeSet>
 
 </databaseChangeLog>

@@ -1,11 +1,13 @@
 package uk.co.threebugs.darwinexclient.accountsetupgroups
 
 import jakarta.persistence.*
-import uk.co.threebugs.darwinexclient.account.Account
-import uk.co.threebugs.darwinexclient.setupgroups.SetupGroups
+import org.hibernate.envers.*
+import uk.co.threebugs.darwinexclient.account.*
+import uk.co.threebugs.darwinexclient.setupgroups.*
 
 @Entity
 @Table(name = "account_setup_groups")
+@Audited
 class AccountSetupGroups (
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

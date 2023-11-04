@@ -1,14 +1,16 @@
 package uk.co.threebugs.darwinexclient.trade
 
 import jakarta.persistence.*
-import uk.co.threebugs.darwinexclient.Status
-import uk.co.threebugs.darwinexclient.account.Account
-import uk.co.threebugs.darwinexclient.setup.Setup
-import java.math.BigDecimal
-import java.time.ZonedDateTime
+import org.hibernate.envers.*
+import uk.co.threebugs.darwinexclient.*
+import uk.co.threebugs.darwinexclient.account.*
+import uk.co.threebugs.darwinexclient.setup.*
+import java.math.*
+import java.time.*
 
 @Entity
 @Table(name = "trade")
+@Audited
 data class Trade (
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

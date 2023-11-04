@@ -63,609 +63,688 @@ class BlackBoxTest : FunSpec() {
     }
 
     init {
-        // This will be your higher-order function that takes a setupGroupsName parameter
-        fun createTestWithSetupGroupsName(setup: TestSetup) {
 
-            val buySell = if (setup.isLong) "buy" else "sell"
-
-            test("place 2 eurusd trades and close by user: ${setup.setupGroupsName}") {
-                beforeEach(setup.setupGroupsName)
-
-                writeMarketData(EURUSD)
-
-                val nextMondayAt9 = ZonedDateTime.parse("2023-10-30T09:00:00.000Z")
-
-                waitForCondition(
-                    timeout = SECONDS_30,
-                    interval = SECONDS_5,
-                    logMessage = "Waiting for trades with status PENDING to be written to the db..."
-                ) {
-                    logger.info("Client time ${getTime()}")
-                    val foundTrades =
-                        getTradesWithSetupGroupsName(setup.setupGroupsName).filter { it.status == Status.PENDING }
-
-                    if (foundTrades.isNotEmpty()) {
-
-                        foundTrades.forEach {
-                            logger.info("Found trade: $it")
-                            it.status shouldBe Status.PENDING
-                            it.setup shouldNotBe null
-                            it.setup.symbol shouldBe EURUSD
-                            it.setup.isLong() shouldBe setup.isLong
-                            it.targetPlaceDateTime!!.toOffsetDateTime() shouldBe nextMondayAt9.toOffsetDateTime()
-                        }
-
-                        return@waitForCondition true  // Breaks out of the waiting loop
-                    }
-                    false  // Continues the waiting loop
-                }
+        val testSetup =
+            testSetupMap[getProperty("testSetup")]
+                ?: throw IllegalArgumentException("testSetup ${getProperty("testSetup")} not found in testSetupMap")
 
 
-                val foundTrades = getTradesWithSetupGroupsName(setup.setupGroupsName)
-                val (magicTrade1, magicTrade2) = foundTrades.take(2).map { it.id }
+        val buySell = if (testSetup.isLong) "buy" else "sell"
 
-                writeMarketData(EURUSD)
+        test("place 2 eurusd long trades and close at time $testSetup") {
+            beforeEach(testSetup.setupGroupsName)
+            writeMarketData(EURUSD)
 
-                waitForCondition(
-                    timeout = SECONDS_30,
-                    interval = SECONDS_5,
-                    logMessage = "Waiting for the time to be 09:00..."
-                ) {
+            val nextMondayAt9 = ZonedDateTime.parse("2023-10-30T09:00:00.000Z")
+            val nextNextMondayAt9 = ZonedDateTime.parse("2023-11-06T09:00Z")
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for trades with status PENDING to be written to the db..."
+            ) {
+                logger.info("Client time ${getTime()}")
+                val foundTrades = getTradesWithSetupGroupsName(testSetup.setupGroupsName)
 
-                    logger.info("Waiting for EA to write file...")
-                    val time = getTime()
-                    logger.info("Client time $time")
+                if (foundTrades.isNotEmpty()) {
 
-                    if (!time.isBefore(nextMondayAt9))
-                        return@waitForCondition true  // Breaks out of the waiting loop
-
-                    false  // Continues the waiting loop
-                }
-
-                writeMarketData(EURUSD)
-
-
-                waitForCondition(
-                    timeout = SECONDS_30,
-                    interval = SECONDS_5,
-                    logMessage = "Waiting for all trades to be OrderSent..."
-                ) {
-
-                    logger.info("Client time ${getTime()}")
-                    val tradesWithStatusOrderSent = getTradesWithSetupGroupsName(setup.setupGroupsName)
-
-
-                    val tradesWithSentCount = tradesWithStatusOrderSent.count { it.status == Status.ORDER_SENT }
-
-                    tradesWithStatusOrderSent.any { it.id == magicTrade1 } shouldBe true
-                    tradesWithStatusOrderSent.any { it.id == magicTrade2 } shouldBe true
-
-                    writeMarketData(EURUSD)
-
-                    if (tradesWithSentCount == 2) {
-                        return@waitForCondition true  // Breaks out of the waiting loop
+                    foundTrades.forEach {
+                        logger.info("Found trade: $it")
+                        it.status shouldBe Status.PENDING
+                        it.createdDateTime shouldNotBe null
+                        it.setup shouldNotBe null
+                        it.setup.symbol shouldBe EURUSD
+                        it.setup.isLong() shouldBe testSetup.isLong
+                        it.targetPlaceDateTime!!.toOffsetDateTime().toString() shouldBe nextMondayAt9
+                            .toString()
                     }
 
-                    false  // Continues the waiting loop
+                    return@waitForCondition true
                 }
-
-                writeOrdersWithMagic(magicTrade1, magicTrade2, "EURUSD", "${buySell}limit")
-
-                waitForCondition(
-                    timeout = SECONDS_30,
-                    interval = SECONDS_5,
-                    logMessage = "Waiting for all trades to be placed in MT..."
-                ) {
-
-                    logger.info("Client time ${getTime()}")
-                    val placedInMtTrades = getTradesWithSetupGroupsName(setup.setupGroupsName)
-
-                    placedInMtTrades.size shouldBe 4
-
-                    val tradesWithStatusPlacedInMTCount = placedInMtTrades.count {
-                        it.status == Status.PLACED_IN_MT
-                    }
-
-                    placedInMtTrades.count { it.status == Status.PENDING } shouldBe 2
-
-                    writeMarketData(EURUSD)
-
-                    if (tradesWithStatusPlacedInMTCount == 2)
-                        return@waitForCondition true  // Breaks out of the waiting loop
-
-                    false  // Continues the waiting loop
-                }
-
-                delay(5000)
-
-                Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_0.txt")) shouldBe true
-                Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_1.txt")) shouldBe true
-
-                Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_0.txt"))
-                    .contains("OPEN_ORDER|EURUSD,${buySell}limit,") shouldBe true
-                Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_1.txt"))
-                    .contains("OPEN_ORDER|EURUSD,${buySell}limit,") shouldBe true
-
-                writeMarketData(EURUSD)
-
-                val ordersAndAccount = readOrdersFile()
-                ordersAndAccount.orders.size shouldBe 2
-
-                ordersAndAccount.orders[1]?.type = buySell
-                ordersAndAccount.orders[2]?.type = buySell
-
-                writeOrdersFile(ordersAndAccount)
-
-                waitForCondition(
-                    timeout = SECONDS_30,
-                    interval = SECONDS_5,
-                    logMessage = "Waiting for all trades to have status filled..."
-                ) {
-
-                    logger.info("Client time ${getTime()}")
-                    val tradesWithSetupGroupsName = getTradesWithSetupGroupsName(setup.setupGroupsName)
-
-                    tradesWithSetupGroupsName.size shouldBe 4
-
-                    val tradesWithStatusFilledCount = tradesWithSetupGroupsName.count { it.status == Status.FILLED }
-
-                    writeMarketData(EURUSD)
-
-                    tradesWithSetupGroupsName.count { it.status == Status.PENDING } shouldBe 2
-
-                    if (tradesWithStatusFilledCount == 2)
-                        return@waitForCondition true  // Breaks out of the waiting loop
-
-                    false  // Continues the waiting loop
-                }
-
-                writeMarketData(EURUSD)
-
-                writeEmptyOrders()
-
-                waitForCondition(
-                    timeout = SECONDS_30,
-                    interval = SECONDS_5,
-                    logMessage = "Waiting for all trades to have status closed by user"
-                ) {
-
-                    logger.info("Client time ${getTime()}")
-                    val tradesWithSetupGroupName = getTradesWithSetupGroupsName(setup.setupGroupsName)
-
-                    tradesWithSetupGroupName.size shouldBe 4
-
-                    val closedByUserCount = tradesWithSetupGroupName.count {
-                        it.status == Status.CLOSED_BY_USER
-                    }
-
-                    writeMarketData(EURUSD)
-
-                    if (closedByUserCount == 2)
-                        return@waitForCondition true  // Breaks out of the waiting loop
-
-                    false  // Continues the waiting loop
-                }
-
-                Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_2.txt")) shouldBe false
+                false
             }
 
-            test("place 2 eurusd trades and out of time close $setup") {
-                beforeEach(setup.setupGroupsName)
-                writeMarketData(EURUSD)
+            val foundTrades = getTradesWithSetupGroupsName(testSetup.setupGroupsName)
+            val (magicTrade1, magicTrade2) = foundTrades.take(2).map { it.id }
 
-                val nextMondayAt9 = ZonedDateTime.parse("2023-10-30T09:00:00.000Z")
-                waitForCondition(
-                    timeout = SECONDS_30,
-                    interval = SECONDS_5,
-                    logMessage = "Waiting for trades with status PENDING to be written to the db..."
-                ) {
-                    logger.info("Client time ${getTime()}")
-                    val foundTrades =
-                        getTradesWithSetupGroupsName(setup.setupGroupsName).filter { it.status == Status.PENDING }
-
-                    if (foundTrades.isNotEmpty()) {
-
-                        foundTrades.forEach {
-                            logger.info("Found trade: $it")
-                            it.status shouldBe Status.PENDING
-                            it.setup shouldNotBe null
-                            it.setup.symbol shouldBe EURUSD
-                            it.setup shouldNotBe null
-                            it.setup.isLong() shouldBe setup.isLong
-                            it.targetPlaceDateTime!!.toOffsetDateTime().toString() shouldBe nextMondayAt9
-                                .toString()
-
-                        }
-
-                        return@waitForCondition true  // Breaks out of the waiting loop
-                    }
-                    false  // Continues the waiting loop
-                }
+            writeMarketData(EURUSD)
 
 
-                val foundTrades = getTradesWithSetupGroupsName(setup.setupGroupsName)
-                val (magicTrade1, magicTrade2) = foundTrades.take(2).map { it.id }
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for the time to be 09:00..."
+            ) {
 
-                writeMarketData(EURUSD)
+                logger.info("Waiting for EA to write file...")
+                val time = getTime()
+                logger.info("Client time $time")
 
+                if (!time.isBefore(nextMondayAt9))
+                    return@waitForCondition true
 
-                waitForCondition(
-                    timeout = SECONDS_30,
-                    interval = SECONDS_5,
-                    logMessage = "Waiting for the time to be 09:00..."
-                ) {
-
-                    logger.info("Waiting for EA to write file...")
-                    val time = getTime()
-                    logger.info("Client time $time")
-
-                    if (!time.isBefore(nextMondayAt9))
-                        return@waitForCondition true  // Breaks out of the waiting loop
-
-                    false  // Continues the waiting loop
-                }
-
-                writeMarketData(EURUSD)
-
-
-                waitForCondition(
-                    timeout = SECONDS_30,
-                    interval = SECONDS_5,
-                    logMessage = "Waiting for all trades to be OrderSent..."
-                ) {
-
-                    logger.info("Client time ${getTime()}")
-                    val tradesWithStatusOrderSent = getTradesWithSetupGroupsName(setup.setupGroupsName)
-
-                    val tradesWithOrderSentCount = tradesWithStatusOrderSent.count {
-                        it.status == Status.ORDER_SENT
-                    }
-
-                    tradesWithStatusOrderSent.any { it.id == magicTrade1 } shouldBe true
-                    tradesWithStatusOrderSent.any { it.id == magicTrade2 } shouldBe true
-
-                    writeMarketData(EURUSD)
-
-                    if (tradesWithOrderSentCount == 2) {
-                        return@waitForCondition true  // Breaks out of the waiting loop
-                    }
-
-                    false  // Continues the waiting loop
-                }
-
-                writeOrdersWithMagic(magicTrade1, magicTrade2, "EURUSD", "${buySell}limit")
-
-                waitForCondition(
-                    timeout = SECONDS_30,
-                    interval = SECONDS_5,
-                    logMessage = "Waiting for all trades to be placed in MT..."
-                ) {
-
-                    logger.info("Client time ${getTime()}")
-                    val trades = getTradesWithSetupGroupsName(setup.setupGroupsName)
-
-                    trades.size shouldBe 4
-
-                    val tradesHaveCorrectStatus = trades.count {
-                        it.status == Status.PLACED_IN_MT
-                    }
-
-                    writeMarketData(EURUSD)
-
-                    if (tradesHaveCorrectStatus == 2)
-                        return@waitForCondition true  // Breaks out of the waiting loop
-
-                    false  // Continues the waiting loop
-                }
-
-                delay(5000)
-
-                Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_0.txt")) shouldBe true
-                Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_1.txt")) shouldBe true
-
-                Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_0.txt"))
-                    .contains("OPEN_ORDER|EURUSD,${buySell}limit,") shouldBe true
-                Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_1.txt"))
-                    .contains("OPEN_ORDER|EURUSD,${buySell}limit,") shouldBe true
-
-                writeMarketData(EURUSD)
-
-
-                writeEmptyOrders()
-
-                waitForCondition(
-                    timeout = SECONDS_30,
-                    interval = SECONDS_5,
-                    logMessage = "Waiting for all trades to have status out of time"
-                ) {
-
-                    logger.info("Client time ${getTime()}")
-                    val trades = getTradesWithSetupGroupsName(setup.setupGroupsName)
-
-                    val tradesHaveCorrectStatus = trades.count {
-                        it.status == Status.OUT_OF_TIME
-                    }
-
-                    writeMarketData(EURUSD)
-
-                    if (tradesHaveCorrectStatus == 2)
-                        return@waitForCondition true  // Breaks out of the waiting loop
-
-                    false  // Continues the waiting loop
-                }
-
-                Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_2.txt")) shouldBe false
+                false
             }
 
-            test("place 2 eurusd long trades and close at time $setup") {
-                beforeEach(setup.setupGroupsName)
-                writeMarketData(EURUSD)
+            writeMarketData(EURUSD)
 
-                val nextMondayAt9 = ZonedDateTime.parse("2023-10-30T09:00:00.000Z")
-                waitForCondition(
-                    timeout = SECONDS_30,
-                    interval = SECONDS_5,
-                    logMessage = "Waiting for trades with status PENDING to be written to the db..."
-                ) {
-                    logger.info("Client time ${getTime()}")
-                    val foundTrades = getTradesWithSetupGroupsName(setup.setupGroupsName)
 
-                    if (foundTrades.isNotEmpty()) {
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for all trades to be OrderSent..."
+            ) {
 
-                        foundTrades.forEach {
-                            logger.info("Found trade: $it")
-                            it.status shouldBe Status.PENDING
-                            it.createdDateTime shouldNotBe null
-                            it.setup shouldNotBe null
-                            it.setup.symbol shouldBe EURUSD
-                            it.setup.isLong() shouldBe setup.isLong
-                            it.targetPlaceDateTime!!.toOffsetDateTime().toString() shouldBe nextMondayAt9
-                                .toString()
-                        }
+                logger.info("Client time ${getTime()}")
+                val tradesWithStatusOrderSent = getTradesWithSetupGroupsName(testSetup.setupGroupsName)
 
-                        return@waitForCondition true  // Breaks out of the waiting loop
-                    }
-                    false  // Continues the waiting loop
+                val allTradesHaveStatusSent = tradesWithStatusOrderSent.count {
+                    it.status == Status.ORDER_SENT
                 }
 
-                val foundTrades = getTradesWithSetupGroupsName(setup.setupGroupsName)
-                val (magicTrade1, magicTrade2) = foundTrades.take(2).map { it.id }
+                tradesWithStatusOrderSent.any { it.id == magicTrade1 } shouldBe true
+                tradesWithStatusOrderSent.any { it.id == magicTrade2 } shouldBe true
 
                 writeMarketData(EURUSD)
 
+                if (allTradesHaveStatusSent == 2) {
+                    return@waitForCondition true
+                }
 
-                waitForCondition(
-                    timeout = SECONDS_30,
-                    interval = SECONDS_5,
-                    logMessage = "Waiting for the time to be 09:00..."
-                ) {
+                false
+            }
 
-                    logger.info("Waiting for EA to write file...")
-                    val time = getTime()
-                    logger.info("Client time $time")
+            writeOrdersWithMagic(magicTrade1, magicTrade2, "EURUSD", "${buySell}limit")
 
-                    if (!time.isBefore(nextMondayAt9))
-                        return@waitForCondition true  // Breaks out of the waiting loop
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for all trades to be placed in MT..."
+            ) {
 
-                    false  // Continues the waiting loop
+                logger.info("Client time ${getTime()}")
+                val trades = getTradesWithSetupGroupsName(testSetup.setupGroupsName)
+
+                trades.size shouldBe 4
+
+                val allTradesHaveStatusPlacedInMT = trades.count {
+                    it.status == Status.PLACED_IN_MT
                 }
 
                 writeMarketData(EURUSD)
 
+                if (allTradesHaveStatusPlacedInMT == 2)
+                    return@waitForCondition true
 
-                waitForCondition(
-                    timeout = SECONDS_30,
-                    interval = SECONDS_5,
-                    logMessage = "Waiting for all trades to be OrderSent..."
-                ) {
+                false
+            }
 
-                    logger.info("Client time ${getTime()}")
-                    val tradesWithStatusOrderSent = getTradesWithSetupGroupsName(setup.setupGroupsName)
+            delay(5000)
 
-                    val allTradesHaveStatusSent = tradesWithStatusOrderSent.count {
-                        it.status == Status.ORDER_SENT
-                    }
+            Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_0.txt")) shouldBe true
+            Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_1.txt")) shouldBe true
+            Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_2.txt")) shouldBe false
 
-                    tradesWithStatusOrderSent.any { it.id == magicTrade1 } shouldBe true
-                    tradesWithStatusOrderSent.any { it.id == magicTrade2 } shouldBe true
+            Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_0.txt"))
+                .contains("OPEN_ORDER|EURUSD,${buySell}limit,") shouldBe true
+            Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_1.txt"))
+                .contains("OPEN_ORDER|EURUSD,${buySell}limit,") shouldBe true
 
-                    writeMarketData(EURUSD)
+            writeMarketData(EURUSD)
 
-                    if (allTradesHaveStatusSent == 2) {
-                        return@waitForCondition true  // Breaks out of the waiting loop
-                    }
+            val ordersAndAccount = readOrdersFile()
+            ordersAndAccount.orders.size shouldBe 2
 
-                    false  // Continues the waiting loop
-                }
+            ordersAndAccount.orders[1]?.type = buySell
+            ordersAndAccount.orders[2]?.type = buySell
 
-                writeOrdersWithMagic(magicTrade1, magicTrade2, "EURUSD", "${buySell}limit")
+            writeOrdersFile(ordersAndAccount)
 
-                waitForCondition(
-                    timeout = SECONDS_30,
-                    interval = SECONDS_5,
-                    logMessage = "Waiting for all trades to be placed in MT..."
-                ) {
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for all trades to have status filled..."
+            ) {
 
-                    logger.info("Client time ${getTime()}")
-                    val placedInMtTrades = getTradesWithSetupGroupsName(setup.setupGroupsName)
-
-                    placedInMtTrades.size shouldBe 4
-
-                    val allTradesHaveStatusPlacedInMT = placedInMtTrades.count {
-                        it.status == Status.PLACED_IN_MT
-                    }
-
-                    writeMarketData(EURUSD)
-
-                    if (allTradesHaveStatusPlacedInMT == 2)
-                        return@waitForCondition true  // Breaks out of the waiting loop
-
-                    false  // Continues the waiting loop
-                }
-
-                delay(5000)
-
-                Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_0.txt")) shouldBe true
-                Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_1.txt")) shouldBe true
-                Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_2.txt")) shouldBe false
-
-                Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_0.txt"))
-                    .contains("OPEN_ORDER|EURUSD,${buySell}limit,") shouldBe true
-                Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_1.txt"))
-                    .contains("OPEN_ORDER|EURUSD,${buySell}limit,") shouldBe true
-
-                writeMarketData(EURUSD)
-
-                val ordersAndAccount = readOrdersFile()
-                ordersAndAccount.orders.size shouldBe 2
-
-                ordersAndAccount.orders[1]?.type = buySell
-                ordersAndAccount.orders[2]?.type = buySell
-
-                writeOrdersFile(ordersAndAccount)
-
-                waitForCondition(
-                    timeout = SECONDS_30,
-                    interval = SECONDS_5,
-                    logMessage = "Waiting for all trades to have status filled..."
-                ) {
-
-                    logger.info("Client time ${getTime()}")
-                    val filledTrades = getTradesWithSetupGroupsName(setup.setupGroupsName)
-
-                    filledTrades.size shouldBe 4
-
-                    val allTradesHaveStatusFilled = filledTrades.count {
-                        it.status == Status.FILLED
-                    }
-
-                    writeMarketData(EURUSD)
-
-                    if (allTradesHaveStatusFilled == 2)
-                        return@waitForCondition true  // Breaks out of the waiting loop
-
-                    false  // Continues the waiting loop
-                }
-
-                writeMarketData(EURUSD)
-
-                val filledTrades = getTradesWithSetupGroupsName(setup.setupGroupsName)
+                logger.info("Client time ${getTime()}")
+                val filledTrades = getTradesWithSetupGroupsName(testSetup.setupGroupsName)
 
                 filledTrades.size shouldBe 4
 
-                setClockToSpecificDateTime(
-                    filledTrades[1].targetPlaceDateTime!!.plusHours(filledTrades[1].setup.tradeDuration.toLong())
-                        .minusSeconds(10)
-                )
-                //  setTimeToNearlyCloseTime(filledTrades[1])
-
-
-                waitForCondition(
-                    timeout = SECONDS_30,
-                    interval = SECONDS_5,
-                    logMessage = "Waiting for all trades to have status closed by magic sent"
-                ) {
-
-                    logger.info("Client time ${getTime()}")
-                    val closedByUserTrades = getTradesWithSetupGroupsName(setup.setupGroupsName)
-
-
-                    val closedByMagicSentCount = closedByUserTrades.count { it.status == Status.CLOSED_BY_MAGIC_SENT }
-                    logger.info("Number of trades with status CLOSED_BY_MAGIC_SENT: $closedByMagicSentCount")
-
-                    if (closedByMagicSentCount == 2) {
-                        return@waitForCondition true
-                    }
-                    writeMarketData(EURUSD)
-
-                    false
-                }
-
-                delay(5000)
-
-                val targetFileCount = 6
-                val directory = Path.of("test-ea-files/DWX")
-                waitForCondition(
-                    timeout = SECONDS_30,
-                    interval = SECONDS_5,
-                    logMessage = "Waiting for 4 DWX_Commands_*.txt files to be written to the DWX directory"
-                ) {
-
-                    writeMarketData(EURUSD)
-                    val files = Files.list(directory)
-                        .filter { path -> path.fileName.toString().startsWith("DWX_Commands_") }
-                        .toList()
-
-
-                    if (files.size == targetFileCount)
-                        return@waitForCondition true  // Breaks out of the waiting loop
-
-                    false  // Continues the waiting loop
-                }
-
-
-
-                Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_0.txt"))
-                    .contains("|OPEN_ORDER|EURUSD,${buySell}limit") shouldBe true
-                Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_1.txt"))
-                    .contains("|OPEN_ORDER|EURUSD,${buySell}limit") shouldBe true
-
-                Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_2.txt"))
-                    .contains("|OPEN_ORDER|EURUSD,${buySell}limit") shouldBe true
-                Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_3.txt"))
-                    .contains("|OPEN_ORDER|EURUSD,${buySell}limit") shouldBe true
-
-                Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_4.txt"))
-                    .contains("|CLOSE_ORDERS_BY_MAGIC|") shouldBe true
-                Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_5.txt"))
-                    .contains("|CLOSE_ORDERS_BY_MAGIC|") shouldBe true
-
-                Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_6.txt")) shouldBe false
-
-                val foundNextTrades =
-                    getTradesWithSetupGroupsName(setup.setupGroupsName).filter { it.status == Status.PENDING }
-
-                if (foundNextTrades.isNotEmpty()) {
-
-                    foundNextTrades.forEach {
-                        logger.info("Found trade: $it")
-                        it.createdDateTime shouldNotBe null
-                        it.status shouldBe Status.PENDING
-                        it.setup shouldNotBe null
-                        it.setup.symbol shouldBe EURUSD
-                        it.setup.isLong() shouldBe setup.isLong
-                    }
+                val allTradesHaveStatusFilled = filledTrades.count {
+                    it.status == Status.FILLED
                 }
 
                 writeMarketData(EURUSD)
 
-                writeEmptyOrders()
+                if (allTradesHaveStatusFilled == 2)
+                    return@waitForCondition true
 
-                waitForCondition(
-                    timeout = SECONDS_30,
-                    interval = SECONDS_5,
-                    logMessage = "Waiting for all trades to have status closed by time"
-                ) {
+                false
+            }
 
-                    logger.info("Client time ${getTime()}")
-                    val closedByUserTrades =
-                        getTradesWithSetupGroupsName(setup.setupGroupsName).count { it.status == Status.CLOSED_BY_TIME }
+            writeMarketData(EURUSD)
 
-                    writeMarketData(EURUSD)
+            val filledTrades = getTradesWithSetupGroupsName(testSetup.setupGroupsName)
 
-                    if (closedByUserTrades == 2)
-                        return@waitForCondition true  // Breaks out of the waiting loop
+            filledTrades.size shouldBe 4
 
-                    false  // Continues the waiting loop
+            setClockToSpecificDateTime(
+                filledTrades[1].targetPlaceDateTime!!.plusHours(filledTrades[1].setup.tradeDuration.toLong())
+                    .minusSeconds(10)
+            )
+            //  setTimeToNearlyCloseTime(filledTrades[1])
+
+
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for all trades to have status closed by magic sent"
+            ) {
+
+                logger.info("Client time ${getTime()}")
+                val closedByUserTrades = getTradesWithSetupGroupsName(testSetup.setupGroupsName)
+
+
+                val closedByMagicSentCount = closedByUserTrades.count { it.status == Status.CLOSED_BY_MAGIC_SENT }
+                logger.info("Number of trades with status CLOSED_BY_MAGIC_SENT: $closedByMagicSentCount")
+
+                if (closedByMagicSentCount == 2) {
+                    return@waitForCondition true
                 }
+                writeMarketData(EURUSD)
+
+                false
+            }
+
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for trades with status PENDING to be written to the db..."
+            ) {
+                logger.info("Client time ${getTime()}")
+                val foundPendingTrades = getTradesWithSetupGroupsName(testSetup.setupGroupsName)
+
+                val pendingCount = foundPendingTrades.count { it.status == Status.PENDING }
+
+                if (pendingCount == 2) {
+                    logger.info("backend time: ${getTime()}")
+                    foundPendingTrades.filter { it.status == Status.PENDING }.forEach {
+                        logger.info("Found trade: $it")
+                        it.status shouldBe Status.PENDING
+                        it.createdDateTime shouldNotBe null
+                        it.setup shouldNotBe null
+                        it.setup.symbol shouldBe EURUSD
+                        it.setup.isLong() shouldBe testSetup.isLong
+                        it.targetPlaceDateTime!!.toOffsetDateTime().toString() shouldBe nextNextMondayAt9.toString()
+                    }
+
+                    return@waitForCondition true
+                }
+                false
+            }
+
+
+            delay(5000)
+
+            val targetFileCount = 4
+            val directory = Path.of("test-ea-files/DWX")
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for 4 DWX_Commands_*.txt files to be written to the DWX directory"
+            ) {
+
+                writeMarketData(EURUSD)
+                val files = Files.list(directory)
+                    .filter { path -> path.fileName.toString().startsWith("DWX_Commands_") }
+                    .toList()
+
+
+                if (files.size == targetFileCount)
+                    return@waitForCondition true
+
+                false
+            }
+
+
+
+            Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_0.txt"))
+                .contains("|OPEN_ORDER|EURUSD,${buySell}limit") shouldBe true
+            Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_1.txt"))
+                .contains("|OPEN_ORDER|EURUSD,${buySell}limit") shouldBe true
+
+            Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_2.txt"))
+                .contains("|CLOSE_ORDERS_BY_MAGIC|") shouldBe true
+            Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_3.txt"))
+                .contains("|CLOSE_ORDERS_BY_MAGIC|") shouldBe true
+
+            Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_4.txt")) shouldBe false
+
+            writeMarketData(EURUSD)
+
+            writeEmptyOrders()
+
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for all trades to have status closed by time"
+            ) {
+
+                logger.info("Client time ${getTime()}")
+                val closedByUserTrades =
+                    getTradesWithSetupGroupsName(testSetup.setupGroupsName).count { it.status == Status.CLOSED_BY_TIME }
+
+                writeMarketData(EURUSD)
+
+                if (closedByUserTrades == 2)
+                    return@waitForCondition true
+
+                false
+            }
+        }
+
+
+        test("place 2 eurusd trades and close by user: ${testSetup.setupGroupsName}")
+        {
+            beforeEach(testSetup.setupGroupsName)
+
+            writeMarketData(EURUSD)
+
+            val nextMondayAt9 = ZonedDateTime.parse("2023-10-30T09:00:00.000Z")
+
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for trades with status PENDING to be written to the db..."
+            ) {
+                logger.info("Client time ${getTime()}")
+                val foundTrades =
+                    getTradesWithSetupGroupsName(testSetup.setupGroupsName).filter { it.status == Status.PENDING }
+
+                if (foundTrades.isNotEmpty()) {
+
+                    foundTrades.forEach {
+                        logger.info("Found trade: $it")
+                        it.status shouldBe Status.PENDING
+                        it.setup shouldNotBe null
+                        it.setup.symbol shouldBe EURUSD
+                        it.setup.isLong() shouldBe testSetup.isLong
+                        it.targetPlaceDateTime!!.toOffsetDateTime() shouldBe nextMondayAt9.toOffsetDateTime()
+                    }
+
+                    return@waitForCondition true
+                }
+                false
+            }
+
+
+            val foundTrades = getTradesWithSetupGroupsName(testSetup.setupGroupsName)
+            val (magicTrade1, magicTrade2) = foundTrades.take(2).map { it.id }
+
+            writeMarketData(EURUSD)
+
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for the time to be 09:00..."
+            ) {
+
+                logger.info("Waiting for EA to write file...")
+                val time = getTime()
+                logger.info("Client time $time")
+
+                if (!time.isBefore(nextMondayAt9))
+                    return@waitForCondition true
+
+                false
+            }
+
+            writeMarketData(EURUSD)
+
+
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for all trades to be OrderSent..."
+            ) {
+
+                logger.info("Client time ${getTime()}")
+                val tradesWithStatusOrderSent = getTradesWithSetupGroupsName(testSetup.setupGroupsName)
+
+
+                val tradesWithSentCount = tradesWithStatusOrderSent.count { it.status == Status.ORDER_SENT }
+
+                tradesWithStatusOrderSent.any { it.id == magicTrade1 } shouldBe true
+                tradesWithStatusOrderSent.any { it.id == magicTrade2 } shouldBe true
+
+                writeMarketData(EURUSD)
+
+                if (tradesWithSentCount == 2) {
+                    return@waitForCondition true
+                }
+
+                false
+            }
+
+            writeOrdersWithMagic(magicTrade1, magicTrade2, "EURUSD", "${buySell}limit")
+
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for all trades to be placed in MT..."
+            ) {
+
+                logger.info("Client time ${getTime()}")
+                val trades = getTradesWithSetupGroupsName(testSetup.setupGroupsName)
+
+                trades.size shouldBe 4
+
+                val tradesWithStatusPlacedInMTCount = trades.count {
+                    it.status == Status.PLACED_IN_MT
+                }
+
+                trades.count { it.status == Status.PENDING } shouldBe 2
+
+                writeMarketData(EURUSD)
+
+                if (tradesWithStatusPlacedInMTCount == 2)
+                    return@waitForCondition true
+
+                false
+            }
+
+            delay(5000)
+
+            Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_0.txt")) shouldBe true
+            Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_1.txt")) shouldBe true
+
+            Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_0.txt"))
+                .contains("OPEN_ORDER|EURUSD,${buySell}limit,") shouldBe true
+            Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_1.txt"))
+                .contains("OPEN_ORDER|EURUSD,${buySell}limit,") shouldBe true
+
+            writeMarketData(EURUSD)
+
+            val ordersAndAccount = readOrdersFile()
+            ordersAndAccount.orders.size shouldBe 2
+
+            ordersAndAccount.orders[1]?.type = buySell
+            ordersAndAccount.orders[2]?.type = buySell
+
+            writeOrdersFile(ordersAndAccount)
+
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for all trades to have status filled..."
+            ) {
+
+                logger.info("Client time ${getTime()}")
+                val tradesWithSetupGroupsName = getTradesWithSetupGroupsName(testSetup.setupGroupsName)
+
+                tradesWithSetupGroupsName.size shouldBe 4
+
+                val tradesWithStatusFilledCount = tradesWithSetupGroupsName.count { it.status == Status.FILLED }
+
+                writeMarketData(EURUSD)
+
+                tradesWithSetupGroupsName.count { it.status == Status.PENDING } shouldBe 2
+
+                if (tradesWithStatusFilledCount == 2)
+                    return@waitForCondition true
+
+                false
+            }
+
+            writeMarketData(EURUSD)
+
+            writeEmptyOrders()
+
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for all trades to have status closed by user"
+            ) {
+
+                logger.info("Client time ${getTime()}")
+                val tradesWithSetupGroupName = getTradesWithSetupGroupsName(testSetup.setupGroupsName)
+
+                tradesWithSetupGroupName.size shouldBe 4
+
+                val closedByUserCount = tradesWithSetupGroupName.count {
+                    it.status == Status.CLOSED_BY_USER
+                }
+
+                writeMarketData(EURUSD)
+
+                if (closedByUserCount == 2)
+                    return@waitForCondition true
+
+                false
+            }
+
+            Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_2.txt")) shouldBe false
+        }
+
+        test("place 2 eurusd trades and out of time close $testSetup")
+        {
+            beforeEach(testSetup.setupGroupsName)
+            writeMarketData(EURUSD)
+
+            val nextMondayAt9 = ZonedDateTime.parse("2023-10-30T09:00:00.000Z")
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for trades with status PENDING to be written to the db..."
+            ) {
+                logger.info("Client time ${getTime()}")
+                val foundTrades =
+                    getTradesWithSetupGroupsName(testSetup.setupGroupsName).filter { it.status == Status.PENDING }
+
+                if (foundTrades.isNotEmpty()) {
+
+                    foundTrades.forEach {
+                        logger.info("Found trade: $it")
+                        it.status shouldBe Status.PENDING
+                        it.setup shouldNotBe null
+                        it.setup.symbol shouldBe EURUSD
+                        it.setup shouldNotBe null
+                        it.setup.isLong() shouldBe testSetup.isLong
+                        it.targetPlaceDateTime!!.toOffsetDateTime().toString() shouldBe nextMondayAt9
+                            .toString()
+
+                    }
+
+                    return@waitForCondition true
+                }
+                false
+            }
+
+
+            val foundTrades = getTradesWithSetupGroupsName(testSetup.setupGroupsName)
+            val (magicTrade1, magicTrade2) = foundTrades.take(2).map { it.id }
+
+            writeMarketData(EURUSD)
+
+
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for the time to be 09:00..."
+            ) {
+
+                logger.info("Waiting for EA to write file...")
+                val time = getTime()
+                logger.info("Client time $time")
+
+                if (!time.isBefore(nextMondayAt9))
+                    return@waitForCondition true
+
+                false
+            }
+
+            writeMarketData(EURUSD)
+
+
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for all trades to be OrderSent..."
+            ) {
+
+                logger.info("Client time ${getTime()}")
+                val tradesWithStatusOrderSent = getTradesWithSetupGroupsName(testSetup.setupGroupsName)
+
+                val tradesWithOrderSentCount = tradesWithStatusOrderSent.count {
+                    it.status == Status.ORDER_SENT
+                }
+
+                tradesWithStatusOrderSent.any { it.id == magicTrade1 } shouldBe true
+                tradesWithStatusOrderSent.any { it.id == magicTrade2 } shouldBe true
+
+                writeMarketData(EURUSD)
+
+                if (tradesWithOrderSentCount == 2) {
+                    return@waitForCondition true
+                }
+
+                false
+            }
+
+            writeOrdersWithMagic(magicTrade1, magicTrade2, "EURUSD", "${buySell}limit")
+
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for all trades to be placed in MT..."
+            ) {
+
+                logger.info("Client time ${getTime()}")
+                val trades = getTradesWithSetupGroupsName(testSetup.setupGroupsName)
+
+                trades.size shouldBe 4
+
+                val tradesHaveCorrectStatus = trades.count {
+                    it.status == Status.PLACED_IN_MT
+                }
+
+                writeMarketData(EURUSD)
+
+                if (tradesHaveCorrectStatus == 2)
+                    return@waitForCondition true
+
+                false
+            }
+
+            delay(5000)
+
+            Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_0.txt")) shouldBe true
+            Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_1.txt")) shouldBe true
+
+            Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_0.txt"))
+                .contains("OPEN_ORDER|EURUSD,${buySell}limit,") shouldBe true
+            Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_1.txt"))
+                .contains("OPEN_ORDER|EURUSD,${buySell}limit,") shouldBe true
+
+            writeMarketData(EURUSD)
+
+
+            writeEmptyOrders()
+
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for all trades to have status out of time"
+            ) {
+
+                logger.info("Client time ${getTime()}")
+                val trades = getTradesWithSetupGroupsName(testSetup.setupGroupsName)
+
+                val tradesHaveCorrectStatus = trades.count {
+                    it.status == Status.OUT_OF_TIME
+                }
+
+                writeMarketData(EURUSD)
+
+                if (tradesHaveCorrectStatus == 2)
+                    return@waitForCondition true
+
+                false
+            }
+
+            Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_2.txt")) shouldBe false
+        }
+
+        test("place 2 missed eurusd trades $testSetup")
+        {
+            beforeEach(testSetup.setupGroupsName)
+            writeMarketData(EURUSD)
+
+            val nextMondayAt9 = ZonedDateTime.parse("2023-10-30T09:00:00.000Z")
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for trades with status PENDING to be written to the db..."
+            ) {
+                logger.info("Client time ${getTime()}")
+                val foundTrades =
+                    getTradesWithSetupGroupsName(testSetup.setupGroupsName).filter { it.status == Status.PENDING }
+
+                if (foundTrades.isNotEmpty()) {
+
+                    foundTrades.forEach {
+                        logger.info("Found trade: $it")
+                        it.status shouldBe Status.PENDING
+                        it.setup shouldNotBe null
+                        it.setup.symbol shouldBe EURUSD
+                        it.setup shouldNotBe null
+                        it.setup.isLong() shouldBe testSetup.isLong
+                        it.targetPlaceDateTime!!.toOffsetDateTime().toString() shouldBe nextMondayAt9
+                            .toString()
+
+                    }
+
+                    return@waitForCondition true  
+                }
+                false
+            }
+
+
+            val foundTrades = getTradesWithSetupGroupsName(testSetup.setupGroupsName)
+            val (magicTrade1, magicTrade2) = foundTrades.take(2).map { it.id }
+
+            setClockToSpecificDateTime(ZonedDateTime.parse("2023-10-31T08:59:40.000Z"))
+
+            writeMarketData(EURUSD)
+
+            waitForCondition(
+                timeout = SECONDS_30,
+                interval = SECONDS_5,
+                logMessage = "Waiting for trades with status MISSED to be written to the db..."
+            ) {
+                logger.info("Client time ${getTime()}")
+                val missedTrades =
+                    getTradesWithSetupGroupsName(testSetup.setupGroupsName).filter { it.status == Status.MISSED }
+
+                if (missedTrades.isNotEmpty()) {
+
+                    missedTrades.forEach {
+                        logger.info("Found trade: $it")
+                        it.status shouldBe Status.MISSED
+                        it.setup shouldNotBe null
+                        it.setup.symbol shouldBe EURUSD
+                        it.setup shouldNotBe null
+                        it.setup.isLong() shouldBe testSetup.isLong
+                        it.targetPlaceDateTime!!.toOffsetDateTime().toString() shouldBe nextMondayAt9
+                            .toString()
+
+                    }
+
+                    return@waitForCondition true
+                }
+                false
             }
 
         }
-
-        val testSetup = getProperty("testSetup")
-
-        testSetupMap[testSetup]?.let { setup ->
-            createTestWithSetupGroupsName(setup)
-        } ?: throw IllegalArgumentException("testSetup $testSetup not found in testSetupMap")
     }
 }

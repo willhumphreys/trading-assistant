@@ -1,16 +1,12 @@
 package uk.co.threebugs.darwinexclient.setup
 
-import org.springframework.stereotype.Repository
-import uk.co.threebugs.darwinexclient.setupgroup.SetupGroup
-import uk.co.threebugs.darwinexclient.utils.logger
-import java.io.IOException
-import java.nio.file.Files
-import java.nio.file.Path
-import java.time.Clock
-import java.time.DayOfWeek
-import java.time.ZonedDateTime
-import java.time.temporal.TemporalAdjusters
-import java.util.stream.Collectors
+import org.springframework.stereotype.*
+import uk.co.threebugs.darwinexclient.setupgroup.*
+import java.io.*
+import java.nio.file.*
+import java.time.*
+import java.time.temporal.*
+import java.util.stream.*
 
 @Repository
 class SetupFileRepository {
@@ -62,12 +58,10 @@ class SetupFileRepository {
                     .withMinute(0).withSecond(0).withNano(0)
             if (nextEventTime.isBefore(now) || nextEventTime.isEqual(now)) {
                 nextEventTime = nextEventTime.plusWeeks(1)
-                if (nextEventTime.dayOfMonth == 6) {
-                    logger.info("Next event time is the first Sunday of the month, so adding 1 week")
-                }
             }
             return nextEventTime
         }
+
 
         private fun getLongShort(stop: Int, limit: Int): String {
             return if (stop < limit) "LONG" else "SHORT"

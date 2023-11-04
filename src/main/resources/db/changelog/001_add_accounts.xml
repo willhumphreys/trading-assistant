@@ -4,6 +4,15 @@
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
+    <changeSet id="create-revinfo-table" author="will">
+        <createTable tableName="revinfo">
+            <column name="rev" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="revtstmp" type="bigint"/>
+        </createTable>
+    </changeSet>
+
     <changeSet id="create_account_table" author="will">
         <createTable tableName="account">
             <column name="id" type="int" autoIncrement="true">
@@ -22,4 +31,26 @@
         </createIndex>
 
     </changeSet>
+
+    <changeSet id="create_account_audit_table" author="will">
+        <createTable tableName="account_aud">
+            <column name="id" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rev" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="revtype" type="smallint"/>
+            <column name="name" type="varchar(255)"/>
+            <column name="metatrader_advisor_path" type="varchar(500)"/>
+        </createTable>
+        <addPrimaryKey tableName="account_aud" columnNames="id, rev"/>
+        <addForeignKeyConstraint constraintName="FK_account_aud_revinfo"
+                                 baseTableName="account_aud"
+                                 baseColumnNames="rev"
+                                 referencedTableName="revinfo"
+                                 referencedColumnNames="rev"/>
+    </changeSet>
+
+
 </databaseChangeLog>

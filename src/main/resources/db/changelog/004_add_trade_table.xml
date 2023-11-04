@@ -4,6 +4,7 @@
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
+
     <changeSet id="create_trade_table" author="will">
         <createTable tableName="trade">
             <column name="id" type="int" autoIncrement="true">
@@ -24,7 +25,9 @@
     'CLOSED_BY_STOP',
     'CLOSED_BY_LIMIT',
     'CLOSED_BY_TIME',
-    'CLOSED_BY_USER')">
+    'CLOSED_BY_USER',
+    'CLOSED_BY_MAGIC_SENT',
+                'MISSED')">
                 <constraints nullable="false"/>
             </column>
 
@@ -35,7 +38,6 @@
                 <constraints nullable="false"/>
             </column>
             <column name="metatrader_id" type="int"/>
-
             <column name="target_place_date_time" type="timestamp"/>
             <column name="placed_date_time" type="timestamp"/>
             <column name="placed_price" type="decimal(19, 4)"/>
@@ -45,9 +47,8 @@
             <column name="closed_price" type="decimal(19, 4)"/>
             <column name="close_type" type="varchar(255)"/>
             <column name="profit" type="decimal(19, 4)"/>
-            <column name="message_column" type="varchar(255)"/>
+            <column name="message_column" type="text"/>
         </createTable>
-
 
         <createIndex indexName="index_trade_placed_date_time" tableName="trade">
             <column name="placed_date_time"/>
@@ -64,6 +65,40 @@
                                  baseColumnNames="account_id"
                                  referencedTableName="account"
                                  referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="create-trade-audit-table" author="will">
+        <createTable tableName="trade_aud">
+            <column name="id" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rev" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="revtype" type="smallint"/>
+            <column name="created_date_time" type="timestamp"/>
+            <column name="last_updated_date_time" type="timestamp"/>
+            <column name="status" type="varchar(255)"/>
+            <column name="setup_id" type="int"/>
+            <column name="account_id" type="int"/>
+            <column name="metatrader_id" type="int"/>
+            <column name="placed_date_time" type="timestamp"/>
+            <column name="target_place_date_time" type="timestamp"/>
+            <column name="placed_price" type="decimal(19,2)"/>
+            <column name="filled_date_time" type="timestamp"/>
+            <column name="filled_price" type="decimal(19,2)"/>
+            <column name="closed_date_time" type="timestamp"/>
+            <column name="closed_price" type="decimal(19,2)"/>
+            <column name="close_type" type="varchar(255)"/>
+            <column name="profit" type="decimal(19,2)"/>
+            <column name="message_column" type="text"/>
+        </createTable>
+        <addPrimaryKey tableName="trade_aud" columnNames="id, rev"/>
+        <addForeignKeyConstraint constraintName="FK_trade_aud_revinfo"
+                                 baseTableName="trade_aud"
+                                 baseColumnNames="rev"
+                                 referencedTableName="revinfo"
+                                 referencedColumnNames="rev"/>
     </changeSet>
 
 </databaseChangeLog>

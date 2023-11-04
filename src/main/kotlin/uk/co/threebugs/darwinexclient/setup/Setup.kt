@@ -1,11 +1,13 @@
 package uk.co.threebugs.darwinexclient.setup
 
 import jakarta.persistence.*
-import uk.co.threebugs.darwinexclient.setupgroup.SetupGroup
-import java.time.ZonedDateTime
+import org.hibernate.envers.*
+import uk.co.threebugs.darwinexclient.setupgroup.*
+import java.time.*
 
 @Entity
 @Table(name = "setup")
+@Audited
 class Setup (
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

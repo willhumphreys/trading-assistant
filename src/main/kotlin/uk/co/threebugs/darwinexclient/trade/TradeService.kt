@@ -1,28 +1,19 @@
 package uk.co.threebugs.darwinexclient.trade
 
-import org.springframework.data.domain.Example
-import org.springframework.data.domain.Sort
-import org.springframework.data.repository.findByIdOrNull
-import org.springframework.stereotype.Service
-import uk.co.threebugs.darwinexclient.SlackClient
-import uk.co.threebugs.darwinexclient.Status
-import uk.co.threebugs.darwinexclient.accountsetupgroups.AccountSetupGroups
-import uk.co.threebugs.darwinexclient.clock.MutableClock
-import uk.co.threebugs.darwinexclient.metatrader.Client
-import uk.co.threebugs.darwinexclient.metatrader.Order
-import uk.co.threebugs.darwinexclient.metatrader.TradeInfo
-import uk.co.threebugs.darwinexclient.search.TradeSearchDto
-import uk.co.threebugs.darwinexclient.setup.Setup
-import uk.co.threebugs.darwinexclient.setup.SetupFileRepository
-import uk.co.threebugs.darwinexclient.setup.SetupRepository
-import uk.co.threebugs.darwinexclient.utils.Constants
-import uk.co.threebugs.darwinexclient.utils.TimeHelper
-import uk.co.threebugs.darwinexclient.utils.logger
-import java.math.BigDecimal
-import java.time.ZoneId
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-import java.util.function.Consumer
+import org.springframework.data.domain.*
+import org.springframework.data.repository.*
+import org.springframework.stereotype.*
+import uk.co.threebugs.darwinexclient.*
+import uk.co.threebugs.darwinexclient.accountsetupgroups.*
+import uk.co.threebugs.darwinexclient.clock.*
+import uk.co.threebugs.darwinexclient.metatrader.*
+import uk.co.threebugs.darwinexclient.search.*
+import uk.co.threebugs.darwinexclient.setup.*
+import uk.co.threebugs.darwinexclient.utils.*
+import java.math.*
+import java.time.*
+import java.time.format.*
+import java.util.function.*
 
 @Service
 class TradeService(
@@ -34,6 +25,8 @@ class TradeService(
     private val clock: MutableClock,
     private val setupRepository: SetupRepository,
 ) {
+
+    val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
     fun findById(id: Int): TradeDto? {
         return tradeRepository.findByIdOrNull(id)?.let { tradeMapper.toDto(it) }
     }
@@ -71,9 +64,6 @@ class TradeService(
 
     fun createTradesToPlaceFromEnabledSetups(symbol: String, accountSetupGroups: AccountSetupGroups) {
 
-        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-
-
         val setups = setupRepository.findEnabledSetups(symbol, accountSetupGroups.setupGroups!!)
         setups.forEach { setup ->
             val targetPlaceTime: ZonedDateTime =
@@ -86,11 +76,20 @@ class TradeService(
                     formatter.format(targetPlaceTime)
                 )
             if (existingTrade == null) {
-                val trade = tradeMapper.toEntity(setup, targetPlaceTime, accountSetupGroups.account!!, clock).apply {
-                    status = Status.PENDING
+                val now = ZonedDateTime.now(clock)
+
+                val trade = tradeMapper.toEntity(setup, targetPlaceTime, accountSetupGroups.account!!, clock)
+                if (now.isAfter(targetPlaceTime.plusHours(setup.outOfTime!!.toLong()))) {
+                    logger.info("Skipping trade as the trade windows has been closed: ${formatter.format(targetPlaceTime)}")
+
+                    tradeRepository.save(trade.apply {
+                        status = Status.MISSED
+                    })
+                } else {
+                    tradeRepository.save(trade.apply {
+                        status = Status.PENDING
+                    })
                 }
-                tradeRepository.save(trade)
-                slackClient.sendSlackNotification(trade.newTradeMessage)
             }
         }
     }
@@ -107,7 +106,12 @@ class TradeService(
             .forEach(Consumer { trade: Trade ->
                 val now = ZonedDateTime.now(clock)
                 val targetPlaceDateTime = trade.targetPlaceDateTime
-                if (now.isAfter(targetPlaceDateTime)) {
+                if (now.isAfter(targetPlaceDateTime!!.plusHours(trade.setup!!.outOfTime!!.toLong()))) {
+                    tradeRepository.save(trade.apply {
+                        status = Status.MISSED
+                        lastUpdatedDateTime = ZonedDateTime.now(clock)
+                    })
+                } else if (now.isAfter(targetPlaceDateTime)) {
                     tradeRepository.save(placeTrade(dwx, bid, ask, trade))
                 }
             })
@@ -124,18 +128,6 @@ class TradeService(
         val stopLoss = addTicks(fillPrice, trade.setup!!.stop!!, tickSize)
         val takeProfit = addTicks(fillPrice, trade.setup!!.limit!!, tickSize)
 
-
-        //        dwx.openOrder(Order.builder()
-//                           .symbol("EURUSD")
-//                           .orderType("buylimit")
-//                           .lots(0.01)
-//                           .price(new BigDecimal("1.02831"))
-//                           .stopLoss(new BigDecimal("1.00831"))
-//                           .takeProfit(new BigDecimal("1.0931"))
-//                           .magic(100)
-//                           .comment("test")
-//                           .expiration(TradeService.addSecondsToCurrentTime(8))
-//                           .build());
         val magic = trade.id
         dwx.openOrder(
             Order(
