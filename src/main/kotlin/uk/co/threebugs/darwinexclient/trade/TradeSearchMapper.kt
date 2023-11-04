@@ -8,6 +8,7 @@ import java.nio.file.Path
 abstract class TradeSearchMapper {
 
     abstract fun toDto(trade: Trade): TradeSearchDto
+    abstract fun toEntity(tradeSearchDto: TradeSearchDto): Trade
 
     fun toPath(path: String?): Path? {
         return path?.let { Path.of(it) }

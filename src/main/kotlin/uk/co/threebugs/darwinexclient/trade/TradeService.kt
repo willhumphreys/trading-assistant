@@ -64,7 +64,7 @@ class TradeService(
     }
 
     fun findTrades(exampleRecord: TradeSearchDto, sort: Sort): List<TradeSearchDto?> {
-        val example = Example.of(tradeMapper.toEntity(exampleRecord, clock))
+        val example = Example.of(tradeSearchMapper.toEntity(exampleRecord))
 
         return tradeRepository.findAll(example, sort).map { tradeSearchMapper.toDto(it) }
     }

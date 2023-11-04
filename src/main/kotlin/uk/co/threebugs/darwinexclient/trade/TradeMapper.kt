@@ -32,10 +32,8 @@ abstract class TradeMapper {
     @Mapping(target = "createdDateTime", source = "tradeDto.createdDateTime")
     abstract fun toEntity(tradeDto: TradeDto, @Context clock: Clock): Trade
 
-    abstract fun toEntity(tradeDto: TradeSearchDto, @Context clock: Clock): Trade
-
-
     @Mapping(target = "createdDateTime", ignore = true)
+    @Mapping(target = "lastUpdatedDateTime", ignore = true)
     @Mapping(target = "metatraderId", ignore = true)
     @Mapping(target = "profit", ignore = true)
     @Mapping(target = "status", ignore = true)
@@ -54,6 +52,9 @@ abstract class TradeMapper {
         account: Account,
         @Context clock: Clock
     ): Trade
+
+
+    abstract fun toEntity(tradeDto: TradeSearchDto, @Context clock: Clock): Trade
 
     fun toPath(path: String?): Path? {
         return path?.let { Path.of(it) }

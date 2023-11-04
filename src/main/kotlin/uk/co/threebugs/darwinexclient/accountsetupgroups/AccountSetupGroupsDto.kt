@@ -6,8 +6,8 @@ import uk.co.threebugs.darwinexclient.setupgroups.SetupGroupsDto
 
 data class AccountSetupGroupsDto (
     var id: Int? = null,
-    var name: String? = null,
-    var account: AccountDto? = null,
-    var setupGroups: SetupGroupsDto? = null
+    val name: String,
+    val account: AccountDto,
+    val setupGroups: SetupGroupsDto
 )
 

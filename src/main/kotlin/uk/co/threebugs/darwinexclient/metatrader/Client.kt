@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.KotlinFeature
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.json.JSONObject
@@ -88,7 +89,16 @@ class Client(
     private final val accountSetupGroupsDto: AccountSetupGroupsDto
 
     init {
-        objectMapper.registerModule(KotlinModule())
+        objectMapper.registerModule(
+            KotlinModule.Builder()
+                .withReflectionCacheSize(512)
+                .configure(KotlinFeature.NullToEmptyCollection, false)
+                .configure(KotlinFeature.NullToEmptyMap, false)
+                .configure(KotlinFeature.NullIsSameAsDefault, false)
+                .configure(KotlinFeature.SingletonSupport, DISABLED)
+                .configure(KotlinFeature.StrictNullChecks, false)
+                .build()
+        )
         objectMapper.registerModule(JavaTimeModule())
         val accountDtos = loadMetaTraderInstalls(Paths.get("accounts", "metatrader_dirs.json"))
         val symbols = arrayOf("EURUSD", "GBPUSD", "USDCAD", "NZDUSD", "AUDUSD", "USDJPY", "USDCHF")
@@ -111,7 +121,7 @@ class Client(
             ?: throw RuntimeException("Failed to find account setup groups: $accountSetupGroupsName")
 
 
-        val metaTraderDirPath = accountSetupGroupsDto.account!!.metatraderAdvisorPath!!
+        val metaTraderDirPath = accountSetupGroupsDto.account.metatraderAdvisorPath
         val f = metaTraderDirPath.toFile()
         if (!f.exists()) {
             logger.info("ERROR: MetaTraderDirPath does not exist!")
