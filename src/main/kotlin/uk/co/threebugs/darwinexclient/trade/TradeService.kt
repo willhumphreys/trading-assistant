@@ -63,7 +63,7 @@ class TradeService(
         return tradeRepository.findAll().filterNotNull().map { tradeMapper.toDto(it) }
     }
 
-    fun findTrades(exampleRecord: TradeSearchDto, sort: Sort): List<TradeSearchDto?> {
+    fun findTrades(exampleRecord: TradeSearchDto, sort: Sort): List<TradeSearchDto> {
         val example = Example.of(tradeSearchMapper.toEntity(exampleRecord))
 
         return tradeRepository.findAll(example, sort).map { tradeSearchMapper.toDto(it) }

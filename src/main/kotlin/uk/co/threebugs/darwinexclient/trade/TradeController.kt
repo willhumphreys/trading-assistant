@@ -22,7 +22,7 @@ class TradeController (
         @RequestBody exampleRecord: TradeSearchDto,
             @RequestParam(name = "sortColumn", required = false) sortColumn: String?,
         @RequestParam(name = "sortDirection", required = false) sortDirection: Sort.Direction?
-    ): List<TradeSearchDto?> {
+    ): List<TradeSearchDto> {
         var sort = Sort.unsorted()
         if (sortColumn != null && sortDirection != null) {
             sort = Sort.by(sortDirection, sortColumn)
