@@ -1,11 +1,9 @@
-import io.kotest.core.spec.style.FunSpec
-import io.kotest.core.test.TestCase
-import io.kotest.core.test.TestResult
-import io.kotest.matchers.collections.shouldBeEmpty
-import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
-import kotlinx.coroutines.delay
-import uk.co.threebugs.darwinexclient.Status
+import io.kotest.core.spec.style.*
+import io.kotest.core.test.*
+import io.kotest.matchers.*
+import io.kotest.matchers.collections.*
+import kotlinx.coroutines.*
+import uk.co.threebugs.darwinexclient.*
 import uk.co.threebugs.darwinexclient.helpers.MetaTraderFileHelper.Companion.deleteFilesBeforeTest
 import uk.co.threebugs.darwinexclient.helpers.MetaTraderFileHelper.Companion.deleteMarketDataFile
 import uk.co.threebugs.darwinexclient.helpers.MetaTraderFileHelper.Companion.readOrdersFile
@@ -20,10 +18,10 @@ import uk.co.threebugs.darwinexclient.helpers.RestCallHelper.Companion.stopProce
 import uk.co.threebugs.darwinexclient.helpers.TimeHelper.Companion.getTime
 import uk.co.threebugs.darwinexclient.helpers.TimeHelper.Companion.setClockToSpecificDateTime
 import uk.co.threebugs.darwinexclient.helpers.TimeOutHelper.Companion.waitForCondition
-import uk.co.threebugs.darwinexclient.utils.logger
-import java.nio.file.Files
-import java.nio.file.Path
-import java.time.ZonedDateTime
+import uk.co.threebugs.darwinexclient.utils.*
+import java.lang.System.*
+import java.nio.file.*
+import java.time.*
 
 
 private const val SECONDS_30 = 30000L
@@ -31,6 +29,13 @@ private const val SECONDS_5 = 5000L
 private const val EURUSD = "EURUSD"
 
 class BlackBoxTest : FunSpec() {
+
+    data class TestSetup(val setupGroupsName: String, val isLong: Boolean)
+
+    private val testSetupMap = mapOf(
+        "longSetup" to TestSetup("long-test", true),
+        "shortSetup" to TestSetup("short-test", false)
+    )
 
     private suspend fun beforeEach(setupGroupsName: String) {
         deleteFilesBeforeTest(Path.of("test-ea-files/DWX"), "DWX_Commands_", ".txt")
@@ -86,7 +91,6 @@ class BlackBoxTest : FunSpec() {
                             it.status shouldBe Status.PENDING
                             it.setup shouldNotBe null
                             it.setup.symbol shouldBe EURUSD
-                            it.setup shouldNotBe null
                             it.setup.isLong() shouldBe setup.isLong
                             it.targetPlaceDateTime!!.toOffsetDateTime() shouldBe nextMondayAt9.toOffsetDateTime()
                         }
@@ -414,7 +418,6 @@ class BlackBoxTest : FunSpec() {
                             it.createdDateTime shouldNotBe null
                             it.setup shouldNotBe null
                             it.setup.symbol shouldBe EURUSD
-                            it.setup shouldNotBe null
                             it.setup.isLong() shouldBe setup.isLong
                             it.targetPlaceDateTime!!.toOffsetDateTime().toString() shouldBe nextMondayAt9
                                 .toString()
@@ -551,7 +554,7 @@ class BlackBoxTest : FunSpec() {
                 filledTrades.size shouldBe 4
 
                 setClockToSpecificDateTime(
-                    filledTrades[1].targetPlaceDateTime!!.plusHours(filledTrades[1].setup.tradeDuration!!.toLong())
+                    filledTrades[1].targetPlaceDateTime!!.plusHours(filledTrades[1].setup.tradeDuration.toLong())
                         .minusSeconds(10)
                 )
                 //  setTimeToNearlyCloseTime(filledTrades[1])
@@ -630,7 +633,6 @@ class BlackBoxTest : FunSpec() {
                         it.status shouldBe Status.PENDING
                         it.setup shouldNotBe null
                         it.setup.symbol shouldBe EURUSD
-                        it.setup shouldNotBe null
                         it.setup.isLong() shouldBe setup.isLong
                     }
                 }
@@ -660,15 +662,10 @@ class BlackBoxTest : FunSpec() {
 
         }
 
-        val longSetup = TestSetup("long-test", true)
-        val shortSetup = TestSetup("short-test", false)
+        val testSetup = getProperty("testSetup")
 
-        // Run your test with different setupGroupsNames
-        listOf(longSetup).forEach { setup ->
+        testSetupMap[testSetup]?.let { setup ->
             createTestWithSetupGroupsName(setup)
-        }
+        } ?: throw IllegalArgumentException("testSetup $testSetup not found in testSetupMap")
     }
-
-    data class TestSetup(val setupGroupsName: String, val isLong: Boolean)
-
 }
