@@ -1,14 +1,12 @@
 package uk.co.threebugs.darwinexclient.helpers
 
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
-import io.kotest.assertions.fail
-import okhttp3.OkHttpClient
-import okhttp3.Request
+import com.fasterxml.jackson.datatype.jsr310.*
+import com.fasterxml.jackson.module.kotlin.*
+import io.kotest.assertions.*
+import okhttp3.*
 import okhttp3.RequestBody.Companion.toRequestBody
-import uk.co.threebugs.darwinexclient.trade.TradeDto
-import uk.co.threebugs.darwinexclient.utils.logger
+import uk.co.threebugs.darwinexclient.trade.*
+import uk.co.threebugs.darwinexclient.utils.*
 
 class RestCallHelper {
 
@@ -39,7 +37,7 @@ class RestCallHelper {
         fun deleteTradesFromTestAccount(accountName: String) {
 
             val request = Request.Builder()
-                .url("$HOST/trades/byAccountName/$accountName")
+                .url("$HOST/trades?accountName=$accountName")
                 .delete()
                 .build()
 
@@ -58,7 +56,7 @@ class RestCallHelper {
         fun deleteTradesFromSetupGroupsName(setupGroupsName: String) {
 
             val request = Request.Builder()
-                .url("$HOST/trades/bySetupGroupsName/$setupGroupsName")
+                .url("$HOST/trades?setupGroupsName=$setupGroupsName")
                 .delete()
                 .build()
 
@@ -79,7 +77,7 @@ class RestCallHelper {
             accountName: String
         ): List<TradeDto> {
             val request = Request.Builder()
-                .url("$HOST/trades/byAccountName/$accountName")
+                .url("$HOST/trades?accountName=$accountName")
                 .build()
 
             val response = client.newCall(request).execute()
@@ -101,7 +99,7 @@ class RestCallHelper {
             setupGroupsName: String
         ): List<TradeDto> {
             val request = Request.Builder()
-                .url("$HOST/trades/bySetupGroupsName/$setupGroupsName")
+                .url("$HOST/trades?setupGroupsName=$setupGroupsName")
                 .build()
 
             val response = client.newCall(request).execute()

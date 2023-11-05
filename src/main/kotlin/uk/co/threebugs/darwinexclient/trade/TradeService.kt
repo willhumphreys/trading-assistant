@@ -52,8 +52,8 @@ class TradeService(
         return tradeRepository.deleteBySetupGroupsName(name)
     }
 
-    fun findAll(): List<TradeDto> {
-        return tradeRepository.findAll().filterNotNull().map { tradeMapper.toDto(it) }
+    fun findAll(sort: Sort): List<TradeDto> {
+        return tradeRepository.findAll(sort).filterNotNull().map { tradeMapper.toDto(it) }
     }
 
     fun findTrades(exampleRecord: TradeSearchDto, sort: Sort): List<TradeSearchDto> {
@@ -225,8 +225,8 @@ class TradeService(
         return tradeRepository.deleteByAccountName(name)
     }
 
-    fun findByAccountName(name: String): List<TradeDto> {
-        return tradeRepository.findByAccount_Name(name).map { tradeMapper.toDto(it) }
+    fun findByAccountName(name: String, sort: Sort): List<TradeDto> {
+        return tradeRepository.findByAccount_Name(name, sort).map { tradeMapper.toDto(it) }
     }
 
     fun findBySetupGroupsName(name: String): List<TradeDto>? {

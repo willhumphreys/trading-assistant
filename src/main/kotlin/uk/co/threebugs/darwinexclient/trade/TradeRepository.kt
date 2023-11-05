@@ -1,15 +1,13 @@
 package uk.co.threebugs.darwinexclient.trade
 
-import jakarta.transaction.Transactional
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.jpa.repository.Modifying
-import org.springframework.data.jpa.repository.Query
-import org.springframework.data.repository.query.Param
-import org.springframework.data.repository.query.QueryByExampleExecutor
-import org.springframework.stereotype.Repository
-import uk.co.threebugs.darwinexclient.account.Account
-import uk.co.threebugs.darwinexclient.setup.Setup
-import java.time.ZonedDateTime
+import jakarta.transaction.*
+import org.springframework.data.domain.*
+import org.springframework.data.jpa.repository.*
+import org.springframework.data.repository.query.*
+import org.springframework.stereotype.*
+import uk.co.threebugs.darwinexclient.account.*
+import uk.co.threebugs.darwinexclient.setup.*
+import java.time.*
 
 @Repository
 interface TradeRepository : JpaRepository<Trade, Int>, QueryByExampleExecutor<Trade> {
@@ -26,7 +24,7 @@ interface TradeRepository : JpaRepository<Trade, Int>, QueryByExampleExecutor<Tr
     fun findByAccountSetupGroupsSymbolAndStatus(
         accountSetupGroupsId: Int,
         symbol: String,
-        status: String
+        status: String,
     ): List<Trade>
 
 
@@ -36,7 +34,7 @@ interface TradeRepository : JpaRepository<Trade, Int>, QueryByExampleExecutor<Tr
         account: Account
     ): Trade?
 
-    fun findByAccount_Name(name: String): List<Trade>
+    fun findByAccount_Name(name: String, sort: Sort): List<Trade>
 
     @Transactional
     @Modifying

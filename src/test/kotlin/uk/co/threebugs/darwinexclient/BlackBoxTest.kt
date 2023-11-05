@@ -104,6 +104,10 @@ class BlackBoxTest : FunSpec() {
             }
 
             val foundTrades = getTradesWithSetupGroupsName(testSetup.setupGroupsName)
+
+            //We should have 2 trades with status PENDING
+            foundTrades.size shouldBe 2
+
             val (magicTrade1, magicTrade2) = foundTrades.take(2).map { it.id }
 
             writeMarketData(EURUSD)
@@ -164,6 +168,7 @@ class BlackBoxTest : FunSpec() {
                 logger.info("Client time ${getTime()}")
                 val trades = getTradesWithSetupGroupsName(testSetup.setupGroupsName)
 
+                //Once we send the trades to MT we should have 4 trades. 2 with status PENDING and 2 with status PLACED_IN_MT
                 trades.size shouldBe 4
 
                 val allTradesHaveStatusPlacedInMT = trades.count {
@@ -171,6 +176,12 @@ class BlackBoxTest : FunSpec() {
                 }
 
                 writeMarketData(EURUSD)
+
+                val nextPendingTrades = trades.count {
+                    it.status == Status.PENDING
+                }
+
+                nextPendingTrades shouldBe 2
 
                 if (allTradesHaveStatusPlacedInMT == 2)
                     return@waitForCondition true
@@ -202,15 +213,16 @@ class BlackBoxTest : FunSpec() {
             waitForCondition(
                 timeout = SECONDS_30,
                 interval = SECONDS_5,
-                logMessage = "Waiting for all trades to have status filled..."
+                logMessage = "Waiting for the 2 trades we placed early to have status filled..."
             ) {
 
                 logger.info("Client time ${getTime()}")
-                val filledTrades = getTradesWithSetupGroupsName(testSetup.setupGroupsName)
+                val tradesWithSetupGroupName = getTradesWithSetupGroupsName(testSetup.setupGroupsName)
 
-                filledTrades.size shouldBe 4
+                // 2 trades with status PENDING and 2 trades with status FILLED
+                tradesWithSetupGroupName.size shouldBe 4
 
-                val allTradesHaveStatusFilled = filledTrades.count {
+                val allTradesHaveStatusFilled = tradesWithSetupGroupName.count {
                     it.status == Status.FILLED
                 }
 
@@ -226,12 +238,16 @@ class BlackBoxTest : FunSpec() {
 
             val filledTrades = getTradesWithSetupGroupsName(testSetup.setupGroupsName)
 
+            val filledTrade1 = filledTrades.first { t -> t.id == magicTrade1 }
+
             filledTrades.size shouldBe 4
 
-            setClockToSpecificDateTime(
-                filledTrades[1].targetPlaceDateTime!!.plusHours(filledTrades[1].setup.tradeDuration.toLong())
-                    .minusSeconds(10)
-            )
+            val targetPlaceDateTime = filledTrade1.targetPlaceDateTime
+            val tradeDurationInHours = filledTrade1.setup.tradeDuration.toLong()
+            val timeJustBeforeClose = targetPlaceDateTime!!.plusHours(tradeDurationInHours).minusSeconds(10)
+            logger.info("targetPlaceDateTime: $targetPlaceDateTime tradeDurationInHours: $tradeDurationInHours timeJustBeforeClose: $timeJustBeforeClose")
+
+            setClockToSpecificDateTime(timeJustBeforeClose)
             //  setTimeToNearlyCloseTime(filledTrades[1])
 
 
@@ -305,8 +321,6 @@ class BlackBoxTest : FunSpec() {
 
                 false
             }
-
-
 
             Files.readString(Path.of("test-ea-files/DWX/DWX_Commands_0.txt"))
                 .contains("|OPEN_ORDER|EURUSD,${buySell}limit") shouldBe true
