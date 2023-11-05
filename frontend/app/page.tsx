@@ -1,12 +1,14 @@
 'use client'
 import {useEffect, useState} from 'react';
-import {Account, Query, Trade} from "@/app/interfaces";
+import {Account, Query, Trade, TradeAudit} from "@/app/interfaces";
 import TradesTable from "@/app/tradesTable";
+import TradesAuditTable from "@/app/tradesAuditTable";
 import QueryBuilder from "@/app/queryBuilder";
 import {fetchTrades} from '@/app/fetchTrades';
 import {fetchAccounts} from '@/app/fetchAccounts';
 import AccountSelector from '@/app/accountSelector';
 import {useWebSocketClient} from '@/app/useWebSocketClient';
+import {fetchTradeAudits} from "@/app/fetchTradeAudits";
 
 export default function FetchTradesClient() {
 
@@ -14,9 +16,12 @@ export default function FetchTradesClient() {
 
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [trades, setTrades] = useState<Trade[]>([]);
+    const [tradeAudits, setTradeAudits] = useState<TradeAudit[]>([]);
     const [sortColumn, setSortColumn] = useState('id');  // Default sort column
     const [sortDirection, setSortDirection] = useState('ASC');  // Default sort direction
-    // const [client, setClient] = useState<Client>(null);
+
+    const [tradeAuditId, setTradeAuditId] = useState(1);
+
     const [query, setQuery] = useState<Query>({
         id: null, account: {id: null}, setup: {
             id: null,
@@ -58,6 +63,14 @@ export default function FetchTradesClient() {
         }
     };
 
+    const fetchTradeAuditsWithId = async () => {
+        const fetchedTradeAudits = await fetchTradeAudits(tradeAuditId);
+        console.log(`tradeAuditId: ${tradeAuditId}`)
+        if (fetchedTradeAudits !== null) {
+            setTradeAudits(fetchedTradeAudits);
+        }
+    };
+
 
     const updateTrades = async () => {
         const fetchedTrades = await fetchTrades(query, sortColumn, sortDirection);
@@ -69,6 +82,7 @@ export default function FetchTradesClient() {
     useEffect(() => {
         fetchAllAccounts();
         updateTrades();
+        fetchTradeAuditsWithId();
     }, [sortColumn, sortDirection, query]);
 
     useEffect(() => {
@@ -96,6 +110,12 @@ export default function FetchTradesClient() {
             setSortDirection('ASC');
         }
         updateTrades();
+    };
+
+    const handleAuditHeaderClick = (tradeAuditId: number) => {
+        console.log(`click click tradeAuditId: ${tradeAuditId}`)
+        setTradeAuditId(tradeAuditId);
+        fetchTradeAuditsWithId();
     };
 
     return (<section className="bg-gray-100 py-10 min-h-screen">
@@ -126,6 +146,12 @@ export default function FetchTradesClient() {
                 <TradesTable
                     trades={trades}
                     handleHeaderClick={handleHeaderClick}
+                    handleAuditHeaderClick={handleAuditHeaderClick}
+                />
+            </div>
+            <div>
+                <TradesAuditTable
+                    trades={tradeAudits}
                 />
             </div>
 

@@ -58,6 +58,12 @@ export enum Status {
     CLOSED_BY_USER = 'CLOSED_BY_USER'
 }
 
+export enum RevisionType {
+    ADD = 'ADD',
+    MOD = 'MOD',
+    DEL = 'DEL'
+}
+
 export interface Trade {
     id: number;
     status: Status;
@@ -74,6 +80,26 @@ export interface Trade {
     closedPrice: number | null;
     closeType: string | null;
     message: string | null;
+}
+
+export interface TradeAudit {
+    id: number;
+    status: Status;
+    setup: Setup;
+    createdDateTime: string;
+    lastUpdatedDateTime: string;
+    targetPlaceDateTime: string;
+    placedDateTime: string;
+    placedPrice: number | null;
+    filledDateTime: string | null;
+    filledPrice: number | null;
+    profit: number | null;
+    closedDateTime: string | null;
+    closedPrice: number | null;
+    closeType: string | null;
+    message: string | null;
+    revisionDate: string,
+    revisionType: RevisionType
 }
 
 export interface Query {
