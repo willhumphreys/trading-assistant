@@ -18,5 +18,9 @@ class SetupService(private val setupRepository: SetupRepository, private val set
         return setupRepository.findEnabledSetups(symbol, setupGroups).stream().map { setupMapper.toDto(it) }.toList()
     }
 
+    fun findAll(): List<SetupDto> {
+        return setupRepository.findAll().stream().map { setupMapper.toDto(it) }.toList()
+    }
+
 }
 

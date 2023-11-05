@@ -1,15 +1,13 @@
 package uk.co.threebugs.darwinexclient.setup
 
-import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.http.*
+import org.springframework.web.bind.annotation.*
 
 @RestController
+@RequestMapping("/setups")
 class SetupController(private val setupService: SetupService) {
 
-    @DeleteMapping("/setups/byAccountName/{name}")
+    @DeleteMapping("/byAccountName/{name}")
     fun deleteSetupsByAccountName(@PathVariable name: String): ResponseEntity<Int> {
         return try {
             val rowsDeleted = setupService.deleteSetupsByAccountName(name)
@@ -18,6 +16,11 @@ class SetupController(private val setupService: SetupService) {
             // Log the error
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
         }
+    }
+
+    @GetMapping
+    fun getSetups(): ResponseEntity<List<SetupDto>> {
+        return ResponseEntity.ok(setupService.findAll())
     }
 
 
