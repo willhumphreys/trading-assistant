@@ -1,6 +1,7 @@
 package uk.co.threebugs.darwinexclient.search
 
-import java.nio.file.Path
+import uk.co.threebugs.darwinexclient.setupgroup.*
+import java.nio.file.*
 
 
 data class SetupGroupSearchDto(
@@ -8,6 +9,7 @@ data class SetupGroupSearchDto(
     var setupGroups: SetupGroupsSearchDto? = null,
     var path: Path? = null,
     var symbol: String? = null,
-    var enabled: Boolean? = null
+    var enabled: Boolean? = null,
+    var direction: Direction? = null
 )
 

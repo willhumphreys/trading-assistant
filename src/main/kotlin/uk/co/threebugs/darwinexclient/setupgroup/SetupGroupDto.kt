@@ -1,7 +1,7 @@
 package uk.co.threebugs.darwinexclient.setupgroup
 
-import uk.co.threebugs.darwinexclient.setupgroups.SetupGroupsDto
-import java.nio.file.Path
+import uk.co.threebugs.darwinexclient.setupgroups.*
+import java.nio.file.*
 
 
 data class SetupGroupDto(
@@ -9,6 +9,7 @@ data class SetupGroupDto(
     val setupGroups: SetupGroupsDto,
     val path: Path,
     val symbol: String,
-    val enabled: Boolean
+    val enabled: Boolean,
+    val direction: Direction
 )
 

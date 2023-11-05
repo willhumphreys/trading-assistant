@@ -37,6 +37,12 @@
             <column name="enabled" type="boolean">
                 <constraints nullable="false"/>
             </column>
+            <column name="direction" type="ENUM(
+    'LONG',
+    'SHORT'
+    )">
+                <constraints nullable="false"/>
+            </column>
         </createTable>
 
         <addForeignKeyConstraint constraintName="fk_setup_group_setup_groups"
@@ -84,6 +90,7 @@
             <column name="path" type="varchar(500)"/>
             <column name="symbol" type="varchar(255)"/>
             <column name="enabled" type="boolean"/>
+            <column name="direction" type="varchar(255)"/>
         </createTable>
         <addPrimaryKey tableName="setup_group_aud" columnNames="id, rev"/>
         <addForeignKeyConstraint constraintName="FK_setup_group_aud_rev"

@@ -5,6 +5,7 @@
     {
       "path": "eurusd_bestTrades_short.csv",
       "symbol": "EURUSD",
+      "direction": "SHORT",
       "enabled": true
     }
   ]

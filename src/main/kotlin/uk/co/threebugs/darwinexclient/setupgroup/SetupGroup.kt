@@ -18,4 +18,6 @@ class SetupGroup (
     var path: String? = null,
     var symbol: String? = null,
     var enabled: Boolean? = null,
+    @Enumerated(EnumType.STRING)
+    var direction: Direction? = null
 )
