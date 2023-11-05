@@ -19,7 +19,6 @@ data class Trade (
     var createdDateTime: ZonedDateTime? = null,
     var lastUpdatedDateTime: ZonedDateTime? = null,
 
-    //@Column(name = "type", columnDefinition = "ENUM('BUY', 'SELL', 'HOLD')")
     @Enumerated(EnumType.STRING)
     var status: Status? = null,
 
@@ -31,8 +30,6 @@ data class Trade (
     @JoinColumn(name = "account_id")
     var account: Account? = null,
     var metatraderId: Int? = null,
-
-
     var placedDateTime: ZonedDateTime? = null,
     var targetPlaceDateTime: ZonedDateTime? = null,
     var placedPrice: BigDecimal? = null,
@@ -45,10 +42,3 @@ data class Trade (
     @Column(name = "message_column")
     var message: String? = null
 )
-
-{
-
-    val newTradeMessage: String
-    get() = "New Trade: ${setup?.rank} ${setup?.symbol} ${setup?.direction} in account: ${account?.name}"
-
-}
