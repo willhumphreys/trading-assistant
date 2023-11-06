@@ -102,6 +102,13 @@ export interface TradeAudit {
     revisionType: RevisionType
 }
 
+export interface TradingStance {
+    id: number;
+    symbol: string;
+    direction: string;
+    account: Account;
+}
+
 export interface Query {
     id: number | null;
     account: {

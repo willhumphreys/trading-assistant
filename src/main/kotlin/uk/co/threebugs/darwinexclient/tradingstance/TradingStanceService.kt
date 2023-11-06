@@ -1,5 +1,6 @@
 package uk.co.threebugs.darwinexclient.tradingstance
 
+import org.springframework.data.domain.*
 import org.springframework.stereotype.*
 import uk.co.threebugs.darwinexclient.account.*
 import java.nio.file.*
@@ -31,5 +32,19 @@ class TradingStanceService(
 
     }
 
+    fun findAll(): List<TradingStanceDto> {
+        return this.tradingStanceRepository.findAll().map { tradingStance ->
+            tradingStanceMapper.toDto(tradingStance)
+        }.toList()
+    }
 
+    fun findByAccountName(accountName: String, sort: Sort): List<TradingStanceDto> {
+        return this.tradingStanceRepository.findByAccount_Name(accountName, sort).map { tradingStance ->
+            tradingStanceMapper.toDto(tradingStance)
+        }.toList()
+    }
+
+    fun deleteById(id: Int): Int {
+        return 1
+    }
 }

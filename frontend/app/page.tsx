@@ -1,6 +1,6 @@
 'use client'
 import {useEffect, useState} from 'react';
-import {Account, Query, Trade, TradeAudit} from "@/app/interfaces";
+import {Account, Query, Trade, TradeAudit, TradingStance} from "@/app/interfaces";
 import TradesTable from "@/app/tradesTable";
 import TradesAuditTable from "@/app/tradesAuditTable";
 import QueryBuilder from "@/app/queryBuilder";
@@ -9,6 +9,8 @@ import {fetchAccounts} from '@/app/fetchAccounts';
 import AccountSelector from '@/app/accountSelector';
 import {useWebSocketClient} from '@/app/useWebSocketClient';
 import {fetchTradeAudits} from "@/app/fetchTradeAudits";
+import {fetchTradingStances} from "@/app/fetchTradingStances";
+import TradingStanceTable from "@/app/tradingStancesTable";
 
 export default function FetchTradesClient() {
 
@@ -17,10 +19,15 @@ export default function FetchTradesClient() {
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [trades, setTrades] = useState<Trade[]>([]);
     const [tradeAudits, setTradeAudits] = useState<TradeAudit[]>([]);
+    const [tradingStances, setTradingStances] = useState<TradingStance[]>([]);
     const [sortColumn, setSortColumn] = useState('id');  // Default sort column
     const [sortDirection, setSortDirection] = useState('ASC');  // Default sort direction
 
+    const [sortColumnTS, setSortColumnTS] = useState('id');  // Default sort column
+    const [sortDirectionTS, setSortDirectionTS] = useState('ASC');  // Default sort direction
+
     const [tradeAuditId, setTradeAuditId] = useState(1);
+    const [accountName, setAccountName] = useState('test');
 
     const [query, setQuery] = useState<Query>({
         id: null, account: {id: null}, setup: {
@@ -71,6 +78,14 @@ export default function FetchTradesClient() {
         }
     };
 
+    const fetchTradingStancesWithId = async () => {
+        const fetchedTradingStances = await fetchTradingStances(accountName, sortColumnTS, sortDirectionTS);
+        console.log(`tradingStanceId: ${accountName}`)
+        if (fetchedTradingStances !== null) {
+            setTradingStances(fetchedTradingStances);
+        }
+    };
+
 
     const updateTrades = async () => {
         const fetchedTrades = await fetchTrades(query, sortColumn, sortDirection);
@@ -83,6 +98,7 @@ export default function FetchTradesClient() {
         fetchAllAccounts();
         updateTrades();
         fetchTradeAuditsWithId();
+        fetchTradingStancesWithId();
     }, [sortColumn, sortDirection, query]);
 
     useEffect(() => {
@@ -153,6 +169,9 @@ export default function FetchTradesClient() {
                 <TradesAuditTable
                     trades={tradeAudits}
                 />
+            </div>
+            <div>
+                <TradingStanceTable tradingStances={tradingStances}/>
             </div>
 
         </div>
