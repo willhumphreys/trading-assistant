@@ -49,4 +49,11 @@ class SetupGroupService(
             throw RuntimeException(e)
         }
     }
+
+    fun findAll(): List<SetupGroupDto> {
+        return setupGroupRepository.findAll()
+            .stream()
+            .map { setupGroup: SetupGroup -> setupGroupMapper.toDto(setupGroup) }
+            .toList()
+    }
 }

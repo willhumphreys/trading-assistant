@@ -5,6 +5,8 @@ import com.fasterxml.jackson.module.kotlin.*
 import io.kotest.assertions.*
 import okhttp3.*
 import uk.co.threebugs.darwinexclient.setup.*
+import uk.co.threebugs.darwinexclient.setupgroup.*
+import uk.co.threebugs.darwinexclient.setupgroups.*
 import uk.co.threebugs.darwinexclient.utils.*
 
 class SetupRestCallHelper {
@@ -36,6 +38,49 @@ class SetupRestCallHelper {
             fail("Failed to retrieve setups: ${response.message}")
 
         }
+
+        fun getSetupGroups(
+        ): List<SetupGroupsDto> {
+            val request = Request.Builder()
+                .url("$HOST/setupGroups")
+                .build()
+
+            val response = client.newCall(request).execute()
+
+            if (response.isSuccessful) {
+                val responseBodyText = response.body?.string() ?: "Empty Response Body"
+
+                val foundSetupGroups = mapper.readValue<List<SetupGroupsDto>>(responseBodyText)
+                logger.info("Successfully retrieved setupGroups: $responseBodyText")
+
+                return foundSetupGroups
+            }
+            logger.info("Failed to retrieve setupGroups: ${response.message}")
+            fail("Failed to retrieve setupGroups: ${response.message}")
+
+        }
+
+        fun getSetupGroup(
+        ): List<SetupGroupDto> {
+            val request = Request.Builder()
+                .url("$HOST/setupGroup")
+                .build()
+
+            val response = client.newCall(request).execute()
+
+            if (response.isSuccessful) {
+                val responseBodyText = response.body?.string() ?: "Empty Response Body"
+
+                val foundSetupGroups = mapper.readValue<List<SetupGroupDto>>(responseBodyText)
+                logger.info("Successfully retrieved setupGroup: $responseBodyText")
+
+                return foundSetupGroups
+            }
+            logger.info("Failed to retrieve setupGroup: ${response.message}")
+            fail("Failed to retrieve setupGroup: ${response.message}")
+
+        }
+
     }
 
 }

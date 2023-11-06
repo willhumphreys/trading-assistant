@@ -1,15 +1,17 @@
 package uk.co.threebugs.darwinexclient.setupgroups
 
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.http.*
+import org.springframework.web.bind.annotation.*
 
 @RestController
+@RequestMapping("/setupGroups")
 class SetupGroupsController (
     private val setupGroupsService: SetupGroupsService
 )
 {
-    @GetMapping("/setupGroups")
-    fun findAll(): List<SetupGroupsDto> {
-        return setupGroupsService.findAll()
+    @GetMapping()
+    fun findAll(): ResponseEntity<List<SetupGroupsDto>> {
+        return ResponseEntity.ok(setupGroupsService.findAll())
     }
+
 }
