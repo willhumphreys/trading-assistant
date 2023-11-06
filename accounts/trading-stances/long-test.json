@@ -1,0 +1,37 @@
+[
+  {
+    "symbol": "EURUSD",
+    "accountName": "test",
+    "direction": "LONG"
+  },
+  {
+    "symbol": "GBPUSD",
+    "accountName": "test",
+    "direction": "LONG"
+  },
+  {
+    "symbol": "USDCAD",
+    "accountName": "test",
+    "direction": "LONG"
+  },
+  {
+    "symbol": "NZDUSD",
+    "accountName": "test",
+    "direction": "LONG"
+  },
+  {
+    "symbol": "AUDUSD",
+    "accountName": "test",
+    "direction": "LONG"
+  },
+  {
+    "symbol": "USDJPY",
+    "accountName": "test",
+    "direction": "LONG"
+  },
+  {
+    "symbol": "USDCHF",
+    "accountName": "test",
+    "direction": "LONG"
+  }
+]

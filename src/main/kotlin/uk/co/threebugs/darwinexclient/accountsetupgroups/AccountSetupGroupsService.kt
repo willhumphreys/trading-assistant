@@ -1,9 +1,9 @@
 package uk.co.threebugs.darwinexclient.accountsetupgroups
 
-import org.springframework.stereotype.Service
-import uk.co.threebugs.darwinexclient.account.AccountRepository
-import uk.co.threebugs.darwinexclient.setupgroups.SetupGroupsRepository
-import java.nio.file.Path
+import org.springframework.stereotype.*
+import uk.co.threebugs.darwinexclient.account.*
+import uk.co.threebugs.darwinexclient.setupgroups.*
+import java.nio.file.*
 
 @Service
 class AccountSetupGroupsService(
@@ -18,8 +18,10 @@ class AccountSetupGroupsService(
                 .map { accountSetupGroupName: AccountSetupGroupsFileDto ->
                     val setupGroups = setupGroupsRepository.findByName(accountSetupGroupName.setupGroupName)
                             .orElseThrow { RuntimeException("Failed to find setup group: " + accountSetupGroupName.setupGroupName) }
-                    val account = accountRepository.findByName(accountSetupGroupName.metatraderAccount)
-                            .orElseThrow { RuntimeException("Failed to find account: " + accountSetupGroupName.metatraderAccount) }
+                    val account =
+                        accountRepository.findByName(accountSetupGroupName.metatraderAccount) ?: throw RuntimeException(
+                            "Failed to find account: " + accountSetupGroupName.metatraderAccount
+                        )
                     val accountSetupGroups = AccountSetupGroups()
                     accountSetupGroups.name = accountSetupGroupName.name
                     accountSetupGroups.setupGroups = setupGroups

@@ -1,11 +1,10 @@
 package uk.co.threebugs.darwinexclient.account
 
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.repository.query.QueryByExampleExecutor
-import org.springframework.stereotype.Repository
-import java.util.*
+import org.springframework.data.jpa.repository.*
+import org.springframework.data.repository.query.*
+import org.springframework.stereotype.*
 
 @Repository
 interface AccountRepository : JpaRepository<Account, Int>, QueryByExampleExecutor<Account> {
-    fun findByName(name: String): Optional<Account>
+    fun findByName(name: String): Account?
 }

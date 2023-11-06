@@ -1,38 +1,26 @@
 package uk.co.threebugs.darwinexclient.metatrader
 
-import com.fasterxml.jackson.core.JsonProcessingException
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.exc.MismatchedInputException
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.KotlinFeature
-import com.fasterxml.jackson.module.kotlin.KotlinModule
-import com.fasterxml.jackson.module.kotlin.readValue
-import org.json.JSONObject
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
-import uk.co.threebugs.darwinexclient.account.AccountDto
-import uk.co.threebugs.darwinexclient.account.AccountService
-import uk.co.threebugs.darwinexclient.account.MetaTraderDir
-import uk.co.threebugs.darwinexclient.accountsetupgroups.AccountSetupGroupsDto
-import uk.co.threebugs.darwinexclient.accountsetupgroups.AccountSetupGroupsService
-import uk.co.threebugs.darwinexclient.actions.ActionsService
-import uk.co.threebugs.darwinexclient.setup.Setup
-import uk.co.threebugs.darwinexclient.setup.SetupFileRepository
-import uk.co.threebugs.darwinexclient.setup.SetupRepository
-import uk.co.threebugs.darwinexclient.setupgroup.SetupGroup
-import uk.co.threebugs.darwinexclient.setupgroup.SetupGroupService
-import uk.co.threebugs.darwinexclient.utils.logger
-import uk.co.threebugs.darwinexclient.websocket.WebSocketController
-import uk.co.threebugs.darwinexclient.websocket.WebSocketMessage
-import java.io.FileNotFoundException
-import java.io.IOException
-import java.math.BigDecimal
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
+import com.fasterxml.jackson.core.*
+import com.fasterxml.jackson.core.type.*
+import com.fasterxml.jackson.databind.*
+import com.fasterxml.jackson.databind.exc.*
+import com.fasterxml.jackson.module.kotlin.*
+import org.json.*
+import org.springframework.beans.factory.annotation.*
+import org.springframework.stereotype.*
+import uk.co.threebugs.darwinexclient.account.*
+import uk.co.threebugs.darwinexclient.accountsetupgroups.*
+import uk.co.threebugs.darwinexclient.actions.*
+import uk.co.threebugs.darwinexclient.setup.*
+import uk.co.threebugs.darwinexclient.setupgroup.*
+import uk.co.threebugs.darwinexclient.tradingstance.*
+import uk.co.threebugs.darwinexclient.utils.*
+import uk.co.threebugs.darwinexclient.websocket.*
+import java.io.*
+import java.math.*
+import java.nio.file.*
 import java.util.*
-import kotlin.concurrent.thread
+import kotlin.concurrent.*
 
 @Component
 class Client(
@@ -48,7 +36,9 @@ class Client(
     private val objectMapper: ObjectMapper,
     private val webSocketController: WebSocketController,
     private val actionsService: ActionsService,
+    private val tradingStanceService: TradingStanceService
 ) {
+
     var openOrders: Orders = Orders(
         accountInfo = AccountInfo(
             number = 0,
@@ -89,17 +79,6 @@ class Client(
     private final val accountSetupGroupsDto: AccountSetupGroupsDto
 
     init {
-        objectMapper.registerModule(
-            KotlinModule.Builder()
-                .withReflectionCacheSize(512)
-                .configure(KotlinFeature.NullToEmptyCollection, false)
-                .configure(KotlinFeature.NullToEmptyMap, false)
-                .configure(KotlinFeature.NullIsSameAsDefault, false)
-                .configure(KotlinFeature.SingletonSupport, false)
-                .configure(KotlinFeature.StrictNullChecks, false)
-                .build()
-        )
-        objectMapper.registerModule(JavaTimeModule())
         val accountDtos = loadMetaTraderInstalls(Paths.get("accounts", "metatrader_dirs.json"))
         val symbols = arrayOf("EURUSD", "GBPUSD", "USDCAD", "NZDUSD", "AUDUSD", "USDJPY", "USDCHF")
 
@@ -120,6 +99,11 @@ class Client(
         accountSetupGroupsDto = accountSetupGroupsService.findByName(accountSetupGroupsName)
             ?: throw RuntimeException("Failed to find account setup groups: $accountSetupGroupsName")
 
+
+        val tradingStances =
+            tradingStanceService.loadTradingStances(Paths.get("accounts", "trading-stances", "long-test.json"))
+
+        tradingStances.forEach(::println)
 
         val metaTraderDirPath = accountSetupGroupsDto.account.metatraderAdvisorPath
         val f = metaTraderDirPath.toFile()

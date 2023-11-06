@@ -34,14 +34,11 @@ class SetupGroupService(
                     )
                 }
                 .map { setupGroupDto: SetupGroupDto ->
-                    val optionalSetupGroup = setupGroupRepository.findByPath(
-                        setupGroupDto.path
-                            .toString()
-                    )
-                    optionalSetupGroup.orElseGet {
+                    setupGroupRepository.findByPath(setupGroupDto.path.toString()) ?: run {
                         val setupGroup = setupGroupMapper.toEntity(setupGroupDto, setupGroups)
                         setupGroupRepository.save(setupGroup)
                     }
+
                 }
                 .collect(Collectors.toList())
         } catch (e: IOException) {
