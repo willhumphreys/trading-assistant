@@ -27,7 +27,7 @@ export default function FetchTradesClient() {
     const [sortDirectionTS, setSortDirectionTS] = useState('ASC');  // Default sort direction
 
     const [tradeAuditId, setTradeAuditId] = useState(1);
-    const [accountName, setAccountName] = useState('test');
+    const [accountSetupGroupsName, setAccountSetupGroupsName] = useState('test-short');
 
     const [query, setQuery] = useState<Query>({
         id: null, account: {id: null}, setup: {
@@ -79,8 +79,8 @@ export default function FetchTradesClient() {
     };
 
     const fetchTradingStancesWithId = async () => {
-        const fetchedTradingStances = await fetchTradingStances(accountName, sortColumnTS, sortDirectionTS);
-        console.log(`tradingStanceId: ${accountName}`)
+        const fetchedTradingStances = await fetchTradingStances(accountSetupGroupsName, sortColumnTS, sortDirectionTS);
+        console.log(`tradingStanceId: ${accountSetupGroupsName}`)
         if (fetchedTradingStances !== null) {
             setTradingStances(fetchedTradingStances);
         }

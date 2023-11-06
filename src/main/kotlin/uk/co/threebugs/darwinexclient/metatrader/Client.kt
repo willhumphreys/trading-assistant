@@ -100,11 +100,6 @@ class Client(
             ?: throw RuntimeException("Failed to find account setup groups: $accountSetupGroupsName")
 
 
-        val tradingStances =
-            tradingStanceService.loadTradingStances(Paths.get("accounts", "trading-stances", "long-test.json"))
-
-        tradingStances.forEach(::println)
-
         val metaTraderDirPath = accountSetupGroupsDto.account.metatraderAdvisorPath
         val f = metaTraderDirPath.toFile()
         if (!f.exists()) {

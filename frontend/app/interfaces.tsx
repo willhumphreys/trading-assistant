@@ -106,7 +106,7 @@ export interface TradingStance {
     id: number;
     symbol: string;
     direction: string;
-    account: Account;
+    accountSetupGroups: AccountSetupGroups;
 }
 
 export interface Query {

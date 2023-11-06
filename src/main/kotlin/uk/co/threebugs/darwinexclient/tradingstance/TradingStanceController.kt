@@ -8,7 +8,7 @@ class TradingStanceController(private val tradingStanceService: TradingStanceSer
 
     @GetMapping("/trading-stances")
     fun getTradingStances(
-        @RequestParam(name = "accountName", required = false) accountName: String?,
+        @RequestParam(name = "accountSetupGroupsName", required = false) accountSetupGroupsName: String?,
         @RequestParam(name = "sortColumn", required = false) sortColumn: String?,
         @RequestParam(name = "sortDirection", required = false) sortDirection: Sort.Direction?
     ): List<TradingStanceDto> {
@@ -21,17 +21,14 @@ class TradingStanceController(private val tradingStanceService: TradingStanceSer
         }
 
         return when {
-            accountName != null -> tradingStanceService.findByAccountName(accountName, sort)
-            else -> tradingStanceService.findAll()
+            accountSetupGroupsName != null -> tradingStanceService.findByAccountSetupGroupsName(
+                accountSetupGroupsName,
+                sort
+            )
+
+            else -> tradingStanceService.findAll(sort)
         }
 
 
     }
-
-    @DeleteMapping("/{id}")
-    fun deleteById(@PathVariable id: Int) {
-        tradingStanceService.deleteById(id)
-    }
-
-
 }

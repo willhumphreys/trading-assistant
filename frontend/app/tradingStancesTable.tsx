@@ -46,7 +46,7 @@ export default function TradingStanceTable({tradingStances}: Props) {
                     <td>{tradingStance.id}</td>
                     <td>{tradingStance.symbol}</td>
                     <td>{tradingStance.direction}</td>
-                    <td>{tradingStance.account.name}</td>
+                    <td>{tradingStance.accountSetupGroups.name}</td>
                 </tr>))}
             </tbody>
         </table>

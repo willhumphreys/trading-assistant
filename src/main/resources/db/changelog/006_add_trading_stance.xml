@@ -18,9 +18,9 @@
     )">
                 <constraints nullable="false"/>
             </column>
-            <column name="account_id" type="int">
+            <column name="account_setup_groups_id" type="int">
                 <constraints nullable="true" foreignKeyName="fk_trading_stance_account"
-                             referencedTableName="account" referencedColumnNames="id"/>
+                             referencedTableName="account_setup_groups" referencedColumnNames="id"/>
             </column>
         </createTable>
 
@@ -30,7 +30,7 @@
             <column name="revtype" type="tinyint"/>
             <column name="symbol" type="varchar(255)"/>
             <column name="direction" type="varchar(255)"/>
-            <column name="account_id" type="int"/>
+            <column name="account_setup_groups_id" type="int"/>
             <column name="revend" type="int"/>
         </createTable>
         <addPrimaryKey tableName="trading_stance_aud" columnNames="id, rev"/>

@@ -6,8 +6,8 @@ import java.nio.file.*
 @Mapper(componentModel = "spring")
 abstract class TradingStanceMapper {
 
-    abstract fun toDto(tradingStance: TradingStance): TradingStanceDto
     abstract fun toEntity(tradingStanceDto: TradingStanceDto): TradingStance
+    abstract fun toDto(tradingStance: TradingStance): TradingStanceDto
 
 
     fun toPath(path: String?): Path? {

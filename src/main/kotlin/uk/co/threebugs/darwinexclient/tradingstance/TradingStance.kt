@@ -2,7 +2,7 @@ package uk.co.threebugs.darwinexclient.tradingstance
 
 import jakarta.persistence.*
 import org.hibernate.envers.*
-import uk.co.threebugs.darwinexclient.account.*
+import uk.co.threebugs.darwinexclient.accountsetupgroups.*
 import uk.co.threebugs.darwinexclient.setupgroup.*
 
 @Entity
@@ -14,8 +14,8 @@ class TradingStance(
     var id: Int? = null,
     var symbol: String? = null,
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "account_id")
-    var account: Account? = null,
+    @JoinColumn(name = "account_setup_groups_id")
+    var accountSetupGroups: AccountSetupGroups? = null,
     @Enumerated(EnumType.STRING)
     var direction: Direction? = null
 )

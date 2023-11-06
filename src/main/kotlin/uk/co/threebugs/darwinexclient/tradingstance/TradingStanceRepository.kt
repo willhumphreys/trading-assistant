@@ -7,5 +7,6 @@ import org.springframework.stereotype.*
 
 @Repository
 interface TradingStanceRepository : JpaRepository<TradingStance, Int>, QueryByExampleExecutor<TradingStance> {
-    fun findByAccount_Name(name: String, sort: Sort): List<TradingStance>
+    fun findByAccountSetupGroups_Name(name: String, sort: Sort): List<TradingStance>
+    fun findBySymbol(symbol: String): TradingStance?
 }

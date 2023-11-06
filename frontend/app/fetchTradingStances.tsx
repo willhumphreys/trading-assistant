@@ -1,6 +1,6 @@
-export const fetchTradingStances = async (accountName: string, sortColumn: string, sortDirection: string): Promise<any> => {
+export const fetchTradingStances = async (accountSetupGroupsName: string, sortColumn: string, sortDirection: string): Promise<any> => {
     try {
-        const res = await fetch(`/api/trading-stances?accountName=${accountName}&sortColumn=${sortColumn}&sortDirection=${sortDirection}`, {
+        const res = await fetch(`/api/trading-stances?accountSetupGroupsName=${accountSetupGroupsName}&sortColumn=${sortColumn}&sortDirection=${sortDirection}`, {
             headers: {
                 'Content-Type': 'application/json'
             }
