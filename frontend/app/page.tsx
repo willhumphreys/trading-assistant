@@ -60,13 +60,6 @@ export default function FetchTradesClient() {
     });
 
 
-    // const fetchAllAccounts = async () => {
-    //     const fetchedAccounts = await fetchAccounts();
-    //     if (fetchedAccounts !== null) {
-    //         setAccounts(fetchedAccounts);
-    //     }
-    // };
-
     const fetchAllAccountSetupGroups = async () => {
         const fetchedAccountSetupGroups = await fetchAccountSetupGroups();
         if (fetchedAccountSetupGroups !== null) {
@@ -139,13 +132,20 @@ export default function FetchTradesClient() {
     };
 
     return (<section className="bg-gray-100 py-10 min-h-screen">
-        <AccountSelector accountSetupGroups={accountSetupGroups}
-                         setSelectedAccountSetupGroups={setSelectedAccountSetupGroups}
-                         query={query}
-                         setQuery={setQuery}
-        />
+
         <div className="container mx-auto">
             <div className="w-full h-16 bg-gray-700 flex items-center pl-6 space-x-4">
+                <div>
+                    <AccountSelector accountSetupGroups={accountSetupGroups}
+                                     setSelectedAccountSetupGroups={setSelectedAccountSetupGroups}
+                                     query={query}
+                                     setQuery={setQuery}
+                    />
+
+                </div>
+                <div className="text-white">
+                    account: {selectedAccountSetupGroups?.account.name}
+                </div>
                 <div className="text-white text-xl">{tickMessage.id}:{tickMessage.field}:{tickMessage.value}</div>
                 {/*<div className="text-white text-xl">{orderMessage.id}:{orderMessage.field}:{orderMessage.value}</div>*/}
             </div>
