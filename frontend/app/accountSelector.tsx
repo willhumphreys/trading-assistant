@@ -1,34 +1,49 @@
-import {Account, Query} from "@/app/interfaces";
+import {AccountSetupGroups, Query} from "@/app/interfaces";
+import React, {Dispatch, FC, SetStateAction} from "react";
 
 type AccountSelectorProps = {
-    accounts: Account[];
-    setQuery: React.Dispatch<React.SetStateAction<Query>>;
+    accountSetupGroups: AccountSetupGroups[];
+    setSelectedAccountSetupGroups: Dispatch<SetStateAction<AccountSetupGroups | undefined>>;
+    setQuery: Dispatch<SetStateAction<Query>>;
     query: Query
 };
 
-const AccountSelector: React.FC<AccountSelectorProps> = ({accounts, setQuery, query}) => {
-    return (
-        <select
-            className="mt-1 p-2 border rounded-md"
-            onChange={(e) => {
-                const accountId = e.target.value;
-                setQuery({
-                    ...query,
-                    account: {
-                        ...query.account,
-                        id: accountId === '' ? null : parseInt(accountId)
-                    }
-                });
-            }}>
-            <option value="all">All</option>
-            {accounts.map((account, index) => (
-                <option key={index} value={account.id}>
-                    {account.name}
-                </option>
-            ))}
-        </select>
+const AccountSelector: FC<AccountSelectorProps> =
+    ({
+         accountSetupGroups,
+         setQuery,
+         query,
+         setSelectedAccountSetupGroups
+     }) => {
+        return (
+            <select
+                className="mt-1 p-2 border rounded-md"
+                onChange={(e) => {
+                    const asgId = e.target.value;
+                    const selectedASG = asgId === 'all'
+                        ? undefined
+                        : accountSetupGroups.find((asg) => asg.id === parseInt(asgId));
 
-    );
-};
+                    setQuery({
+                        ...query,
+                        account: {
+                            ...query.account,
+                            id: selectedASG ? selectedASG.account.id : null
+                        }
+                    });
+
+                    setSelectedAccountSetupGroups(selectedASG);
+                }}
+            >
+                <option value="all">All</option>
+                {accountSetupGroups.map((accountSetupGroups, index) => (
+                    <option key={index} value={accountSetupGroups.id}>
+                        {accountSetupGroups.name}
+                    </option>
+                ))}
+            </select>
+
+        );
+    };
 
 export default AccountSelector;

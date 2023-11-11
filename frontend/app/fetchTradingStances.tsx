@@ -1,6 +1,16 @@
-export const fetchTradingStances = async (accountSetupGroupsName: string, sortColumn: string, sortDirection: string): Promise<any> => {
+import {AccountSetupGroups} from "@/app/interfaces";
+
+export const fetchTradingStances = async (sortColumn: string, sortDirection: string, accountSetupGroups?: AccountSetupGroups): Promise<any> => {
+
+    const queryParams = [
+        accountSetupGroups ? `accountSetupGroupsName=${accountSetupGroups.name}` : null,
+        `sortColumn=${sortColumn}`,
+        `sortDirection=${sortDirection}`
+    ].filter(Boolean).join('&');
+
+    const query = `/api/trading-stances${queryParams ? `?${queryParams}` : ''}`;
     try {
-        const res = await fetch(`/api/trading-stances?accountSetupGroupsName=${accountSetupGroupsName}&sortColumn=${sortColumn}&sortDirection=${sortDirection}`, {
+        const res = await fetch(query, {
             headers: {
                 'Content-Type': 'application/json'
             }

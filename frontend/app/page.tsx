@@ -1,33 +1,35 @@
 'use client'
 import {useEffect, useState} from 'react';
-import {Account, Query, Trade, TradeAudit, TradingStance} from "@/app/interfaces";
+import {AccountSetupGroups, Query, Trade, TradeAudit, TradingStance} from "@/app/interfaces";
 import TradesTable from "@/app/tradesTable";
 import TradesAuditTable from "@/app/tradesAuditTable";
 import QueryBuilder from "@/app/queryBuilder";
 import {fetchTrades} from '@/app/fetchTrades';
-import {fetchAccounts} from '@/app/fetchAccounts';
 import AccountSelector from '@/app/accountSelector';
 import {useWebSocketClient} from '@/app/useWebSocketClient';
 import {fetchTradeAudits} from "@/app/fetchTradeAudits";
 import {fetchTradingStances} from "@/app/fetchTradingStances";
 import TradingStanceTable from "@/app/tradingStancesTable";
+import {fetchAccountSetupGroups} from "@/app/fetchAccountSetupGroups";
 
 export default function FetchTradesClient() {
 
     const {client, sendHelloMessage, tickMessage, orderMessage} = useWebSocketClient();
 
-    const [accounts, setAccounts] = useState<Account[]>([]);
+    const [accountSetupGroups, setAccountSetupGroups] = useState<AccountSetupGroups[]>([]);
+
+    const [selectedAccountSetupGroups, setSelectedAccountSetupGroups] = useState<AccountSetupGroups>();
+
     const [trades, setTrades] = useState<Trade[]>([]);
     const [tradeAudits, setTradeAudits] = useState<TradeAudit[]>([]);
     const [tradingStances, setTradingStances] = useState<TradingStance[]>([]);
+
     const [sortColumn, setSortColumn] = useState('id');  // Default sort column
     const [sortDirection, setSortDirection] = useState('ASC');  // Default sort direction
 
     const [sortColumnTS, setSortColumnTS] = useState('id');  // Default sort column
     const [sortDirectionTS, setSortDirectionTS] = useState('ASC');  // Default sort direction
-
     const [tradeAuditId, setTradeAuditId] = useState(1);
-    const [accountSetupGroupsName, setAccountSetupGroupsName] = useState('test-short');
 
     const [query, setQuery] = useState<Query>({
         id: null, account: {id: null}, setup: {
@@ -58,17 +60,19 @@ export default function FetchTradesClient() {
     });
 
 
-    // useEffect(() => {
-    //     return receiveMessages(setClient);
-    // }, []);
+    // const fetchAllAccounts = async () => {
+    //     const fetchedAccounts = await fetchAccounts();
+    //     if (fetchedAccounts !== null) {
+    //         setAccounts(fetchedAccounts);
+    //     }
+    // };
 
-
-    const fetchAllAccounts = async () => {
-        const fetchedAccounts = await fetchAccounts();
-        if (fetchedAccounts !== null) {
-            setAccounts(fetchedAccounts);
+    const fetchAllAccountSetupGroups = async () => {
+        const fetchedAccountSetupGroups = await fetchAccountSetupGroups();
+        if (fetchedAccountSetupGroups !== null) {
+            setAccountSetupGroups(fetchedAccountSetupGroups);
         }
-    };
+    }
 
     const fetchTradeAuditsWithId = async () => {
         const fetchedTradeAudits = await fetchTradeAudits(tradeAuditId);
@@ -79,8 +83,8 @@ export default function FetchTradesClient() {
     };
 
     const fetchTradingStancesWithId = async () => {
-        const fetchedTradingStances = await fetchTradingStances(accountSetupGroupsName, sortColumnTS, sortDirectionTS);
-        console.log(`tradingStanceId: ${accountSetupGroupsName}`)
+        const fetchedTradingStances = await fetchTradingStances(sortColumnTS, sortDirectionTS, selectedAccountSetupGroups);
+        console.log(`tradingStanceId: ${JSON.stringify(selectedAccountSetupGroups)}`)
         if (fetchedTradingStances !== null) {
             setTradingStances(fetchedTradingStances);
         }
@@ -95,7 +99,7 @@ export default function FetchTradesClient() {
     };
 
     useEffect(() => {
-        fetchAllAccounts();
+        fetchAllAccountSetupGroups()
         updateTrades();
         fetchTradeAuditsWithId();
         fetchTradingStancesWithId();
@@ -135,9 +139,13 @@ export default function FetchTradesClient() {
     };
 
     return (<section className="bg-gray-100 py-10 min-h-screen">
+        <AccountSelector accountSetupGroups={accountSetupGroups}
+                         setSelectedAccountSetupGroups={setSelectedAccountSetupGroups}
+                         query={query}
+                         setQuery={setQuery}
+        />
         <div className="container mx-auto">
             <div className="w-full h-16 bg-gray-700 flex items-center pl-6 space-x-4">
-                <AccountSelector accounts={accounts} setQuery={setQuery} query={query}/>
                 <div className="text-white text-xl">{tickMessage.id}:{tickMessage.field}:{tickMessage.value}</div>
                 {/*<div className="text-white text-xl">{orderMessage.id}:{orderMessage.field}:{orderMessage.value}</div>*/}
             </div>
