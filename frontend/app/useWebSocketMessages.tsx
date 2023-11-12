@@ -1,20 +1,19 @@
-import {useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
+import {ServerMessage, Trade} from "@/app/interfaces";
 import {Client, IMessage} from '@stomp/stompjs';
-import {ServerMessage} from "@/app/interfaces";
+
 
 const newClient = new Client({
     brokerURL: 'ws://localhost:8080/gs-guide-websocket'
 });
 
-export function useWebSocketClient() {
-
+export function useWebSocketMessages(setTrades: React.Dispatch<React.SetStateAction<Trade[]>>) {
     const [tickMessage, setTickMessage] = useState<ServerMessage>({id: 0, field: '', value: ''});
     const [orderMessage, setOrderMessage] = useState<ServerMessage>({id: 0, field: '', value: ''});
-
+    const [client, setClient] = useState<WebSocket | null>(null);
 
     useEffect(() => {
 
-        // Setup connection behavior
         newClient.onConnect = (frame) => {
             console.log('Connected: ' + frame);
 
@@ -41,7 +40,7 @@ export function useWebSocketClient() {
         // Activate the client
         newClient.activate();
 
-        // Cleanup logic for disconnecting from STOMP server
+
         return () => {
             newClient.deactivate();
         };
@@ -62,11 +61,16 @@ export function useWebSocketClient() {
             });
         }
     };
+    // Logic to handle updates in trades when an order message is received
+    useEffect(() => {
+        if (orderMessage && orderMessage.id && orderMessage.field === 'profitAndLoss') {
+            setTrades(prevTrades => prevTrades.map(trade =>
+                trade.id === orderMessage.id
+                    ? {...trade, profit: parseFloat(orderMessage.value)} // assuming value is a string
+                    : trade
+            ));
+        }
+    }, [orderMessage, setTrades]);
 
-    return {
-        client: newClient,
-        sendHelloMessage,
-        tickMessage: tickMessage,
-        orderMessage: orderMessage
-    };
+    return {client, sendHelloMessage, tickMessage, orderMessage};
 }

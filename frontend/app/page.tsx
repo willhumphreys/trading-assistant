@@ -4,17 +4,13 @@ import {AccountSetupGroups, Page, Query, Trade, TradeAudit, TradingStanceInfo} f
 import TradesTable from "@/app/tradesTable";
 import TradesAuditTable from "@/app/tradesAuditTable";
 import QueryBuilder from "@/app/queryBuilder";
-import {fetchTrades} from '@/app/fetchTrades';
 import AccountSelector from '@/app/accountSelector';
-import {useWebSocketClient} from '@/app/useWebSocketClient';
 import {fetchTradeAudits} from "@/app/fetchTradeAudits";
-import {fetchTradingStances} from "@/app/fetchTradingStances";
 import TradingStanceTable from "@/app/tradingStancesTable";
-import {fetchAccountSetupGroups} from "@/app/fetchAccountSetupGroups";
+import {useDataFetching} from "@/app/dataFetching";
+import {useWebSocketMessages} from "@/app/useWebSocketMessages";
 
 export default function FetchTradesClient() {
-
-    const {client, sendHelloMessage, tickMessage, orderMessage} = useWebSocketClient();
 
     const [accountSetupGroups, setAccountSetupGroups] = useState<AccountSetupGroups[]>([]);
 
@@ -60,13 +56,6 @@ export default function FetchTradesClient() {
     });
 
 
-    const fetchAllAccountSetupGroups = async () => {
-        const fetchedAccountSetupGroups = await fetchAccountSetupGroups();
-        if (fetchedAccountSetupGroups !== null) {
-            setAccountSetupGroups(fetchedAccountSetupGroups);
-        }
-    }
-
     const fetchTradeAuditsWithId = async () => {
         const fetchedTradeAudits = await fetchTradeAudits(tradeAuditId);
         console.log(`tradeAuditId: ${tradeAuditId}`)
@@ -75,48 +64,26 @@ export default function FetchTradesClient() {
         }
     };
 
-    const fetchTradingStancesWithId = async () => {
-        const fetchedTradingStances = await fetchTradingStances(0, 100, 'symbol', 'asc', selectedAccountSetupGroups);
-        console.log(`tradingStanceId: ${JSON.stringify(selectedAccountSetupGroups)}`)
-        if (fetchedTradingStances !== null) {
-            setTradingStances(fetchedTradingStances);
-        }
-    };
 
+    // Custom hooks for data fetching and WebSocket message handling
+    const {fetchAll, updateTrades} = useDataFetching({
+        setAccountSetupGroups,
+        setTrades,
+        setTradeAudits,
+        setTradingStances,
+        query,
+        sortColumn,
+        sortDirection,
+        tradeAuditId
+    });
 
-    const updateTrades = async () => {
-        const fetchedTrades = await fetchTrades(query, sortColumn, sortDirection);
-        if (fetchedTrades !== null) {
-            setTrades(fetchedTrades);
-        }
-    };
+    const {tickMessage, orderMessage, sendHelloMessage} = useWebSocketMessages(setTrades);
+
 
     useEffect(() => {
-        updateTrades();
-    }, [sortColumn, sortDirection, query]);
+        fetchAll();
+    }, [query, sortColumn, sortDirection, tradeAuditId, fetchAll]);
 
-    useEffect(() => {
-        fetchAllAccountSetupGroups()
-        fetchTradeAuditsWithId();
-        fetchTradingStancesWithId();
-    }, [query]);
-
-    useEffect(() => {
-        console.log(orderMessage)
-        if (orderMessage.id && orderMessage.field === 'profitAndLoss') {
-            console.log('here')
-            const updatedTrades = trades.map((trade) => {
-                if (trade.id === orderMessage.id) {
-                    return {
-                        ...trade,
-                        profit: parseFloat(orderMessage.value), // assuming the value is a string that can be parsed to float
-                    };
-                }
-                return trade;
-            });
-            setTrades(updatedTrades);
-        }
-    }, [orderMessage]);
 
     const handleHeaderClick = (newSortColumn: string) => {
         if (newSortColumn === sortColumn) {
