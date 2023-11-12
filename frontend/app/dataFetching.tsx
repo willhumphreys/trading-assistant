@@ -7,6 +7,8 @@ import {fetchAccountSetupGroups} from "@/app/fetchAccountSetupGroups";
 
 interface UseDataFetchingParams {
     setAccountSetupGroups: React.Dispatch<React.SetStateAction<AccountSetupGroups[]>>;
+    setSelectedAccountSetupGroups: React.Dispatch<React.SetStateAction<AccountSetupGroups | undefined>>;
+    selectedAccountSetupGroups: AccountSetupGroups | undefined;
     setTrades: React.Dispatch<React.SetStateAction<Trade[]>>;
     setTradeAudits: React.Dispatch<React.SetStateAction<TradeAudit[]>>;
     setTradingStances: React.Dispatch<React.SetStateAction<Page<TradingStanceInfo> | undefined>>;
@@ -24,7 +26,9 @@ export function useDataFetching({
                                     query,
                                     sortColumn,
                                     sortDirection,
-                                    tradeAuditId
+                                    tradeAuditId,
+                                    setSelectedAccountSetupGroups,
+                                    selectedAccountSetupGroups
                                 }: UseDataFetchingParams) {
 
     const fetchAll = useCallback(async () => {
@@ -34,20 +38,17 @@ export function useDataFetching({
             setAccountSetupGroups(accountSetupGroups);
         }
 
-        // Fetch Trades
         const trades = await fetchTrades(query, sortColumn, sortDirection);
         if (trades) {
             setTrades(trades);
         }
 
-        // Fetch Trade Audits
         const tradeAudits = await fetchTradeAudits(tradeAuditId);
         if (tradeAudits) {
             setTradeAudits(tradeAudits);
         }
 
-        // Fetch Trading Stances
-        const tradingStances = await fetchTradingStances(0, 100, sortColumn, sortDirection);
+        const tradingStances = await fetchTradingStances(0, 100, sortColumn, sortDirection, selectedAccountSetupGroups);
         if (tradingStances) {
             setTradingStances(tradingStances);
         }

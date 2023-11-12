@@ -1,4 +1,6 @@
-export const fetchTradeAudits = async (tradeId: number): Promise<any> => {
+import {TradeAudit} from "@/app/interfaces";
+
+export const fetchTradeAudits = async (tradeId: number): Promise<TradeAudit[] | null> => {
     try {
         const res = await fetch(`/api/audits/trades/${tradeId}`);
         if (res.ok) {

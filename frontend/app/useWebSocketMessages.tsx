@@ -66,7 +66,7 @@ export function useWebSocketMessages(setTrades: React.Dispatch<React.SetStateAct
         if (orderMessage && orderMessage.id && orderMessage.field === 'profitAndLoss') {
             setTrades(prevTrades => prevTrades.map(trade =>
                 trade.id === orderMessage.id
-                    ? {...trade, profit: parseFloat(orderMessage.value)} // assuming value is a string
+                    ? {...trade, profit: parseFloat(orderMessage.value)}
                     : trade
             ));
         }

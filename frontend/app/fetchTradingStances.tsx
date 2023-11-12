@@ -5,7 +5,7 @@ export const fetchTradingStances = async (
     size: number,
     sortColumn: string,
     sortDirection: string,
-    accountSetupGroups?: AccountSetupGroups
+    accountSetupGroups: AccountSetupGroups | undefined
 ): Promise<Page<TradingStanceInfo>> => {
 
     const sort = `${sortColumn},${sortDirection}`;

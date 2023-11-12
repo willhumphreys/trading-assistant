@@ -14,7 +14,7 @@ export default function FetchTradesClient() {
 
     const [accountSetupGroups, setAccountSetupGroups] = useState<AccountSetupGroups[]>([]);
 
-    const [selectedAccountSetupGroups, setSelectedAccountSetupGroups] = useState<AccountSetupGroups>();
+    const [selectedAccountSetupGroups, setSelectedAccountSetupGroups] = useState<AccountSetupGroups | undefined>();
 
     const [trades, setTrades] = useState<Trade[]>([]);
     const [tradeAudits, setTradeAudits] = useState<TradeAudit[]>([]);
@@ -74,7 +74,9 @@ export default function FetchTradesClient() {
         query,
         sortColumn,
         sortDirection,
-        tradeAuditId
+        tradeAuditId,
+        setSelectedAccountSetupGroups,
+        selectedAccountSetupGroups
     });
 
     const {tickMessage, orderMessage, sendHelloMessage} = useWebSocketMessages(setTrades);

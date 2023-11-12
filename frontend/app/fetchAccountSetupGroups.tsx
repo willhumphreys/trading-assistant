@@ -1,4 +1,6 @@
-export const fetchAccountSetupGroups = async (): Promise<any> => {
+import {AccountSetupGroups} from "@/app/interfaces";
+
+export const fetchAccountSetupGroups = async (): Promise<AccountSetupGroups[]> => {
 
     try {
         const res = await fetch('/api/accountSetupGroups');
@@ -6,11 +8,11 @@ export const fetchAccountSetupGroups = async (): Promise<any> => {
             return await res.json();
         } else {
             console.log('Failed to fetch account setup groups');
-            return null;
+            return [];
         }
     } catch (error) {
         console.log('An error occurred:', error);
-        return null;
+        return [];
     }
 
 }

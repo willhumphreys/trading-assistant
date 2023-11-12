@@ -1,7 +1,7 @@
 // fetchTrades.ts
-import {Query} from "@/app/interfaces";
+import {Query, Trade} from "@/app/interfaces";
 
-export const fetchTrades = async (query: Query, sortColumn: string, sortDirection: string): Promise<any> => {
+export const fetchTrades = async (query: Query, sortColumn: string, sortDirection: string): Promise<Trade[] | null> => {
     try {
         const nonEmptyQuery = Object.fromEntries(Object.entries(query).filter(([key, value]) => {
             if (key === 'setup') {
