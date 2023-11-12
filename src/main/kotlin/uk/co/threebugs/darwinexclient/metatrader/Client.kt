@@ -36,7 +36,6 @@ class Client(
     private val objectMapper: ObjectMapper,
     private val webSocketController: WebSocketController,
     private val actionsService: ActionsService,
-    private val tradingStanceService: TradingStanceService
 ) {
 
     var openOrders: Orders = Orders(

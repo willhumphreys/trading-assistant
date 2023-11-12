@@ -9,16 +9,12 @@ class TradingStanceService(
     private val tradingStanceMapper: TradingStanceMapper,
 ) {
 
-    fun findAll(sort: Sort): List<TradingStanceDto> {
-        return this.tradingStanceRepository.findAll(sort).map { tradingStance ->
-            tradingStanceMapper.toDto(tradingStance)
-        }.toList()
+    fun findAll(pageable: Pageable): Page<TradingStanceDto> {
+        return this.tradingStanceRepository.findAll(pageable)
+            .map(tradingStanceMapper::toDto)
     }
 
-    fun findByAccountSetupGroupsName(accountSetupGroupsName: String, sort: Sort): List<TradingStanceDto> {
-        return this.tradingStanceRepository.findByAccountSetupGroups_Name(accountSetupGroupsName, sort)
-            .map { tradingStance ->
-                tradingStanceMapper.toDto(tradingStance)
-        }.toList()
+    fun findAllByAccountSetupGroupsNameWithSetupCount(groupName: String?, pageable: Pageable): Page<TradingStanceInfo> {
+        return this.tradingStanceRepository.findAllByAccountSetupGroupsNameWithSetupCount(groupName, pageable)
     }
 }

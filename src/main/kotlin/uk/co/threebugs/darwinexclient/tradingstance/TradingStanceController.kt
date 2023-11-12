@@ -7,28 +7,15 @@ import org.springframework.web.bind.annotation.*
 class TradingStanceController(private val tradingStanceService: TradingStanceService) {
 
     @GetMapping("/trading-stances")
-    fun getTradingStances(
+    fun getTradingStances(pageable: Pageable): Page<TradingStanceDto> {
+        return tradingStanceService.findAll(pageable)
+    }
+
+    @GetMapping("/trading-stances-with-setup-count")
+    fun getTradingStancesWithSetupCount(
         @RequestParam(name = "accountSetupGroupsName", required = false) accountSetupGroupsName: String?,
-        @RequestParam(name = "sortColumn", required = false) sortColumn: String?,
-        @RequestParam(name = "sortDirection", required = false) sortDirection: Sort.Direction?
-    ): List<TradingStanceDto> {
-
-        var sort = Sort.unsorted()
-        sortColumn?.let { column ->
-            sortDirection?.let { direction ->
-                sort = Sort.by(direction, column)
-            }
-        }
-
-        return when {
-            accountSetupGroupsName != null -> tradingStanceService.findByAccountSetupGroupsName(
-                accountSetupGroupsName,
-                sort
-            )
-
-            else -> tradingStanceService.findAll(sort)
-        }
-
-
+        pageable: Pageable
+    ): Page<TradingStanceInfo> {
+        return tradingStanceService.findAllByAccountSetupGroupsNameWithSetupCount(accountSetupGroupsName, pageable)
     }
 }

@@ -1,14 +1,11 @@
 package uk.co.threebugs.darwinexclient.setup
 
-import jakarta.transaction.Transactional
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.jpa.repository.Modifying
-import org.springframework.data.jpa.repository.Query
-import org.springframework.data.repository.query.Param
-import org.springframework.data.repository.query.QueryByExampleExecutor
-import org.springframework.stereotype.Repository
-import uk.co.threebugs.darwinexclient.setupgroup.SetupGroup
-import uk.co.threebugs.darwinexclient.setupgroups.SetupGroups
+import jakarta.transaction.*
+import org.springframework.data.jpa.repository.*
+import org.springframework.data.repository.query.*
+import org.springframework.stereotype.*
+import uk.co.threebugs.darwinexclient.setupgroup.*
+import uk.co.threebugs.darwinexclient.setupgroups.*
 
 @Repository
 interface SetupRepository : JpaRepository<Setup, Int>, QueryByExampleExecutor<Setup> {

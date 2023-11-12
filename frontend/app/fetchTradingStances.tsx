@@ -1,14 +1,22 @@
-import {AccountSetupGroups} from "@/app/interfaces";
+import {AccountSetupGroups, Page, TradingStanceInfo} from "@/app/interfaces";
 
-export const fetchTradingStances = async (sortColumn: string, sortDirection: string, accountSetupGroups?: AccountSetupGroups): Promise<any> => {
+export const fetchTradingStances = async (
+    page: number,
+    size: number,
+    sortColumn: string,
+    sortDirection: string,
+    accountSetupGroups?: AccountSetupGroups
+): Promise<Page<TradingStanceInfo>> => {
 
+    const sort = `${sortColumn},${sortDirection}`;
     const queryParams = [
         accountSetupGroups ? `accountSetupGroupsName=${accountSetupGroups.name}` : null,
-        `sortColumn=${sortColumn}`,
-        `sortDirection=${sortDirection}`
+        `page=${page}`,
+        `size=${size}`,
+        `sort=${sort}`
     ].filter(Boolean).join('&');
 
-    const query = `/api/trading-stances${queryParams ? `?${queryParams}` : ''}`;
+    const query = `/api/trading-stances-with-setup-count${queryParams ? `?${queryParams}` : ''}`;
     try {
         const res = await fetch(query, {
             headers: {
@@ -18,11 +26,11 @@ export const fetchTradingStances = async (sortColumn: string, sortDirection: str
         if (res.ok) {
             return await res.json();
         } else {
-            console.log('Failed to fetch tradingStances')
-            return null;
+            console.log('Failed to fetch tradingStances');
+            return Promise.reject(new Error('Failed to fetch trading stances'));
         }
     } catch (error) {
-        console.log('An error occurred:', error);
-        return null;
+        console.error('An error occurred:', error);
+        return Promise.reject(error);
     }
 };
