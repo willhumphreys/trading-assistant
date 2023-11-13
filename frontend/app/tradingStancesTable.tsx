@@ -1,9 +1,9 @@
 import {Page, TradingStanceInfo} from './interfaces';
 import React from "react";
+import UpdateTradingStanceDirection from "@/app/updateTradingStanceDirection";
 
 type Props = {
-    tradingStances?: Page<TradingStanceInfo>;
-
+    tradingStances?: Page<TradingStanceInfo>
 };
 
 export default function TradingStanceTable({tradingStances}: Props) {
@@ -17,6 +17,7 @@ export default function TradingStanceTable({tradingStances}: Props) {
         {name: 'activeSetups', entity: ''},
         {name: 'disabledSetups', entity: ''},
     ];
+
 
     if (!tradingStances) {
         return <div>Loading trading stances...</div>;
@@ -43,19 +44,7 @@ export default function TradingStanceTable({tradingStances}: Props) {
 
                     <td>{tradingStanceInfo.tradingStance.id}</td>
                     <td>{tradingStanceInfo.tradingStance.symbol}</td>
-                    <td><select
-                        className="mt-1 p-2 border rounded-md"
-                        onChange={(e) => {
-                        }}
-                    >
-                        <option value="long">Long</option>
-                        <option value="flat">Flat</option>
-                        <option value="short">Short</option>
-
-                    </select>
-                        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                            Update
-                        </button>
+                    <td><UpdateTradingStanceDirection tradingStance={tradingStanceInfo.tradingStance}/>
                     </td>
                     <td>{tradingStanceInfo.tradingStance.direction}</td>
                     <td>{tradingStanceInfo.tradingStance.accountSetupGroups.name}: {tradingStanceInfo.tradingStance.accountSetupGroups.account.name}</td>

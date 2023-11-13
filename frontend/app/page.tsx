@@ -1,6 +1,6 @@
 'use client'
 import {useEffect, useState} from 'react';
-import {AccountSetupGroups, Page, Query, Trade, TradeAudit, TradingStanceInfo} from "@/app/interfaces";
+import {AccountSetupGroups, Page, Query, Trade, TradeAudit, TradingStance, TradingStanceInfo} from "@/app/interfaces";
 import TradesTable from "@/app/tradesTable";
 import TradesAuditTable from "@/app/tradesAuditTable";
 import QueryBuilder from "@/app/queryBuilder";
@@ -15,6 +15,8 @@ export default function FetchTradesClient() {
     const [accountSetupGroups, setAccountSetupGroups] = useState<AccountSetupGroups[]>([]);
 
     const [selectedAccountSetupGroups, setSelectedAccountSetupGroups] = useState<AccountSetupGroups | undefined>();
+
+    const [updatedTradingStance, setUpdatedTradingStance] = useState<TradingStance | undefined>();
 
     const [trades, setTrades] = useState<Trade[]>([]);
     const [tradeAudits, setTradeAudits] = useState<TradeAudit[]>([]);
@@ -84,7 +86,6 @@ export default function FetchTradesClient() {
         fetchAll();
     }, [query, sortColumn, sortDirection, tradeAuditId, fetchAll]);
 
-
     const handleHeaderClick = (newSortColumn: string) => {
         if (newSortColumn === sortColumn) {
             setSortDirection(sortDirection === 'ASC' ? 'DESC' : 'ASC');
@@ -149,7 +150,7 @@ export default function FetchTradesClient() {
                 />
             </div>
             <div>
-                <TradingStanceTable tradingStances={tradingStances}/>
+                <TradingStanceTable tradingStances={tradingStances} setUpdatedTradingStance={setUpdatedTradingStance}/>
             </div>
 
         </div>

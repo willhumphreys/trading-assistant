@@ -177,3 +177,8 @@ export interface TradingStanceInfo {
     disabledSetupCount: number;
 }
 
+export interface UpdateTradingStanceDto {
+    symbol: String,
+    direction: String,
+    accountSetupGroupsName: String
+}

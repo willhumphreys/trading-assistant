@@ -14,7 +14,8 @@
             </column>
             <column name="direction" type="ENUM(
     'LONG',
-    'SHORT'
+    'SHORT',
+    'FLAT'
     )">
                 <constraints nullable="false"/>
             </column>

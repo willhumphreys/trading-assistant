@@ -19,14 +19,14 @@ export function useWebSocketMessages(setTrades: React.Dispatch<React.SetStateAct
 
             newClient.subscribe('/topic/ticks', (message: IMessage) => {
                 if (message.body) {
-                    console.log('Received message: ', message.body);
+                    //console.log('Received message: ', message.body);
                     setTickMessage(JSON.parse(message.body));
                 }
             });
 
             newClient.subscribe('/topic/order-change', (message: IMessage) => {
                 if (message.body) {
-                    console.log('Received message: ', message.body);
+                    //console.log('Received message: ', message.body);
                     setOrderMessage(JSON.parse(message.body));
                 }
             });
