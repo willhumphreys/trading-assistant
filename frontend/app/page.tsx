@@ -150,7 +150,7 @@ export default function FetchTradesClient() {
                 />
             </div>
             <div>
-                <TradingStanceTable tradingStances={tradingStances} setUpdatedTradingStance={setUpdatedTradingStance}/>
+                <TradingStanceTable tradingStances={tradingStances}/>
             </div>
 
         </div>

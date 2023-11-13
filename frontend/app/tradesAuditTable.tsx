@@ -6,7 +6,7 @@ type Props = {
 
 };
 
-export default function TradesTable({trades}: Props) {
+export default function TradesAuditTable({trades}: Props) {
 
     type CellColors = { [key: number]: string };
     type PreviousProfits = { [key: number]: number };

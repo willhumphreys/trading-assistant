@@ -1,4 +1,4 @@
-import React, {FC, useState} from "react";
+import React, {FC, useEffect, useState} from "react";
 import {TradingStance} from "./interfaces";
 import {fetchUpdateTradingStance} from "@/app/fetchUpdateTradingStance";
 
@@ -16,9 +16,17 @@ const UpdateTradingStanceDirection: FC<UpdateTradingStanceProps> = ({tradingStan
                 direction: selectedDirection.toUpperCase(),
                 accountSetupGroupsName: tradingStance.accountSetupGroups.name
             };
-            fetchUpdateTradingStance(updatedTradingStance, tradingStance.id).then(r => console.log(r));
+            fetchUpdateTradingStance(updatedTradingStance, tradingStance.id)
+                .then(r => {
+                    console.log(`Updated tradingStance ${JSON.stringify(r)}`);
+                    tradingStance.direction = r.direction;
+                });
         }
     };
+
+    useEffect(() => {
+        setSelectedDirection(tradingStance.direction);
+    }, [tradingStance]);
 
     return (
         <div>

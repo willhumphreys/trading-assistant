@@ -1,9 +1,9 @@
-import {TradingStanceInfo, UpdateTradingStanceDto} from "@/app/interfaces";
+import {TradingStance, UpdateTradingStanceDto} from "@/app/interfaces";
 
 export const fetchUpdateTradingStance = async (
     updateTradingStanceDto: UpdateTradingStanceDto,
     id: number
-): Promise<TradingStanceInfo> => {
+): Promise<TradingStance> => {
 
     const res = await fetch(`/api/trading-stances/${id}`, {
             method: 'PUT',
