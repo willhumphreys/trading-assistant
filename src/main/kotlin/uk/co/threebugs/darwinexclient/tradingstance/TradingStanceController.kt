@@ -4,6 +4,7 @@ import org.springframework.data.domain.*
 import org.springframework.web.bind.annotation.*
 
 @RestController
+@RequestMapping()
 class TradingStanceController(private val tradingStanceService: TradingStanceService) {
 
     @GetMapping("/trading-stances")
@@ -17,5 +18,14 @@ class TradingStanceController(private val tradingStanceService: TradingStanceSer
         pageable: Pageable
     ): Page<TradingStanceInfo> {
         return tradingStanceService.findAllByAccountSetupGroupsNameWithSetupCount(accountSetupGroupsName, pageable)
+    }
+
+    @PutMapping("/trading-stances/{id}")
+    fun updateTradingStance(
+        @PathVariable id: Int,
+        @RequestBody tradingStanceDto: UpdateTradingStanceDto
+    ): TradingStanceDto {
+
+        return tradingStanceService.updateTradingStance(id, tradingStanceDto)
     }
 }

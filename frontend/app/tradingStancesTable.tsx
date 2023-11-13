@@ -1,4 +1,5 @@
 import {Page, TradingStanceInfo} from './interfaces';
+import React from "react";
 
 type Props = {
     tradingStances?: Page<TradingStanceInfo>;
@@ -10,6 +11,7 @@ export default function TradingStanceTable({tradingStances}: Props) {
     const columns = [
         {name: 'id', entity: ''},
         {name: 'symbol', entity: ''},
+        {name: 'new-direction', entity: ''},
         {name: 'direction', entity: ''},
         {name: 'accountSetupGroup / Account', entity: ''},
         {name: 'activeSetups', entity: ''},
@@ -41,6 +43,20 @@ export default function TradingStanceTable({tradingStances}: Props) {
 
                     <td>{tradingStanceInfo.tradingStance.id}</td>
                     <td>{tradingStanceInfo.tradingStance.symbol}</td>
+                    <td><select
+                        className="mt-1 p-2 border rounded-md"
+                        onChange={(e) => {
+                        }}
+                    >
+                        <option value="long">Long</option>
+                        <option value="flat">Flat</option>
+                        <option value="short">Short</option>
+
+                    </select>
+                        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                            Update
+                        </button>
+                    </td>
                     <td>{tradingStanceInfo.tradingStance.direction}</td>
                     <td>{tradingStanceInfo.tradingStance.accountSetupGroups.name}: {tradingStanceInfo.tradingStance.accountSetupGroups.account.name}</td>
                     <td>{tradingStanceInfo.enabledSetupCount}</td>

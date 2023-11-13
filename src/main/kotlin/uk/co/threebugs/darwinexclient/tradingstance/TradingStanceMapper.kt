@@ -7,6 +7,12 @@ import java.nio.file.*
 abstract class TradingStanceMapper {
 
     abstract fun toEntity(tradingStanceDto: TradingStanceDto): TradingStance
+
+    @Mapping(target = "id", source = "tradingStance.id")
+    @Mapping(target = "symbol", source = "tradingStanceDto.symbol")
+    @Mapping(target = "direction", source = "tradingStanceDto.direction")
+    @Mapping(target = "accountSetupGroups", source = "tradingStanceDto.accountSetupGroups")
+    abstract fun toEntity(tradingStanceDto: TradingStanceDto, tradingStance: TradingStance): TradingStance
     abstract fun toDto(tradingStance: TradingStance): TradingStanceDto
 
 

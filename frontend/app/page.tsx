@@ -23,8 +23,6 @@ export default function FetchTradesClient() {
     const [sortColumn, setSortColumn] = useState('id');  // Default sort column
     const [sortDirection, setSortDirection] = useState('ASC');  // Default sort direction
 
-    const [sortColumnTS, setSortColumnTS] = useState('id');  // Default sort column
-    const [sortDirectionTS, setSortDirectionTS] = useState('ASC');  // Default sort direction
     const [tradeAuditId, setTradeAuditId] = useState(1);
 
     const [query, setQuery] = useState<Query>({
