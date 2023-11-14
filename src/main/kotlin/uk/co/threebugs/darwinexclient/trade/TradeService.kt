@@ -15,6 +15,7 @@ import java.time.*
 import java.time.format.*
 import java.util.function.*
 
+
 @Service
 class TradeService(
     private val tradeRepository: TradeRepository,
@@ -24,7 +25,9 @@ class TradeService(
     private val slackClient: SlackClient,
     private val clock: MutableClock,
     private val setupRepository: SetupRepository,
+
 ) {
+
 
     val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
     fun findById(id: Int): TradeDto? {
@@ -231,6 +234,27 @@ class TradeService(
 
     fun findBySetupGroupsName(name: String): List<TradeDto>? {
         return tradeRepository.findBySetupGroupsName(name).map { tradeMapper.toDto(it) }
+    }
+
+    fun closeTrades(accountSetupGroups: AccountSetupGroupsDto, symbol: String): Int {
+
+        val openStatuses = setOf(Status.FILLED, Status.PENDING, Status.ORDER_SENT, Status.PLACED_IN_MT)
+
+        val tradesToClose =
+            tradeRepository.findByAccountSetupGroupsAndSymbol(accountSetupGroups.id!!, symbol)
+
+        tradesToClose.filter { t -> openStatuses.contains(t.status) }.forEach { trade ->
+            trade.apply {
+                status = Status.CLOSED_BY_STANCE
+                closedDateTime = ZonedDateTime.now(clock)
+                lastUpdatedDateTime = ZonedDateTime.now(clock)
+            }.also { tradeRepository.save(it) }
+
+            slackClient.sendSlackNotification("Order closed: ${trade.setup!!.rank} ${trade.setup!!.symbol} ${trade.setup!!.direction} ${trade.profit}")
+        }
+
+        return tradesToClose.size
+
     }
 
     companion object {

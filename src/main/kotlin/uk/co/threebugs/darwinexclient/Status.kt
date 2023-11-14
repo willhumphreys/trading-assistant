@@ -11,5 +11,6 @@ enum class Status {
     CLOSED_BY_TIME,
     CLOSED_BY_MAGIC_SENT,
     CLOSED_BY_USER,
-    MISSED
+    MISSED,
+    CLOSED_BY_STANCE
 }

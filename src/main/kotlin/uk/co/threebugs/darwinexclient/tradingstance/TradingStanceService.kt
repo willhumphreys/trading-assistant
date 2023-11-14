@@ -4,12 +4,14 @@ import org.springframework.data.domain.*
 import org.springframework.data.repository.*
 import org.springframework.stereotype.*
 import uk.co.threebugs.darwinexclient.accountsetupgroups.*
+import uk.co.threebugs.darwinexclient.trade.*
 
 @Service
 class TradingStanceService(
     private val tradingStanceRepository: TradingStanceRepository,
     private val tradingStanceMapper: TradingStanceMapper,
-    private val accountSetupGroupsService: AccountSetupGroupsService
+    private val accountSetupGroupsService: AccountSetupGroupsService,
+    private val tradeService: TradeService
 ) {
 
     fun findAll(pageable: Pageable): Page<TradingStanceDto> {
@@ -23,22 +25,30 @@ class TradingStanceService(
 
     fun updateTradingStance(id: Int, tradingStanceDto: UpdateTradingStanceDto): TradingStanceDto {
 
-        val accountSetupGroups = (accountSetupGroupsService.findByName(tradingStanceDto.accountSetupGroupsName)
-            ?: throw IllegalArgumentException("AccountSetupGroups with name ${tradingStanceDto.accountSetupGroupsName} not found"))
+        val accountSetupGroups = accountSetupGroupsService.findByName(tradingStanceDto.accountSetupGroupsName)
+            ?: throw IllegalArgumentException("AccountSetupGroups with name ${tradingStanceDto.accountSetupGroupsName} not found")
 
-        val tradingStanceDto = TradingStanceDto(
-            id = id,
-            symbol = tradingStanceDto.symbol,
-            direction = tradingStanceDto.direction,
-            accountSetupGroups = accountSetupGroups
+        val existingTradingStance = tradingStanceRepository.findByIdOrNull(id)
+            ?: throw IllegalArgumentException("TradingStance with id $id not found")
+
+        if (existingTradingStance.direction == tradingStanceDto.direction) {
+            throw IllegalArgumentException("No change in direction for TradingStance with id $id")
+        }
+
+        // Proceed with updating the trading stance
+        val updatedEntity = tradingStanceMapper.toEntity(
+            TradingStanceDto(
+                id = id,
+                symbol = tradingStanceDto.symbol,
+                direction = tradingStanceDto.direction,
+                accountSetupGroups = accountSetupGroups
+            ), existingTradingStance
         )
 
-        return this.tradingStanceRepository.findByIdOrNull(id)?.let {
-            tradingStanceMapper.toEntity(tradingStanceDto, it)
-        }?.let {
-            tradingStanceRepository.save(it)
-        }?.let {
-            tradingStanceMapper.toDto(it)
-        } ?: throw IllegalArgumentException("TradingStance with id $id not found")
+        val savedEntity = tradingStanceRepository.save(updatedEntity)
+
+        tradeService.closeTrades(accountSetupGroups, tradingStanceDto.symbol)
+
+        return tradingStanceMapper.toDto(savedEntity)
     }
 }

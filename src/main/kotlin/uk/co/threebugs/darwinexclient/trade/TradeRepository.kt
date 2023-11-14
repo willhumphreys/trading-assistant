@@ -28,6 +28,20 @@ interface TradeRepository : JpaRepository<Trade, Int>, QueryByExampleExecutor<Tr
     ): List<Trade>
 
 
+    @Query(
+        value = "SELECT t.* FROM trade t " +
+                "JOIN setup s ON t.setup_id = s.id " +
+                "JOIN setup_group sg ON s.setup_group_id = sg.id " +
+                "JOIN setup_groups sgs ON sg.setup_groups_id = sgs.id " +
+                "JOIN account_setup_groups asg ON asg.setup_groups_id = sgs.id " +
+                "WHERE asg.id = :accountSetupGroupsId and s.symbol = :symbol", nativeQuery = true
+    )
+    fun findByAccountSetupGroupsAndSymbol(
+        accountSetupGroupsId: Int,
+        symbol: String
+    ): List<Trade>
+
+
     fun findBySetupAndTargetPlaceDateTimeAndAccount(
         setup: Setup,
         placedDateTime: ZonedDateTime,

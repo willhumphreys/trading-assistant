@@ -27,7 +27,8 @@
     'CLOSED_BY_TIME',
     'CLOSED_BY_USER',
     'CLOSED_BY_MAGIC_SENT',
-                'MISSED')">
+                'MISSED',
+                'CLOSED_BY_STANCE')">
                 <constraints nullable="false"/>
             </column>
 

@@ -34,7 +34,7 @@ class SetupGroupService(
                     )
                 }
                 .map { setupGroupDto: SetupGroupDto ->
-                    setupGroupRepository.findByPath(setupGroupDto.path.toString()) ?: run {
+                    setupGroupRepository.findByPathAndSetupGroups(setupGroupDto.path.toString(), setupGroups) ?: run {
                         val setupGroup = setupGroupMapper.toEntity(setupGroupDto, setupGroups)
                         setupGroupRepository.save(setupGroup)
                     }
