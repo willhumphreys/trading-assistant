@@ -1,0 +1,1 @@
+python scripts/start-server.py dev
