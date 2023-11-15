@@ -53,7 +53,7 @@ export class TradingAssistantStack extends cdk.Stack {
     const currentEnv =
         environments[(process.env.VITAMINS_AMPLIFY_ENV as keyof typeof environments) || "prod"];
 
-    const amplifyApp = new amplify.App(this, "vitaminsAmplify", {
+    const amplifyApp = new amplify.App(this, "tradingAssistantAmplify", {
       sourceCodeProvider: new amplify.GitHubSourceCodeProvider({
         owner: "willhumphreys",
         repository: "darwinex-client",
@@ -71,10 +71,10 @@ export class TradingAssistantStack extends cdk.Stack {
             frontend: {
               phases: {
                 preBuild: {
-                  commands: ["npm ci"],
+                  commands: ["nvm use 18", "npm ci"],
                 },
                 build: {
-                  commands: ["npm run build"],
+                  commands: ["nvm use 18", "npm run build"],
                 },
               },
               artifacts: {
