@@ -1,0 +1,26 @@
+[
+  {
+    "name": "long",
+    "dir-path": "/home/will/.cxoffice/MetaTrader_5/drive_c/Program Files/MetaTrader 5/MQL5/Files/"
+  },
+  {
+    "name": "short",
+    "dir-path": "/home/will/.cxoffice/MetaTrader_5-2/drive_c/Program Files/MetaTrader 5/MQL5/Files/"
+  },
+  {
+    "name": "long-windows-23",
+    "dir-path": "C:\\Users\\user\\AppData\\Roaming\\MetaQuotes\\Terminal\\52567D768769B2A12AC3254656D828F6\\MQL5\\Files\\"
+  },
+  {
+    "name": "short-windows-04",
+    "dir-path": "C:\\Users\\user\\AppData\\Roaming\\MetaQuotes\\Terminal\\D0E8209F77C8CF37AD8BF550E51FF075\\MQL5\\Files\\"
+  },
+  {
+    "name": "long-dev-linux",
+    "dir-path": "/home/will/.cxoffice/MetaTrader_5-3/drive_c/Program Files/MetaTrader 5/MQL5/Files/"
+  },
+  {
+    "name": "test",
+    "dir-path": "test-ea-files"
+  }
+]

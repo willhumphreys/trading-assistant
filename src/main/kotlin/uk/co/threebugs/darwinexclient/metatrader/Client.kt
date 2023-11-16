@@ -22,6 +22,7 @@ import java.nio.file.*
 import java.util.*
 import kotlin.concurrent.*
 
+
 @Component
 class Client(
     private val eventHandler: TradeEventHandler,
@@ -29,13 +30,14 @@ class Client(
     @param:Value("\${account-setup-groups-name}") private val accountSetupGroupsName: String,
     @param:Value("\${sleep-delay}") private val sleepDelay: Int,
     @param:Value("\${max-retry-command-seconds}") private val maxRetryCommandSeconds: Int,
+    @param:Value("\${accounts-dir}") private val accounts: String,
     private val setupGroupService: SetupGroupService,
     private val setupRepository: SetupRepository,
     private val setupFileRepository: SetupFileRepository,
     private val accountSetupGroupsService: AccountSetupGroupsService,
-    private val objectMapper: ObjectMapper,
     private val webSocketController: WebSocketController,
-    private val actionsService: ActionsService,
+    private val objectMapper: ObjectMapper,
+    private val actionsService: ActionsService
 ) {
 
     var openOrders: Orders = Orders(
