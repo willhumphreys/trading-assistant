@@ -106,7 +106,7 @@ class Client(
         val f = metaTraderDirPath.toFile()
         if (!f.exists()) {
             logger.info("ERROR: MetaTraderDirPath does not exist!")
-            System.exit(1)
+            throw RuntimeException("ERROR: MetaTraderDirPath does not exist! $metaTraderDirPath")
         }
         dwxPath = metaTraderDirPath.resolve("DWX")
 
