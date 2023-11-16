@@ -232,7 +232,7 @@ class TradeService(
         return tradeRepository.findByAccount_Name(name, sort).map { tradeMapper.toDto(it) }
     }
 
-    fun findBySetupGroupsName(name: String): List<TradeDto>? {
+    fun findBySetupGroupsName(name: String): List<TradeDto> {
         return tradeRepository.findBySetupGroupsName(name).map { tradeMapper.toDto(it) }
     }
 

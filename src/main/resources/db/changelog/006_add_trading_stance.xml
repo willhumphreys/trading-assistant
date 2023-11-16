@@ -26,8 +26,12 @@
         </createTable>
 
         <createTable tableName="trading_stance_aud">
-            <column name="id" type="int"/>
-            <column name="REV" type="int"/>
+            <column name="id" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rev" type="int">
+                <constraints nullable="false"/>
+            </column>
             <column name="revtype" type="tinyint"/>
             <column name="symbol" type="varchar(255)"/>
             <column name="direction" type="varchar(255)"/>
