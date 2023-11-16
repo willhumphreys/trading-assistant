@@ -76,7 +76,6 @@ class Client(
     private var lastBarData = JSONObject()
     private var lastMarketData: Map<String, CurrencyInfo> = java.util.Map.of()
 
-    //private final val account: AccountDto
     private final val accountSetupGroupsDto: AccountSetupGroupsDto
 
     private final val accountsPath: Path = Paths.get(accounts)
