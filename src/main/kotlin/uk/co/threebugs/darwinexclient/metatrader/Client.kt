@@ -79,11 +79,13 @@ class Client(
     //private final val account: AccountDto
     private final val accountSetupGroupsDto: AccountSetupGroupsDto
 
+    private final val accountsPath: Path = Paths.get(accounts)
+
     init {
-        val accountDtos = loadMetaTraderInstalls(Paths.get("accounts", "metatrader_dirs.json"))
+        val accountDtos = loadMetaTraderInstalls(accountsPath.resolve("metatrader_dirs.json"))
         val symbols = arrayOf("EURUSD", "GBPUSD", "USDCAD", "NZDUSD", "AUDUSD", "USDJPY", "USDCHF")
 
-        val setupGroupsPath = Paths.get("accounts", "setup-groups")
+        val setupGroupsPath = Paths.get(accounts, "setup-groups")
         try {
             Files.list(setupGroupsPath).use { paths ->
                 paths.forEach { setupsPath: Path ->
@@ -96,7 +98,7 @@ class Client(
             throw RuntimeException(e)
         }
         val accounts =
-            accountSetupGroupsService.loadAccountSetupGroups(Paths.get("accounts", "account-setup-groups.json"))
+            accountSetupGroupsService.loadAccountSetupGroups(accountsPath.resolve("account-setup-groups.json"))
         accountSetupGroupsDto = accountSetupGroupsService.findByName(accountSetupGroupsName)
             ?: throw RuntimeException("Failed to find account setup groups: $accountSetupGroupsName")
 
