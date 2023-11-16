@@ -28,7 +28,7 @@ private const val SECONDS_30 = 30000L
 private const val SECONDS_5 = 5000L
 private const val EURUSD = "EURUSD"
 
-class BlackBoxTest : AnnotationSpec() {
+class BlackBoxTestIT : AnnotationSpec() {
 
     data class TestSetup(val setupGroupsName: String, val isLong: Boolean)
 
