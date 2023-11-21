@@ -1,12 +1,14 @@
 package uk.co.threebugs.darwinexclient.actions
 
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
+import uk.co.threebugs.darwinexclient.tradingstance.*
 
 @RestController
 @RequestMapping("/actions")
-class ActionsController(private val actionsService: ActionsService) {
+class ActionsController(
+    private val actionsService: ActionsService,
+    private val tradingStanceService: TradingStanceService
+) {
 
     @PostMapping("/start")
     fun start() {
@@ -17,4 +19,13 @@ class ActionsController(private val actionsService: ActionsService) {
     fun stop() {
         actionsService.setRunning(false)
     }
+
+    @PostMapping("/update-trading-stance/{id}")
+    fun updateTradingStance(
+        @PathVariable id: Int,
+        @RequestBody tradingStanceDto: UpdateTradingStanceDto
+    ): TradingStanceDto {
+        return tradingStanceService.updateTradingStance(id, tradingStanceDto)
+    }
+
 }

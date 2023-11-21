@@ -5,8 +5,8 @@ export const fetchUpdateTradingStance = async (
     id: number
 ): Promise<TradingStance> => {
 
-    const res = await fetch(`/api/trading-stances/${id}`, {
-            method: 'PUT',
+    const res = await fetch(`/api/actions/update-trading-stance/${id}`, {
+        method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },

@@ -25,6 +25,7 @@ const UpdateTradingStanceDirection: FC<UpdateTradingStanceProps> = ({tradingStan
     };
 
     useEffect(() => {
+        console.log("Selected Direction:", selectedDirection);
         setSelectedDirection(tradingStance.direction);
     }, [tradingStance]);
 
@@ -32,7 +33,7 @@ const UpdateTradingStanceDirection: FC<UpdateTradingStanceProps> = ({tradingStan
         <div>
             <select
                 className="mt-1 p-2 border rounded-md"
-                value={selectedDirection}
+                value={selectedDirection.toLowerCase()}
                 onChange={(e) => setSelectedDirection(e.target.value)}
             >
                 <option value="long">Long</option>

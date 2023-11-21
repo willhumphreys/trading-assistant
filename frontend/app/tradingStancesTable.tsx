@@ -7,7 +7,6 @@ type Props = {
 };
 
 export default function TradingStanceTable({tradingStances}: Props) {
-
     const columns = [
         {name: 'id', entity: ''},
         {name: 'symbol', entity: ''},
