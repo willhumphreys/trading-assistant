@@ -17,5 +17,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Build with Maven
+      - name: Build with Maven shorttest
         run: mvn -B verify -Dprofile.active=shorttest --file pom.xml
+      - name: Build with Maven longtest
+        run: mvn -B verify -Dprofile.active=longtest --file pom.xml
