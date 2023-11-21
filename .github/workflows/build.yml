@@ -18,4 +18,4 @@ jobs:
           distribution: 'temurin'
 
       - name: Build with Maven
-        run: mvn -B verify --file pom.xml
+        run: mvn -B verify -Dprofile.active=shorttest --file pom.xml

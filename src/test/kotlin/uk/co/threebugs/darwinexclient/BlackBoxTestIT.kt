@@ -33,8 +33,8 @@ class BlackBoxTestIT : AnnotationSpec() {
     data class TestSetup(val setupGroupsName: String, val isLong: Boolean)
 
     private val testSetupMap = mapOf(
-        "longSetup" to TestSetup("long-test", true),
-        "shortSetup" to TestSetup("short-test", false)
+        "longtest" to TestSetup("long-test", true),
+        "shorttest" to TestSetup("short-test", false)
     )
 
     private suspend fun beforeEach(setupGroupsName: String) {

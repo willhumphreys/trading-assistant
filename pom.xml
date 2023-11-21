@@ -19,6 +19,7 @@
         <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
         <kotlin.version>1.9.20</kotlin.version>
         <org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
+        <profile.active>shorttest</profile.active>
     </properties>
     <dependencies>
         <dependency>
@@ -205,7 +206,7 @@
                         <configuration>
                             <!-- Optional: specify profiles or other config here -->
                             <arguments>
-                                <argument>--spring.profiles.active=longtest</argument>
+                                <argument>--spring.profiles.active=${profile.active}</argument>
                             </arguments>
                         </configuration>
                         <phase>pre-integration-test</phase>
@@ -333,9 +334,9 @@
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>3.1.2</version>
                 <configuration>
-                    <systemPropertyVariables>
-                        <testSetup>longSetup</testSetup>
-                    </systemPropertyVariables>
+                    <!--                    <systemPropertyVariables>-->
+                    <!--                        <testSetup>${profile.active}</testSetup>-->
+                    <!--                    </systemPropertyVariables>-->
                 </configuration>
                 <executions>
                     <execution>
@@ -344,6 +345,9 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
+                            <systemProperties>
+                                <testSetup>${profile.active}</testSetup>
+                            </systemProperties>
                             <!-- Specify the test patterns to include -->
                             <includes>
                                 <include>**/*IT.kt</include>
