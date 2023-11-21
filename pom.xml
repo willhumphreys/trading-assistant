@@ -369,10 +369,13 @@
                         </goals>
                         <configuration>
                             <target>
-
                                 <exec executable="bash">
                                     <arg value="-c"/>
-                                    <arg value="pidof java"/>
+                                    <arg value="ps ax | awk '/[s]pring/ { print $1 }'"/>
+                                </exec>
+                                <exec executable="bash">
+                                    <arg value="-c"/>
+                                    <arg value="ps ax | awk '/[s]pring/ { print $1 }' | xargs kill"/>
                                 </exec>
                             </target>
                         </configuration>
