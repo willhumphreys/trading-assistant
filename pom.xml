@@ -372,7 +372,7 @@
 
                                 <exec executable="bash">
                                     <arg value="-c"/>
-                                    <arg value="ps | grep java"/>
+                                    <arg value="pidof java"/>
                                 </exec>
                             </target>
                         </configuration>
