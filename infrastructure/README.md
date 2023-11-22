@@ -1,4 +1,6 @@
-# Welcome to your CDK TypeScript project
+# Infrastructure for the TradingAssistant project
+
+At the moment only the frontend is deployed to AWS. The backend is still running on a local machine.
 
 This is a blank project for CDK development with TypeScript.
 
