@@ -1,0 +1,38 @@
+name: deploy-vitamins-dev
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: { }
+jobs:
+  deploy:
+    name: Deploy CDK stacks to test
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+      id-token: write
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::573591465159:role/gitHubDeployRole
+          aws-region: eu-central-1
+      - name: Checkout repo
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+      - name: Install dependencies
+        working-directory: ./infrastructure
+        run: npm install
+      - name: CDK synth
+        working-directory: ./infrastructure
+        env:
+          GITHUB_BRANCH: main
+        run: npx cdk synth TradingAssistant
+      - name: CDK deploy
+        working-directory: ./infrastructure
+        env:
+          GITHUB_BRANCH: main
+        run: npx cdk deploy TradingAssistant
