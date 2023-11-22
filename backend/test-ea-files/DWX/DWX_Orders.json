@@ -1,0 +1,12 @@
+{
+  "account_info": {
+    "number": 123456,
+    "leverage": 100,
+    "balance": 1000,
+    "free_margin": 1000,
+    "name": "test",
+    "currency": "USD",
+    "equity": 1000
+  },
+  "orders": {}
+}

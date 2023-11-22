@@ -18,6 +18,8 @@ jobs:
           distribution: 'temurin'
 
       - name: Build with Maven shorttest
+        working-directory: ./backend
         run: mvn -B verify -Dprofile.active=shorttest --file pom.xml
       - name: Build with Maven longtest
+        working-directory: ./backend
         run: mvn -B verify -Dprofile.active=longtest --file pom.xml
