@@ -1,10 +1,17 @@
 name: Maven Build
 
+defaults:
+  run:
+    working-directory: backend
 on:
   push:
     branches: [ main ]
+    paths:
+      - backend/**
   pull_request:
     branches: [ main ]
+    paths:
+      - backend/**
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,8 +25,6 @@ jobs:
           distribution: 'temurin'
 
       - name: Build with Maven shorttest
-        working-directory: ./backend
         run: mvn -B verify -Dprofile.active=shorttest --file pom.xml
       - name: Build with Maven longtest
-        working-directory: ./backend
         run: mvn -B verify -Dprofile.active=longtest --file pom.xml

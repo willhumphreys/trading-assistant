@@ -1,8 +1,17 @@
-name: deploy-vitamins-dev
+name: deploy-tradingAssistant
+defaults:
+  run:
+    working-directory: infrastructure
 on:
   push:
     branches:
       - main
+    paths:
+      - infrastructure/**
+  pull_request:
+    branches: [ main ]
+    paths:
+      - infrastructure/**
   workflow_dispatch: { }
 jobs:
   deploy:
@@ -24,20 +33,16 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
       - name: Install dependencies
-        working-directory: ./infrastructure
         run: npm install
       - name: Run tests
-        working-directory: ./infrastructure
         run: npm test
         env:
           GITHUB_BRANCH: main
       - name: CDK synth
-        working-directory: ./infrastructure
         env:
           GITHUB_BRANCH: main
         run: npx cdk synth TradingAssistant
       - name: CDK deploy
-        working-directory: ./infrastructure
         env:
           GITHUB_BRANCH: main
         run: npx cdk deploy TradingAssistant
