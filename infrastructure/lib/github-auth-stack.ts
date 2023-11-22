@@ -30,7 +30,7 @@ export class GitHubStack extends cdk.Stack {
 
     const deployRole = "gitHubDeployRole";
     const repositoryConfig = [
-      {owner: "willhumphreys", repo: "vitamins", filter: `ref:refs/heads/${process.env.GITHUB_BRANCH}`},
+      {owner: "willhumphreys", repo: "darwinex-client", filter: `ref:refs/heads/${process.env.GITHUB_BRANCH}`},
     ];
 
     const githubDomain = "token.actions.githubusercontent.com";
