@@ -26,6 +26,9 @@ jobs:
       - name: Install dependencies
         working-directory: ./infrastructure
         run: npm install
+      - name: Run tests
+        working-directory: ./infrastructure
+        run: npm test
       - name: CDK synth
         working-directory: ./infrastructure
         env:
