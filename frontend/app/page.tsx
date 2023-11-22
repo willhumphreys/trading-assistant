@@ -1,14 +1,22 @@
 'use client'
 import {useEffect, useState} from 'react';
-import {AccountSetupGroups, Page, Query, Trade, TradeAudit, TradingStance, TradingStanceInfo} from "@/app/interfaces";
-import TradesTable from "@/app/tradesTable";
-import TradesAuditTable from "@/app/tradesAuditTable";
-import QueryBuilder from "@/app/queryBuilder";
-import AccountSelector from '@/app/accountSelector';
-import {fetchTradeAudits} from "@/app/fetchTradeAudits";
-import TradingStanceTable from "@/app/tradingStancesTable";
-import {useDataFetching} from "@/app/dataFetching";
-import {useWebSocketMessages} from "@/app/useWebSocketMessages";
+import {
+    AccountSetupGroups,
+    Page,
+    Query,
+    Trade,
+    TradeAudit,
+    TradingStance,
+    TradingStanceInfo
+} from "@/app/types/interfaces";
+import TradesTable from "@/app/components/tradesTable";
+import TradesAuditTable from "@/app/components/tradesAuditTable";
+import QueryBuilder from "@/app/utils/queryBuilder";
+import AccountSelector from '@/app/components/accountSelector';
+import {fetchTradeAudits} from "@/app/utils/fetchTradeAudits";
+import TradingStanceTable from "@/app/components/tradingStancesTable";
+import {useDataFetching} from "@/app/utils/dataFetching";
+import {useWebSocketMessages} from "@/app/hooks/useWebSocketMessages";
 
 export default function FetchTradesClient() {
 

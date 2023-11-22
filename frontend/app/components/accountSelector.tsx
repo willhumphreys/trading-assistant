@@ -1,4 +1,4 @@
-import {AccountSetupGroups, Query} from "@/app/interfaces";
+import {AccountSetupGroups, Query} from '@/app/types/interfaces';
 import React, {Dispatch, FC, SetStateAction} from "react";
 
 type AccountSelectorProps = {

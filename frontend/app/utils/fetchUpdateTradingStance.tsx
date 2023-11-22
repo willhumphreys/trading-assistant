@@ -1,4 +1,4 @@
-import {TradingStance, UpdateTradingStanceDto} from "@/app/interfaces";
+import {TradingStance, UpdateTradingStanceDto} from "@/app/types/interfaces";
 
 export const fetchUpdateTradingStance = async (
     updateTradingStanceDto: UpdateTradingStanceDto,

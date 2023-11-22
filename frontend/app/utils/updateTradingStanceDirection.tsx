@@ -1,6 +1,6 @@
 import React, {FC, useEffect, useState} from "react";
-import {TradingStance} from "./interfaces";
-import {fetchUpdateTradingStance} from "@/app/fetchUpdateTradingStance";
+import {TradingStance} from "@/app/types/interfaces";
+import {fetchUpdateTradingStance} from "@/app/utils/fetchUpdateTradingStance";
 
 type UpdateTradingStanceProps = {
     tradingStance: TradingStance;

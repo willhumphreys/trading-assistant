@@ -1,4 +1,4 @@
-import {Query, Status} from "@/app/interfaces";
+import {Query, Status} from "@/app/types/interfaces";
 
 
 type Props = {

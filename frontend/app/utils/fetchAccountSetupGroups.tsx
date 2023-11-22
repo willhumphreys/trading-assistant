@@ -1,4 +1,4 @@
-import {AccountSetupGroups} from "@/app/interfaces";
+import {AccountSetupGroups} from "@/app/types/interfaces";
 
 export const fetchAccountSetupGroups = async (): Promise<AccountSetupGroups[]> => {
 

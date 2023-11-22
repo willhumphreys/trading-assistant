@@ -1,9 +1,9 @@
 import React, {useCallback} from 'react';
-import {AccountSetupGroups, Page, Query, Trade, TradeAudit, TradingStanceInfo} from "@/app/interfaces";
-import {fetchTrades} from '@/app/fetchTrades';
-import {fetchTradeAudits} from "@/app/fetchTradeAudits";
-import {fetchTradingStances} from "@/app/fetchTradingStances";
-import {fetchAccountSetupGroups} from "@/app/fetchAccountSetupGroups";
+import {AccountSetupGroups, Page, Query, Trade, TradeAudit, TradingStanceInfo} from "@/app/types/interfaces";
+import {fetchTrades} from '@/app/utils/fetchTrades';
+import {fetchTradeAudits} from "@/app/utils/fetchTradeAudits";
+import {fetchTradingStances} from "@/app/utils/fetchTradingStances";
+import {fetchAccountSetupGroups} from "@/app/utils/fetchAccountSetupGroups";
 
 interface UseDataFetchingParams {
     setAccountSetupGroups: React.Dispatch<React.SetStateAction<AccountSetupGroups[]>>;

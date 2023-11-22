@@ -1,4 +1,4 @@
-import {TradeAudit} from "@/app/interfaces";
+import {TradeAudit} from "@/app/types/interfaces";
 
 export const fetchTradeAudits = async (tradeId: number): Promise<TradeAudit[] | null> => {
     try {

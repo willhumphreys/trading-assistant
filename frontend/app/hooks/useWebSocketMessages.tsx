@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {ServerMessage, Trade} from "@/app/interfaces";
+import {ServerMessage, Trade} from '@/app/types/interfaces';
 import {Client, IMessage} from '@stomp/stompjs';
 
 

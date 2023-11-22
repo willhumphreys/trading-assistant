@@ -1,4 +1,4 @@
-import {AccountSetupGroups, Page, TradingStanceInfo} from "@/app/interfaces";
+import {AccountSetupGroups, Page, TradingStanceInfo} from "@/app/types/interfaces";
 
 export const fetchTradingStances = async (
     page: number,

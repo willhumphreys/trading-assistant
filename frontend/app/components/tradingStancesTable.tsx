@@ -1,6 +1,6 @@
-import {Page, TradingStanceInfo} from './interfaces';
+import {Page, TradingStanceInfo} from '@/app/types/interfaces';
 import React from "react";
-import UpdateTradingStanceDirection from "@/app/updateTradingStanceDirection";
+import UpdateTradingStanceDirection from "@/app/utils/updateTradingStanceDirection";
 
 type Props = {
     tradingStances?: Page<TradingStanceInfo>

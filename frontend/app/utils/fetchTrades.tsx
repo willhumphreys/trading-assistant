@@ -1,5 +1,5 @@
 // fetchTrades.ts
-import {Query, Trade} from "@/app/interfaces";
+import {Query, Trade} from "@/app/types/interfaces";
 
 export const fetchTrades = async (query: Query, sortColumn: string, sortDirection: string): Promise<Trade[] | null> => {
     try {
