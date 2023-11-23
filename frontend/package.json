@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@stomp/stompjs": "^7.0.0",
-    "next": "14.0.2",
+    "next": "14.0.3",
     "react": "^18",
     "react-dom": "^18"
   },
