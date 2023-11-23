@@ -49,7 +49,7 @@ describe('AccountSelector', () => {
             closedDateTime: '2021-01-01T00:00:00.000Z',
             closedPrice: '1.4',
             closeType: 'STOP',
-            message: 'test'
+            message: 'test2'
         };
 
 
