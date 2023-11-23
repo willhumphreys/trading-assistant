@@ -1,4 +1,4 @@
-name: deploy-tradingAssistant
+name: test-frontend
 defaults:
   run:
     working-directory: frontend
