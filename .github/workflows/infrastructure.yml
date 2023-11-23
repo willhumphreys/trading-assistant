@@ -28,7 +28,7 @@ jobs:
           role-to-assume: arn:aws:iam::573591465159:role/gitHubDeployRole
           aws-region: eu-central-1
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
