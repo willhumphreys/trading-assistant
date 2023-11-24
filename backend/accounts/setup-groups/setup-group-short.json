@@ -1,6 +1,6 @@
 {
   "name": "short",
-  "scriptsDirectory": "../../mochi-java/scripts/mochi-graphs/",
+  "scriptsDirectory": "mochi-graphs/",
   "setupGroups": [
     {
       "path": "eurusd-1m-btmH/s_-3000..-100..100___l_100..7500..100___o_-800..-100..50___d_14..14..7___out_8..8..4___short/aggregated-eurusd-1m-btmH_s_-3000..-100..100___l_100..7500..100___o_-800..-100..50___d_14..14..7___out_8..8..4___short_aggregationQueryTemplate-all.csv.lzo/eurusd_BestTrades/profitperrisk/eurusd_bestTrades.csv",
