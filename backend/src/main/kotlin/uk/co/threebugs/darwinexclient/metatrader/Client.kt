@@ -11,6 +11,7 @@ import org.springframework.stereotype.*
 import uk.co.threebugs.darwinexclient.account.*
 import uk.co.threebugs.darwinexclient.accountsetupgroups.*
 import uk.co.threebugs.darwinexclient.actions.*
+import uk.co.threebugs.darwinexclient.metatrader.messages.*
 import uk.co.threebugs.darwinexclient.setup.*
 import uk.co.threebugs.darwinexclient.setupgroup.*
 import uk.co.threebugs.darwinexclient.tradingstance.*
@@ -38,7 +39,8 @@ class Client(
     private val webSocketController: WebSocketController,
     private val objectMapper: ObjectMapper,
     private val actionsService: ActionsService,
-    private val messageRepository: MessageRepository
+    private val messageRepository: MessageRepository,
+    private val messageService: MessageService
 ) {
 
     var openOrders: Orders = Orders(
@@ -121,7 +123,7 @@ class Client(
             checkOpenOrders()
 
         }
-        thread(name = "checkMessage") { checkMessages() }
+        thread(name = "checkMessage") { messageService.checkMessages(accountSetupGroupsName) }
         thread(name = "checkMarketData") { checkMarketData() }
 
         resetCommandIDs()
@@ -383,62 +385,6 @@ class Client(
     }
 
 
-    /*Regularly checks the file for messages and triggers
-    the eventHandler.onMessage() function.
-    */
-    private fun checkMessages() {
-
-        if (actionsService.isRunning()) {
-
-            while (true) {
-                Helpers.sleep(sleepDelay)
-
-                val newMessages = messageRepository.getNewMessages(accountSetupGroupsName);
-                newMessages.forEach() {
-                    eventHandler.onMessage(it)
-                }
-
-            }
-
-        }
-
-//        while (true) {
-//            Helpers.sleep(sleepDelay)
-//            if (!actionsService.isRunning())
-//                continue
-//
-//
-//            val messagesPath =
-//                pathMap["pathMessages"] ?: throw NoSuchElementException("Key 'pathMessages' not found")
-//            val text = Helpers.tryReadFile(messagesPath)
-//            if (text.isEmpty() || text == lastMessagesStr) continue
-//            lastMessagesStr = text
-//            val data: JSONObject = try {
-//                JSONObject(text)
-//            } catch (e: Exception) {
-//                continue
-//            }
-//
-//            // the objects are not ordered. because of (millis > lastMessagesMillis) it would miss messages if we just looped through them directly.
-//            val millisList = ArrayList<String>()
-//            for (millisStr in data.keySet()) {
-//                if (data[millisStr] != null) {
-//                    millisList.add(millisStr)
-//                }
-//            }
-//            Collections.sort(millisList)
-//            for (millisStr in millisList) {
-//                if (data[millisStr] != null) {
-//                    val millis = millisStr.toLong()
-//                    if (millis > lastMessagesMillis) {
-//                        lastMessagesMillis = millis
-//                        eventHandler.onMessage(data[millisStr] as JSONObject)
-//                    }
-//                }
-//            }
-//            Helpers.tryWriteToFile(messagesPath, data.toString())
-//        }
-    }
 
     /*Regularly checks the file for market data and triggers
     the eventHandler.onTick() function.

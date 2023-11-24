@@ -1,8 +1,9 @@
-package uk.co.threebugs.darwinexclient.metatrader
+package uk.co.threebugs.darwinexclient.metatrader.messages
 
 import org.json.*
 import org.springframework.stereotype.*
 import uk.co.threebugs.darwinexclient.accountsetupgroups.*
+import uk.co.threebugs.darwinexclient.metatrader.*
 import java.util.*
 
 @Repository
