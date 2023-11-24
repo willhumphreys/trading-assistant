@@ -195,7 +195,7 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>3.1.5</version>
+                <version>3.2.0</version>
                 <executions>
                     <!-- Start Spring Boot application before integration tests are run -->
                     <execution>
