@@ -37,7 +37,8 @@ class Client(
     private val accountSetupGroupsService: AccountSetupGroupsService,
     private val webSocketController: WebSocketController,
     private val objectMapper: ObjectMapper,
-    private val actionsService: ActionsService
+    private val actionsService: ActionsService,
+    private val messageRepository: MessageRepository
 ) {
 
     var openOrders: Orders = Orders(
@@ -51,13 +52,9 @@ class Client(
             equity = BigDecimal.ZERO
         ), orders = mapOf()
     )
-    var barData = JSONObject()
-    var historicData = JSONObject()
-    var historicTrades = JSONObject()
     private final val dwxPath: Path
     private final val pathMap: Map<String, Path>
     private var commandID = 0
-    private var lastMessagesMillis: Long = 0
     private var lastOpenOrders: Orders = Orders(
         accountInfo = AccountInfo(
             number = 0,
@@ -69,11 +66,6 @@ class Client(
             equity = BigDecimal.ZERO
         ), orders = mapOf()
     )
-    private var lastMessagesStr: String? = ""
-    private var lastBarDataStr: String? = ""
-    private var lastHistoricDataStr: String? = ""
-    private var lastHistoricTradesStr: String? = ""
-    private var lastBarData = JSONObject()
     private var lastMarketData: Map<String, CurrencyInfo> = java.util.Map.of()
 
     private final val accountSetupGroupsDto: AccountSetupGroupsDto
@@ -122,7 +114,7 @@ class Client(
 
             )
 
-        loadMessages()
+        messageRepository.loadMessages(accountSetupGroupsName)
 
         thread(name = "openOrdersThread") {
 
@@ -131,8 +123,6 @@ class Client(
         }
         thread(name = "checkMessage") { checkMessages() }
         thread(name = "checkMarketData") { checkMarketData() }
-        thread(name = "checkBarData") { checkBarData() }
-        thread(name = "checkHistoricData") { checkHistoricData() }
 
         resetCommandIDs()
         loadOrders()
@@ -397,42 +387,57 @@ class Client(
     the eventHandler.onMessage() function.
     */
     private fun checkMessages() {
-        while (true) {
-            Helpers.sleep(sleepDelay)
-            if (!actionsService.isRunning())
-                continue
 
+        if (actionsService.isRunning()) {
 
-            val messagesPath =
-                pathMap["pathMessages"] ?: throw NoSuchElementException("Key 'pathMessages' not found")
-            val text = Helpers.tryReadFile(messagesPath)
-            if (text.isEmpty() || text == lastMessagesStr) continue
-            lastMessagesStr = text
-            val data: JSONObject = try {
-                JSONObject(text)
-            } catch (e: Exception) {
-                continue
-            }
+            while (true) {
+                Helpers.sleep(sleepDelay)
 
-            // the objects are not ordered. because of (millis > lastMessagesMillis) it would miss messages if we just looped through them directly.
-            val millisList = ArrayList<String>()
-            for (millisStr in data.keySet()) {
-                if (data[millisStr] != null) {
-                    millisList.add(millisStr)
+                val newMessages = messageRepository.getNewMessages(accountSetupGroupsName);
+                newMessages.forEach() {
+                    eventHandler.onMessage(it)
                 }
+
             }
-            Collections.sort(millisList)
-            for (millisStr in millisList) {
-                if (data[millisStr] != null) {
-                    val millis = millisStr.toLong()
-                    if (millis > lastMessagesMillis) {
-                        lastMessagesMillis = millis
-                        eventHandler.onMessage(this, data[millisStr] as JSONObject)
-                    }
-                }
-            }
-            Helpers.tryWriteToFile(messagesPath, data.toString())
+
         }
+
+//        while (true) {
+//            Helpers.sleep(sleepDelay)
+//            if (!actionsService.isRunning())
+//                continue
+//
+//
+//            val messagesPath =
+//                pathMap["pathMessages"] ?: throw NoSuchElementException("Key 'pathMessages' not found")
+//            val text = Helpers.tryReadFile(messagesPath)
+//            if (text.isEmpty() || text == lastMessagesStr) continue
+//            lastMessagesStr = text
+//            val data: JSONObject = try {
+//                JSONObject(text)
+//            } catch (e: Exception) {
+//                continue
+//            }
+//
+//            // the objects are not ordered. because of (millis > lastMessagesMillis) it would miss messages if we just looped through them directly.
+//            val millisList = ArrayList<String>()
+//            for (millisStr in data.keySet()) {
+//                if (data[millisStr] != null) {
+//                    millisList.add(millisStr)
+//                }
+//            }
+//            Collections.sort(millisList)
+//            for (millisStr in millisList) {
+//                if (data[millisStr] != null) {
+//                    val millis = millisStr.toLong()
+//                    if (millis > lastMessagesMillis) {
+//                        lastMessagesMillis = millis
+//                        eventHandler.onMessage(data[millisStr] as JSONObject)
+//                    }
+//                }
+//            }
+//            Helpers.tryWriteToFile(messagesPath, data.toString())
+//        }
     }
 
     /*Regularly checks the file for market data and triggers
@@ -476,107 +481,6 @@ class Client(
         }
     }
 
-    /*Regularly checks the file for bar data and triggers
-    the eventHandler.onBarData() function.
-    */
-    private fun checkBarData() {
-        while (true) {
-            Helpers.sleep(sleepDelay)
-            if (!actionsService.isRunning())
-                continue
-
-            val text = Helpers.tryReadFile(
-                pathMap["pathBarData"] ?: throw NoSuchElementException("Key 'pathBarData' not found")
-            )
-
-            if (text.isEmpty() || text == lastBarDataStr) continue
-            lastBarDataStr = text
-            var data: JSONObject
-            data = try {
-                JSONObject(text)
-            } catch (e: Exception) {
-                continue
-            }
-            barData = data
-
-            for (st in barData.keySet()) {
-                if (!lastBarData.has(st) || barData[st] != lastBarData[st]) {
-                    val stSplit = st.split("_".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                    if (stSplit.size != 2) continue
-                    val jo = barData[st] as JSONObject
-                    eventHandler.onBarData(
-                        this,
-                        stSplit[0],
-                        stSplit[1],
-                        jo["time"] as String,
-                        jo["open"] as BigDecimal,
-                        jo["high"] as BigDecimal,
-                        jo["low"] as BigDecimal,
-                        jo["close"] as BigDecimal,
-                        jo["tick_volume"] as Int
-                    )
-                }
-            }
-
-            lastBarData = data
-        }
-    }
-
-    /*Regularly checks the file for historic data and triggers
-    the eventHandler.onHistoricData() function.
-    */
-    private fun checkHistoricData() {
-        while (true) {
-            Helpers.sleep(sleepDelay)
-            if (!actionsService.isRunning()) {
-                continue
-            }
-            val historicDataPath =
-                pathMap["pathHistoricData"] ?: throw NoSuchElementException("Key 'pathHistoricData' not found")
-            val text = Helpers.tryReadFile(historicDataPath)
-            if (!text.isEmpty() && text != lastHistoricDataStr!!) {
-                lastHistoricDataStr = text
-                var data: JSONObject?
-                data = try {
-                    JSONObject(text)
-                } catch (e: Exception) {
-                    null
-                }
-                if (data != null) {
-                    for (st in data.keySet()) {
-                        historicData.put(st, data[st])
-                    }
-                    Helpers.tryDeleteFile(historicDataPath)
-
-                    for (st in data.keySet()) {
-                        val stSplit = st.split("_".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                        if (stSplit.size != 2) continue
-                        eventHandler.onHistoricData(this, stSplit[0], stSplit[1], data[st] as JSONObject)
-                    }
-
-                }
-            }
-
-            // also check historic trades in the same thread.
-            val historicTradesText = Helpers.tryReadFile(
-                pathMap["pathHistoricTrades"] ?: throw NoSuchElementException("Key 'pathHistoricTrades' not found")
-            )
-
-            if (!historicTradesText.isEmpty() && historicTradesText != lastHistoricTradesStr) {
-                lastHistoricTradesStr = historicTradesText
-                var data: JSONObject?
-                data = try {
-                    JSONObject(historicTradesText)
-                } catch (e: Exception) {
-                    null
-                }
-                if (data != null) {
-                    historicTrades = data
-                    eventHandler.onHistoricTrades(this)
-                }
-            }
-        }
-    }
 
     /*Loads stored orders from file (in case of a restart).
      */
@@ -602,29 +506,6 @@ class Client(
 
     }
 
-    /*Loads stored messages from file (in case of a restart).
-     */
-    private fun loadMessages() {
-        val text = Helpers.tryReadFile(
-            pathMap["pathMessagesStored"] ?: throw NoSuchElementException("Key 'pathMessagesStored' not found")
-        )
-        if (text.isEmpty()) return
-        val data: JSONObject
-        data = try {
-            JSONObject(text)
-        } catch (e: Exception) {
-            return
-        }
-        lastMessagesStr = text
-
-        // here we don't have to sort because we just need the latest millis value.
-        for (millisStr in data.keySet()) {
-            if (data.has(millisStr)) {
-                val millis = millisStr.toLong()
-                if (millis > lastMessagesMillis) lastMessagesMillis = millis
-            }
-        }
-    }
 
     /*Sends a SUBSCRIBE_SYMBOLS command to subscribe to market (tick) data.
 
@@ -642,67 +523,8 @@ class Client(
         sendCommand("SUBSCRIBE_SYMBOLS", java.lang.String.join(",", *symbols))
     }
 
-    /*Sends a SUBSCRIBE_SYMBOLS_BAR_DATA command to subscribe to bar data.
 
-    Args:
-        symbols (String[][]): List of lists containing symbol/time frame
-        combinations to subscribe to. For example:
-        String[][] symbols = {{"EURUSD", "M1"}, {"USDJPY", "H1"}};
 
-    Returns:
-        null
-
-        The data will be stored in barData.
-        On receiving the data the eventHandler.onBarData()
-        function will be triggered.
-    */
-    fun subscribeSymbolsBarData(symbols: Array<Array<String?>>) {
-        val content = StringBuilder()
-        for (i in symbols.indices) {
-            if (i != 0) content.append(",")
-            content.append(symbols[i][0])
-                .append(",")
-                .append(symbols[i][1])
-        }
-        sendCommand("SUBSCRIBE_SYMBOLS_BAR_DATA", content.toString())
-    }
-
-    /*Sends a GET_HISTORIC_DATA command to request historic data.
-
-    Args:
-        symbol (String): Symbol to get historic data.
-        timeFrame (String): Time frame for the requested data.
-        start (long): Start timestamp (seconds since epoch) of the requested data.
-        end (long): End timestamp of the requested data.
-
-    Returns:
-        null
-
-        The data will be stored in historicData.
-        On receiving the data the eventHandler.onHistoricData()
-        function will be triggered.
-    */
-    fun getHistoricData(symbol: String, timeFrame: String, start: Long, end: Long) {
-        val content = "$symbol,$timeFrame,$start,$end"
-        sendCommand("GET_HISTORIC_DATA", content)
-    }
-
-    /*Sends a GET_HISTORIC_TRADES command to request historic trades.
-
-    Kwargs:
-        lookbackDays (int): Days to look back into the trade history.
-                            The history must also be visible in MT4.
-
-    Returns:
-        None
-
-        The data will be stored in historicTrades.
-        On receiving the data the eventHandler.onHistoricTrades()
-        function will be triggered.
-    */
-    fun getHistoricTrades(lookbackDays: Int) {
-        sendCommand("GET_HISTORIC_TRADES", lookbackDays.toString())
-    }
 
     /*Sends an OPEN_ORDER command to open an order.
 

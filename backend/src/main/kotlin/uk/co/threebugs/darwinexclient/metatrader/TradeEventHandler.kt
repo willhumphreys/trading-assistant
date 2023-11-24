@@ -1,19 +1,14 @@
 package uk.co.threebugs.darwinexclient.metatrader
 
-import org.json.JSONObject
-import org.springframework.stereotype.Component
-import uk.co.threebugs.darwinexclient.SlackClient
-import uk.co.threebugs.darwinexclient.Status
-import uk.co.threebugs.darwinexclient.accountsetupgroups.AccountSetupGroupsDto
-import uk.co.threebugs.darwinexclient.accountsetupgroups.AccountSetupGroupsMapper
-import uk.co.threebugs.darwinexclient.trade.TradeService
-import uk.co.threebugs.darwinexclient.utils.logger
-import uk.co.threebugs.darwinexclient.websocket.WebSocketController
-import uk.co.threebugs.darwinexclient.websocket.WebSocketMessage
-import java.math.BigDecimal
-import java.time.Clock
-import java.time.ZonedDateTime
-import java.util.concurrent.atomic.AtomicBoolean
+import org.json.*
+import org.springframework.stereotype.*
+import uk.co.threebugs.darwinexclient.*
+import uk.co.threebugs.darwinexclient.accountsetupgroups.*
+import uk.co.threebugs.darwinexclient.trade.*
+import uk.co.threebugs.darwinexclient.utils.*
+import uk.co.threebugs.darwinexclient.websocket.*
+import java.math.*
+import java.time.*
 
 /*Custom event handler implementing the EventHandler interface.
 */
@@ -27,7 +22,6 @@ class TradeEventHandler(
     private val clock: Clock
 
 ) {
-    private val executed = AtomicBoolean(false)
 
     //    public void start(Client dwx, String[] symbols) {
     //
@@ -71,24 +65,9 @@ class TradeEventHandler(
         tradeService.closeTradesAtTime(dwx, symbol, accountSetupGroups)
     }
 
-    @Synchronized
-    fun onBarData(
-        dwx: Client,
-        symbol: String,
-        timeFrame: String,
-        time: String,
-        open: BigDecimal,
-        high: BigDecimal,
-        low: BigDecimal,
-        close: BigDecimal,
-        tickVolume: Int
-    ) {
-
-        //logger.info("onBarData: " + symbol + ", " + timeFrame + ", " + time + ", " + open + ", " + high + ", " + low + ", " + close + ", " + tickVolume);
-    }
 
     @Synchronized
-    fun onMessage(dwx: Client, message: JSONObject) {
+    fun onMessage(message: JSONObject) {
         if (message["type"]
             == "ERROR"
         ) logger.info(message["type"].toString() + " | " + message["error_type"] + " | " + message["description"]) else if (message["type"]
@@ -100,17 +79,6 @@ class TradeEventHandler(
 
     }
 
-    @Synchronized
-    fun onHistoricTrades(dwx: Client) {
-        logger.info("onHistoricTrades: " + dwx.historicTrades)
-    }
-
-    @Synchronized
-    fun onHistoricData(dwx: Client, symbol: String, timeFrame: String, data: JSONObject) {
-
-        // you can also access historic data via: dwx.historicData
-        logger.info("onHistoricData: $symbol, $timeFrame, $data")
-    }
 
     fun onNewOrder(tradeInfo: TradeInfo, metaTraderId: Int) {
         webSocketController.sendMessage(
