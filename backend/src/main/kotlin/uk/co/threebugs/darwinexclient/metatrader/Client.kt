@@ -11,6 +11,7 @@ import org.springframework.stereotype.*
 import uk.co.threebugs.darwinexclient.account.*
 import uk.co.threebugs.darwinexclient.accountsetupgroups.*
 import uk.co.threebugs.darwinexclient.actions.*
+import uk.co.threebugs.darwinexclient.metatrader.marketdata.*
 import uk.co.threebugs.darwinexclient.metatrader.messages.*
 import uk.co.threebugs.darwinexclient.setup.*
 import uk.co.threebugs.darwinexclient.setupgroup.*
@@ -37,10 +38,12 @@ class Client(
     private val setupFileRepository: SetupFileRepository,
     private val accountSetupGroupsService: AccountSetupGroupsService,
     private val webSocketController: WebSocketController,
-    private val objectMapper: ObjectMapper,
     private val actionsService: ActionsService,
     private val messageRepository: MessageRepository,
-    private val messageService: MessageService
+    private val messageService: MessageService,
+    private val marketDataRepository: MarketDataRepository,
+    private val marketDataService: MarketDataService,
+    private val objectMapper: ObjectMapper
 ) {
 
     var openOrders: Orders = Orders(
@@ -68,7 +71,7 @@ class Client(
             equity = BigDecimal.ZERO
         ), orders = mapOf()
     )
-    private var lastMarketData: Map<String, CurrencyInfo> = java.util.Map.of()
+
 
     private final val accountSetupGroupsDto: AccountSetupGroupsDto
 
@@ -395,35 +398,14 @@ class Client(
             if (!actionsService.isRunning())
                 continue
 
-            val marketDataPath =
-                pathMap["pathMarketData"] ?: throw NoSuchElementException("Key 'pathMarketData' not found")
-
-            if (!Files.exists(marketDataPath)) {
-                logger.warn("Market data file does not exist: $marketDataPath")
-                continue
-            }
-
-            val data: Map<String, CurrencyInfo> = runCatching {
-                objectMapper.readValue(
-                    marketDataPath.toFile(),
-                    object : TypeReference<Map<String, CurrencyInfo>>() {})
-            }.getOrElse { throwable ->
-                logger.error("An error occurred while reading the marketData file. Returning an emptyMap: $throwable")
-                emptyMap()
-            }
-
-            if (data.isEmpty()) continue
+            val data = marketDataRepository.loadMarketData(accountSetupGroupsName)
 
             data.forEach { (symbol, newCurrencyInfo) ->
-                val lastCurrencyInfo = lastMarketData[symbol]
 
-                if (lastCurrencyInfo == null || newCurrencyInfo != lastCurrencyInfo) {
                     eventHandler.onTick(this, symbol, newCurrencyInfo.bid, newCurrencyInfo.ask, accountSetupGroupsDto)
-                }
+
             }
 
-
-            lastMarketData = data
         }
     }
 
