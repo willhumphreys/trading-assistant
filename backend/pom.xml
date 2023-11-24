@@ -17,7 +17,7 @@
     <properties>
         <java.version>17</java.version>
         <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
-        <kotlin.version>1.9.20</kotlin.version>
+        <kotlin.version>1.9.21</kotlin.version>
         <org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
         <profile.active>shorttest</profile.active>
     </properties>
