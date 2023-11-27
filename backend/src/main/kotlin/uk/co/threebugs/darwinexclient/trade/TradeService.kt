@@ -7,6 +7,7 @@ import uk.co.threebugs.darwinexclient.*
 import uk.co.threebugs.darwinexclient.accountsetupgroups.*
 import uk.co.threebugs.darwinexclient.clock.*
 import uk.co.threebugs.darwinexclient.metatrader.*
+import uk.co.threebugs.darwinexclient.metatrader.commands.*
 import uk.co.threebugs.darwinexclient.search.*
 import uk.co.threebugs.darwinexclient.setup.*
 import uk.co.threebugs.darwinexclient.utils.*
@@ -25,7 +26,7 @@ class TradeService(
     private val slackClient: SlackClient,
     private val clock: MutableClock,
     private val setupRepository: SetupRepository,
-
+    private val commandService: CommandService
     ) {
 
 
@@ -99,7 +100,6 @@ class TradeService(
 
 
     fun placeTrades(
-        dwx: Client,
         symbol: String,
         bid: BigDecimal,
         ask: BigDecimal,
@@ -115,12 +115,12 @@ class TradeService(
                         lastUpdatedDateTime = ZonedDateTime.now(clock)
                     })
                 } else if (now.isAfter(targetPlaceDateTime)) {
-                    tradeRepository.save(placeTrade(dwx, bid, ask, trade))
+                    tradeRepository.save(placeTrade(bid, ask, trade, accountSetupGroups.name!!))
                 }
             })
     }
 
-    fun placeTrade(dwx: Client, bid: BigDecimal, ask: BigDecimal, trade: Trade): Trade {
+    fun placeTrade(bid: BigDecimal, ask: BigDecimal, trade: Trade, accountSetupGroupsName: String): Trade {
         val fillPrice = if (trade.setup!!.isLong) ask else bid
         val orderType = if (trade.setup!!.isLong) "buylimit" else "selllimit"
         var tickSize = BigDecimal("0.00001")
@@ -132,7 +132,7 @@ class TradeService(
         val takeProfit = addTicks(fillPrice, trade.setup!!.limit!!, tickSize)
 
         val magic = trade.id
-        dwx.openOrder(
+        commandService.openOrder(
             Order(
                 symbol = trade.setup!!.symbol,
                 orderType = orderType,
@@ -142,8 +142,9 @@ class TradeService(
                 takeProfit = takeProfit,
                 magic = magic,
                 expiration = timeHelper.addSecondsToCurrentTime(trade.setup!!.outOfTime!!.toLong()),
-                comment = "${trade.targetPlaceDateTime} ${trade.setup!!.concatenateFields()}"
-            )
+                comment = "${trade.targetPlaceDateTime} ${trade.setup!!.concatenateFields()}",
+            ),
+            accountSetupGroupsName
         )
 
         trade.status = Status.ORDER_SENT
@@ -152,7 +153,10 @@ class TradeService(
         return trade
     }
 
-    fun closeTradesAtTime(dwx: Client, symbol: String, accountSetupGroups: AccountSetupGroups) {
+    fun closeTradesAtTime(
+        symbol: String,
+        accountSetupGroups: AccountSetupGroups
+    ) {
         tradeRepository.findByAccountSetupGroupsSymbolAndStatus(accountSetupGroups.id!!, symbol, Status.FILLED.name)
             .stream()
             .filter { trade: Trade ->
@@ -164,7 +168,7 @@ class TradeService(
 
                 closeDateTime.isBefore(currentDateTime)
             }.forEach { trade: Trade ->
-                dwx.closeOrdersByMagic(trade.id!!)
+                commandService.closeOrdersByMagic(trade.id!!, accountSetupGroups.name!!)
                 trade.status = Status.CLOSED_BY_MAGIC_SENT
                 trade.lastUpdatedDateTime = ZonedDateTime.now(clock)
                 //trade.closedDateTime = ZonedDateTime.now()

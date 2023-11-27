@@ -47,7 +47,6 @@ class TradeEventHandler(
     // use synchronized so that price updates and execution updates are not processed one after the other.
     @Synchronized
     fun onTick(
-        dwx: Client,
         symbol: String,
         bid: BigDecimal,
         ask: BigDecimal,
@@ -61,8 +60,8 @@ class TradeEventHandler(
 
         val accountSetupGroups = accountSetupGroupsMapper.toEntity(accountSetupGroupsDto)
         tradeService.createTradesToPlaceFromEnabledSetups(symbol, accountSetupGroups)
-        tradeService.placeTrades(dwx, symbol, bid, ask, accountSetupGroups)
-        tradeService.closeTradesAtTime(dwx, symbol, accountSetupGroups)
+        tradeService.placeTrades(symbol, bid, ask, accountSetupGroups)
+        tradeService.closeTradesAtTime(symbol, accountSetupGroups)
     }
 
 
