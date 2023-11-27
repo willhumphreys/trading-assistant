@@ -60,26 +60,19 @@ the eventHandler.onOrderEvent() function.
         val dwxPath =
             accountSetupGroupsService.findByName(accountSetupGroupsName)?.account!!.metatraderAdvisorPath.resolve("DWX")
 
-
-        val pathMap = mapOf(
-            "pathOrders" to dwxPath.resolve("DWX_Orders.json"),
-            "pathMessages" to dwxPath.resolve("DWX_Messages.json"),
-            "pathMarketData" to dwxPath.resolve("DWX_Market_Data.json"),
-            "pathBarData" to dwxPath.resolve("DWX_Bar_Data.json"),
-            "pathHistoricData" to dwxPath.resolve("DWX_Historic_Data.json"),
-            "pathHistoricTrades" to dwxPath.resolve("DWX_Historic_Trades.json"),
-            "pathOrdersStored" to dwxPath.resolve("DWX_Orders_Stored.json"),
-            "pathMessagesStored" to dwxPath.resolve("DWX_Messages_Stored.json"),
-
-            )
-
-
         val ordersPath =
-            pathMap["pathOrders"] ?: throw NoSuchElementException("Key 'pathOrders' not found")
-
+            dwxPath.resolve("DWX_Orders.json") ?: throw NoSuchElementException("Key 'pathOrders' not found")
 
         if (!ordersPath.toFile().exists()) {
             logger.warn("Orders file does not exist: $ordersPath")
+            return
+        }
+
+        val storedOrdersPath = dwxPath.resolve("DWX_Orders_Stored.json")
+            ?: throw NoSuchElementException("Key 'pathOrdersStored' not found")
+
+        if (!storedOrdersPath.toFile().exists()) {
+            logger.warn("Stored orders path not found")
             return
         }
 
@@ -125,7 +118,7 @@ the eventHandler.onOrderEvent() function.
             }
 
             lastOpenOrders = data
-            Helpers.tryWriteToFile(pathMap["pathOrdersStored"], objectMapper.writeValueAsString(data))
+            Helpers.tryWriteToFile(storedOrdersPath, objectMapper.writeValueAsString(data))
         } catch (e: JsonProcessingException) {
             logger.error("JsonProcessingException checking open orders", e)
 
@@ -142,25 +135,9 @@ the eventHandler.onOrderEvent() function.
     @Throws(JsonProcessingException::class)
     internal fun loadOrders(accountSetupGroupsName: String) {
 
-        val dwxPath =
-            accountSetupGroupsService.findByName(accountSetupGroupsName)?.account!!.metatraderAdvisorPath.resolve("DWX")
-
-
-        val pathMap = mapOf(
-            "pathOrders" to dwxPath.resolve("DWX_Orders.json"),
-            "pathMessages" to dwxPath.resolve("DWX_Messages.json"),
-            "pathMarketData" to dwxPath.resolve("DWX_Market_Data.json"),
-            "pathBarData" to dwxPath.resolve("DWX_Bar_Data.json"),
-            "pathHistoricData" to dwxPath.resolve("DWX_Historic_Data.json"),
-            "pathHistoricTrades" to dwxPath.resolve("DWX_Historic_Trades.json"),
-            "pathOrdersStored" to dwxPath.resolve("DWX_Orders_Stored.json"),
-            "pathMessagesStored" to dwxPath.resolve("DWX_Messages_Stored.json"),
-
-            )
-
-
         val storedOrdersPath =
-            pathMap["pathOrdersStored"] ?: throw java.util.NoSuchElementException("Key 'pathOrdersStored' not found")
+            accountSetupGroupsService.findByName(accountSetupGroupsName)?.account!!.metatraderAdvisorPath.resolve("DWX")
+                .resolve("DWX_Messages.json")
 
         if (!storedOrdersPath.toFile().exists()) {
             logger.warn("No stored orders found")

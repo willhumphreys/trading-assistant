@@ -41,10 +41,6 @@ class Client(
 ) {
 
 
-    private final val dwxPath: Path
-    private final val pathMap: Map<String, Path>
-
-
     private final val accountSetupGroupsDto: AccountSetupGroupsDto
 
     private final val accountsPath: Path = Paths.get(accounts)
@@ -77,19 +73,6 @@ class Client(
             logger.info("ERROR: MetaTraderDirPath does not exist!")
             throw RuntimeException("ERROR: MetaTraderDirPath does not exist! $metaTraderDirPath")
         }
-        dwxPath = metaTraderDirPath.resolve("DWX")
-
-        pathMap = mapOf(
-            "pathOrders" to dwxPath.resolve("DWX_Orders.json"),
-            "pathMessages" to dwxPath.resolve("DWX_Messages.json"),
-            "pathMarketData" to dwxPath.resolve("DWX_Market_Data.json"),
-            "pathBarData" to dwxPath.resolve("DWX_Bar_Data.json"),
-            "pathHistoricData" to dwxPath.resolve("DWX_Historic_Data.json"),
-            "pathHistoricTrades" to dwxPath.resolve("DWX_Historic_Trades.json"),
-            "pathOrdersStored" to dwxPath.resolve("DWX_Orders_Stored.json"),
-            "pathMessagesStored" to dwxPath.resolve("DWX_Messages_Stored.json"),
-
-            )
 
         messageRepository.loadMessages(accountSetupGroupsName)
 
@@ -182,10 +165,6 @@ class Client(
                 eventHandler.onTick(symbol, newCurrencyInfo.bid, newCurrencyInfo.ask, accountSetupGroupsDto)
 
             }
-
         }
     }
-
-
-
 }

@@ -21,24 +21,9 @@ class MarketDataRepository(
     fun loadMarketData(accountSetupGroupsName: String): Map<String, CurrencyInfo> {
 
 
-        val dwxPath =
-            accountSetupGroupsService.findByName(accountSetupGroupsName)?.account!!.metatraderAdvisorPath.resolve("DWX")
-
-        val pathMap = mapOf(
-            "pathOrders" to dwxPath.resolve("DWX_Orders.json"),
-            "pathMessages" to dwxPath.resolve("DWX_Messages.json"),
-            "pathMarketData" to dwxPath.resolve("DWX_Market_Data.json"),
-            "pathBarData" to dwxPath.resolve("DWX_Bar_Data.json"),
-            "pathHistoricData" to dwxPath.resolve("DWX_Historic_Data.json"),
-            "pathHistoricTrades" to dwxPath.resolve("DWX_Historic_Trades.json"),
-            "pathOrdersStored" to dwxPath.resolve("DWX_Orders_Stored.json"),
-            "pathMessagesStored" to dwxPath.resolve("DWX_Messages_Stored.json"),
-
-            )
-
-
         val marketDataPath =
-            pathMap["pathMarketData"] ?: throw NoSuchElementException("Key 'pathMarketData' not found")
+            accountSetupGroupsService.findByName(accountSetupGroupsName)?.account!!.metatraderAdvisorPath.resolve("DWX")
+                .resolve("DWX_Market_Data.json") ?: throw NoSuchElementException("Key 'pathMarketData' not found")
 
         if (!Files.exists(marketDataPath)) {
             logger.warn("Market data file does not exist: $marketDataPath")

@@ -27,21 +27,9 @@ class MessageRepository(
             accountSetupGroupsService.findByName(accountSetupGroupsName)?.account!!.metatraderAdvisorPath.resolve("DWX")
 
 
-        val pathMap = mapOf(
-            "pathOrders" to dwxPath.resolve("DWX_Orders.json"),
-            "pathMessages" to dwxPath.resolve("DWX_Messages.json"),
-            "pathMarketData" to dwxPath.resolve("DWX_Market_Data.json"),
-            "pathBarData" to dwxPath.resolve("DWX_Bar_Data.json"),
-            "pathHistoricData" to dwxPath.resolve("DWX_Historic_Data.json"),
-            "pathHistoricTrades" to dwxPath.resolve("DWX_Historic_Trades.json"),
-            "pathOrdersStored" to dwxPath.resolve("DWX_Orders_Stored.json"),
-            "pathMessagesStored" to dwxPath.resolve("DWX_Messages_Stored.json"),
-
-            )
-
-
         val text = Helpers.tryReadFile(
-            pathMap["pathMessagesStored"] ?: throw NoSuchElementException("Key 'pathMessagesStored' not found")
+            dwxPath.resolve("DWX_Messages_Stored.json")
+                ?: throw NoSuchElementException("Key 'pathMessagesStored' not found")
         )
         if (text.isEmpty()) return
         val data: JSONObject
@@ -66,25 +54,10 @@ class MessageRepository(
         val dwxPath =
             accountSetupGroupsService.findByName(accountSetupGroupsName)?.account!!.metatraderAdvisorPath.resolve("DWX")
 
-
-        val pathMap = mapOf(
-            "pathOrders" to dwxPath.resolve("DWX_Orders.json"),
-            "pathMessages" to dwxPath.resolve("DWX_Messages.json"),
-            "pathMarketData" to dwxPath.resolve("DWX_Market_Data.json"),
-            "pathBarData" to dwxPath.resolve("DWX_Bar_Data.json"),
-            "pathHistoricData" to dwxPath.resolve("DWX_Historic_Data.json"),
-            "pathHistoricTrades" to dwxPath.resolve("DWX_Historic_Trades.json"),
-            "pathOrdersStored" to dwxPath.resolve("DWX_Orders_Stored.json"),
-            "pathMessagesStored" to dwxPath.resolve("DWX_Messages_Stored.json"),
-
-            )
-
-
         val newMessages = mutableListOf<JSONObject>()
 
-
         val messagesPath =
-            pathMap["pathMessages"] ?: throw NoSuchElementException("Key 'pathMessages' not found")
+            dwxPath.resolve("DWX_Messages.json") ?: throw NoSuchElementException("Key 'pathMessages' not found")
         val text = Helpers.tryReadFile(messagesPath)
         if (text.isEmpty() || text == lastMessagesStr) return newMessages
         lastMessagesStr = text
