@@ -12,9 +12,7 @@ import java.math.*
 class MarketDataService(
 
     private val webSocketController: WebSocketController,
-    private val tradeService: TradeService,
-    val accountSetupGroupsMapper: AccountSetupGroupsMapper
-
+    private val tradeService: TradeService
 ) {
 
     @Synchronized
@@ -30,10 +28,9 @@ class MarketDataService(
             "/topic/ticks"
         )
 
-        val accountSetupGroups = accountSetupGroupsMapper.toEntity(accountSetupGroupsDto)
-        tradeService.createTradesToPlaceFromEnabledSetups(symbol, accountSetupGroups)
-        tradeService.placeTrades(symbol, bid, ask, accountSetupGroups)
-        tradeService.closeTrades(symbol, accountSetupGroups)
+        tradeService.createTradesToPlaceFromEnabledSetups(symbol, accountSetupGroupsDto)
+        tradeService.placeTrades(symbol, bid, ask, accountSetupGroupsDto)
+        tradeService.closeTrades(symbol, accountSetupGroupsDto)
     }
 
 }

@@ -8,7 +8,6 @@ import uk.co.threebugs.darwinexclient.utils.*
 
 @Service
 class CommandService(
-    private val accountSetupGroupsService: AccountSetupGroupsService,
     @param:Value("\${sleep-delay}") private val sleepDelay: Int,
     @param:Value("\${max-retry-command-seconds}") private val maxRetryCommandSeconds: Int,
 ) {
@@ -26,12 +25,9 @@ The method needs to be synchronized so that different threads
 do not use the same commandID or write at the same time.
 */
     @Synchronized
-    fun sendCommand(command: String, content: String, accountSetupGroupsName: String) {
+    fun sendCommand(command: String, content: String, accountSetupGroupsDto: AccountSetupGroupsDto) {
 
-        val dwxPath =
-            accountSetupGroupsService.findByName(accountSetupGroupsName)?.account!!.metatraderAdvisorPath.resolve("DWX")
-
-
+        val dwxPath = accountSetupGroupsDto.account.metatraderAdvisorPath.resolve("DWX")
 
         commandID = (commandID + 1) % 100000
         val text = "<:$commandID|$command|$content:>"
@@ -72,7 +68,7 @@ do not use the same commandID or write at the same time.
         On receiving the data the eventHandler.onTick()
         function will be triggered.
     */
-    final fun subscribeSymbols(symbols: Array<String>, accountSetupGroupsName: String) {
+    final fun subscribeSymbols(symbols: Array<String>, accountSetupGroupsName: AccountSetupGroupsDto) {
         sendCommand("SUBSCRIBE_SYMBOLS", java.lang.String.join(",", *symbols), accountSetupGroupsName)
     }
 
@@ -95,7 +91,7 @@ do not use the same commandID or write at the same time.
         expriation (long): Expiration time given as timestamp in seconds.
             Can be zero if the order should not have an expiration time.
     */
-    fun openOrder(order: Order, accountSetupGroupsName: String) {
+    fun openOrder(order: Order, accountSetupGroupsName: AccountSetupGroupsDto) {
         logger.info("openOrder: " + order.symbol + ", " + order.orderType + ", " + order.lots + ", " + order.price + ", " + order.stopLoss + ", " + order.takeProfit + ", " + order.magic + ", " + order.comment + ", " + order.expiration)
         val content =
             order.symbol + "," + order.orderType + "," + order.lots + "," + order.price + "," + order.stopLoss + "," + order.takeProfit + "," + order.magic + "," + order.comment + "," + order.expiration
@@ -122,17 +118,17 @@ do not use the same commandID or write at the same time.
         stopLoss: Double,
         takeProfit: Double,
         expiration: Long,
-        accountSetupGroupsName: String
+        accountSetupGroupsDto: AccountSetupGroupsDto
     ) {
         val content = "$ticket,$lots,$price,$stopLoss,$takeProfit,$expiration"
-        sendCommand("MODIFY_ORDER", content, accountSetupGroupsName)
+        sendCommand("MODIFY_ORDER", content, accountSetupGroupsDto)
     }
 
     /*Sends a CLOSE_ORDER command with lots=0 to close an order completely.
      */
-    fun closeOrder(ticket: Int, accountSetupGroupsName: String) {
+    fun closeOrder(ticket: Int, accountSetupGroupsDto: AccountSetupGroupsDto) {
         val content = "$ticket,0"
-        sendCommand("CLOSE_ORDER", content, accountSetupGroupsName)
+        sendCommand("CLOSE_ORDER", content, accountSetupGroupsDto)
     }
 
     /*Sends a CLOSE_ORDER command to close an order.
@@ -142,15 +138,15 @@ do not use the same commandID or write at the same time.
         lots (double): Volume in lots. If lots=0 it will try to
             close the complete position.
     */
-    fun closeOrder(ticket: Int, lots: Double, accountSetupGroupsName: String) {
+    fun closeOrder(ticket: Int, lots: Double, accountSetupGroupsDto: AccountSetupGroupsDto) {
         val content = "$ticket,$lots"
-        sendCommand("CLOSE_ORDER", content, accountSetupGroupsName)
+        sendCommand("CLOSE_ORDER", content, accountSetupGroupsDto)
     }
 
     /*Sends a CLOSE_ALL_ORDERS command to close all orders.
      */
-    fun closeAllOrders(accountSetupGroupsName: String) {
-        sendCommand("CLOSE_ALL_ORDERS", "", accountSetupGroupsName)
+    fun closeAllOrders(accountSetupGroupsDto: AccountSetupGroupsDto) {
+        sendCommand("CLOSE_ALL_ORDERS", "", accountSetupGroupsDto)
     }
 
     /*Sends a CLOSE_ORDERS_BY_SYMBOL command to close all orders
@@ -159,8 +155,8 @@ do not use the same commandID or write at the same time.
     Args:
         symbol (str): Symbol for which all orders should be closed.
     */
-    fun closeOrdersBySymbol(symbol: String, accountSetupGroupsName: String) {
-        sendCommand("CLOSE_ORDERS_BY_SYMBOL", symbol, accountSetupGroupsName)
+    fun closeOrdersBySymbol(symbol: String, accountSetupGroupsDto: AccountSetupGroupsDto) {
+        sendCommand("CLOSE_ORDERS_BY_SYMBOL", symbol, accountSetupGroupsDto)
     }
 
     /*Sends a CLOSE_ORDERS_BY_MAGIC command to close all orders
@@ -170,17 +166,17 @@ do not use the same commandID or write at the same time.
         magic (str): Magic number for which all orders should
             be closed.
     */
-    fun closeOrdersByMagic(magic: Int, accountSetupGroupsName: String) {
-        sendCommand("CLOSE_ORDERS_BY_MAGIC", magic.toString(), accountSetupGroupsName)
+    fun closeOrdersByMagic(magic: Int, accountSetupGroups: AccountSetupGroupsDto) {
+        sendCommand("CLOSE_ORDERS_BY_MAGIC", magic.toString(), accountSetupGroups)
     }
 
     /*Sends a RESET_COMMAND_IDS command to reset stored command IDs.
     This should be used when restarting the java side without restarting
     the mql side.
     */
-    final fun resetCommandIDs(accountSetupGroupsName: String) {
+    final fun resetCommandIDs(accountSetupGroupsDto: AccountSetupGroupsDto) {
         commandID = 0
-        sendCommand("RESET_COMMAND_IDS", "", accountSetupGroupsName)
+        sendCommand("RESET_COMMAND_IDS", "", accountSetupGroupsDto)
 
         // sleep to make sure it is read before other commands.
         Helpers.sleep(500)

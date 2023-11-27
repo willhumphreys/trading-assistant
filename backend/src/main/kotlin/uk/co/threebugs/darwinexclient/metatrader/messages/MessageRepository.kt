@@ -7,9 +7,7 @@ import uk.co.threebugs.darwinexclient.metatrader.*
 import java.util.*
 
 @Repository
-class MessageRepository(
-    private val accountSetupGroupsService: AccountSetupGroupsService,
-) {
+class MessageRepository {
 
     private var lastMessagesStr: String? = ""
     private var lastMessagesMillis: Long = 0
@@ -21,11 +19,9 @@ class MessageRepository(
 
     /*Loads stored messages from file (in case of a restart).
  */
-    fun loadMessages(accountSetupGroupsName: String) {
+    fun loadMessages(accountSetupGroups: AccountSetupGroupsDto) {
 
-        val dwxPath =
-            accountSetupGroupsService.findByName(accountSetupGroupsName)?.account!!.metatraderAdvisorPath.resolve("DWX")
-
+        val dwxPath = accountSetupGroups.account.metatraderAdvisorPath.resolve("DWX")
 
         val text = Helpers.tryReadFile(
             dwxPath.resolve("DWX_Messages_Stored.json")
@@ -49,10 +45,9 @@ class MessageRepository(
         }
     }
 
-    fun getNewMessages(accountSetupGroupsName: String): MutableList<JSONObject> {
+    fun getNewMessages(accountSetupGroupsDto: AccountSetupGroupsDto): MutableList<JSONObject> {
 
-        val dwxPath =
-            accountSetupGroupsService.findByName(accountSetupGroupsName)?.account!!.metatraderAdvisorPath.resolve("DWX")
+        val dwxPath = accountSetupGroupsDto.account.metatraderAdvisorPath.resolve("DWX")
 
         val newMessages = mutableListOf<JSONObject>()
 

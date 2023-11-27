@@ -4,6 +4,7 @@ import org.json.*
 import org.springframework.beans.factory.annotation.*
 import org.springframework.stereotype.*
 import uk.co.threebugs.darwinexclient.*
+import uk.co.threebugs.darwinexclient.accountsetupgroups.*
 import uk.co.threebugs.darwinexclient.actions.*
 import uk.co.threebugs.darwinexclient.metatrader.*
 import uk.co.threebugs.darwinexclient.utils.*
@@ -18,14 +19,14 @@ class MessageService(
     @param:Value("\${sleep-delay}") private val sleepDelay: Int
 ) {
 
-    fun checkMessages(accountSetupGroupsName: String) {
+    fun checkMessages(accountSetupGroupsDto: AccountSetupGroupsDto) {
 
         if (actionsService.isRunning()) {
 
             while (true) {
                 Helpers.sleep(sleepDelay)
 
-                val newMessages = messageRepository.getNewMessages(accountSetupGroupsName)
+                val newMessages = messageRepository.getNewMessages(accountSetupGroupsDto)
                 newMessages.forEach {
                     onMessage(it)
                 }

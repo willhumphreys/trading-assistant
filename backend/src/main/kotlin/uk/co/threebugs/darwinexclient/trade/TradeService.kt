@@ -66,9 +66,9 @@ class TradeService(
         return tradeRepository.findAll(example, sort).map { tradeSearchMapper.toDto(it) }
     }
 
-    fun createTradesToPlaceFromEnabledSetups(symbol: String, accountSetupGroups: AccountSetupGroups) {
+    fun createTradesToPlaceFromEnabledSetups(symbol: String, accountSetupGroups: AccountSetupGroupsDto) {
 
-        val setups = setupRepository.findEnabledSetups(symbol, accountSetupGroups.setupGroups!!)
+        val setups = setupRepository.findEnabledSetups(symbol, accountSetupGroups.setupGroups.name)
         setups.forEach { setup ->
             val targetPlaceTime: ZonedDateTime =
                 SetupFileRepository.getNextEventTime(setup.dayOfWeek!!, setup.hourOfDay!!, clock)
@@ -82,7 +82,7 @@ class TradeService(
             if (existingTrade == null) {
                 val now = ZonedDateTime.now(clock)
 
-                val trade = tradeMapper.toEntity(setup, targetPlaceTime, accountSetupGroups.account!!, clock)
+                val trade = tradeMapper.toEntity(setup, targetPlaceTime, accountSetupGroups.account, clock)
                 if (now.isAfter(targetPlaceTime.plusHours(setup.outOfTime!!.toLong()))) {
                     logger.info("Skipping trade as the trade windows has been closed: ${formatter.format(targetPlaceTime)}")
 
@@ -103,7 +103,7 @@ class TradeService(
         symbol: String,
         bid: BigDecimal,
         ask: BigDecimal,
-        accountSetupGroups: AccountSetupGroups
+        accountSetupGroups: AccountSetupGroupsDto
     ) {
         tradeRepository.findByAccountSetupGroupsSymbolAndStatus(accountSetupGroups.id!!, symbol, Status.PENDING.name)
             .forEach(Consumer { trade: Trade ->
@@ -115,12 +115,17 @@ class TradeService(
                         lastUpdatedDateTime = ZonedDateTime.now(clock)
                     })
                 } else if (now.isAfter(targetPlaceDateTime)) {
-                    tradeRepository.save(placeTrade(bid, ask, trade, accountSetupGroups.name!!))
+                    tradeRepository.save(placeTrade(bid, ask, trade, accountSetupGroups))
                 }
             })
     }
 
-    fun placeTrade(bid: BigDecimal, ask: BigDecimal, trade: Trade, accountSetupGroupsName: String): Trade {
+    fun placeTrade(
+        bid: BigDecimal,
+        ask: BigDecimal,
+        trade: Trade,
+        accountSetupGroupsDto: AccountSetupGroupsDto
+    ): Trade {
         val fillPrice = if (trade.setup!!.isLong) ask else bid
         val orderType = if (trade.setup!!.isLong) "buylimit" else "selllimit"
         var tickSize = BigDecimal("0.00001")
@@ -144,7 +149,7 @@ class TradeService(
                 expiration = timeHelper.addSecondsToCurrentTime(trade.setup!!.outOfTime!!.toLong()),
                 comment = "${trade.targetPlaceDateTime} ${trade.setup!!.concatenateFields()}",
             ),
-            accountSetupGroupsName
+            accountSetupGroupsDto
         )
 
         trade.status = Status.ORDER_SENT
@@ -155,7 +160,7 @@ class TradeService(
 
     fun closeTrades(
         symbol: String,
-        accountSetupGroups: AccountSetupGroups
+        accountSetupGroups: AccountSetupGroupsDto
     ) {
         tradeRepository.findByAccountSetupGroupsSymbolAndStatus(accountSetupGroups.id!!, symbol, Status.FILLED.name)
             .stream()
@@ -165,7 +170,7 @@ class TradeService(
                 val currentDateTime = ZonedDateTime.now(clock)
                 closeDateTime.isBefore(currentDateTime)
             }.forEach { trade: Trade ->
-                commandService.closeOrdersByMagic(trade.id!!, accountSetupGroups.name!!)
+                commandService.closeOrdersByMagic(trade.id!!, accountSetupGroups)
                 trade.status = Status.CLOSED_BY_MAGIC_SENT
                 trade.lastUpdatedDateTime = ZonedDateTime.now(clock)
                 //trade.closedDateTime = ZonedDateTime.now()

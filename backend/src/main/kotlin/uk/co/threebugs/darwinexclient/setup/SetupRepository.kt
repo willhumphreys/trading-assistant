@@ -5,14 +5,13 @@ import org.springframework.data.jpa.repository.*
 import org.springframework.data.repository.query.*
 import org.springframework.stereotype.*
 import uk.co.threebugs.darwinexclient.setupgroup.*
-import uk.co.threebugs.darwinexclient.setupgroups.*
 
 @Repository
 interface SetupRepository : JpaRepository<Setup, Int>, QueryByExampleExecutor<Setup> {
     fun findBySymbolAndRankAndSetupGroup(symbol: String, rank: Int, setupGroup: SetupGroup): Setup?
 
-    @Query("SELECT s FROM Setup s WHERE s.setupGroup.setupGroups = :setupGroups and s.setupGroup.enabled = true and s.symbol = :symbol")
-    fun findEnabledSetups(symbol: String, setupGroups: SetupGroups): List<Setup>
+    @Query("SELECT s FROM Setup s WHERE s.setupGroup.setupGroups.name = :setupGroupsName and s.setupGroup.enabled = true and s.symbol = :symbol")
+    fun findEnabledSetups(symbol: String, setupGroupsName: String): List<Setup>
 
     @Transactional
     @Modifying

@@ -1,12 +1,11 @@
 package uk.co.threebugs.darwinexclient.trade
 
 import org.mapstruct.*
-import uk.co.threebugs.darwinexclient.account.Account
-import uk.co.threebugs.darwinexclient.search.TradeSearchDto
-import uk.co.threebugs.darwinexclient.setup.Setup
-import java.nio.file.Path
-import java.time.Clock
-import java.time.ZonedDateTime
+import uk.co.threebugs.darwinexclient.account.*
+import uk.co.threebugs.darwinexclient.search.*
+import uk.co.threebugs.darwinexclient.setup.*
+import java.nio.file.*
+import java.time.*
 
 
 @Mapper(componentModel = "spring")
@@ -49,7 +48,7 @@ abstract class TradeMapper {
     abstract fun toEntity(
         setup: Setup,
         targetPlaceDateTime: ZonedDateTime,
-        account: Account,
+        account: AccountDto,
         @Context clock: Clock
     ): Trade
 

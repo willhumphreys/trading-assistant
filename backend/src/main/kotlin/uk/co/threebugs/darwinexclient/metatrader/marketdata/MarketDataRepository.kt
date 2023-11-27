@@ -10,19 +10,15 @@ import java.nio.file.*
 
 @Repository
 class MarketDataRepository(
-    private val objectMapper: ObjectMapper,
-    private val accountSetupGroupsService: AccountSetupGroupsService
-
+    private val objectMapper: ObjectMapper
 ) {
 
     private var lastMarketData: Map<String, CurrencyInfo> = java.util.Map.of()
 
-
-    fun loadMarketData(accountSetupGroupsName: String): Map<String, CurrencyInfo> {
-
+    fun loadMarketData(accountSetupGroupsDto: AccountSetupGroupsDto): Map<String, CurrencyInfo> {
 
         val marketDataPath =
-            accountSetupGroupsService.findByName(accountSetupGroupsName)?.account!!.metatraderAdvisorPath.resolve("DWX")
+            accountSetupGroupsDto.account.metatraderAdvisorPath.resolve("DWX")
                 .resolve("DWX_Market_Data.json") ?: throw NoSuchElementException("Key 'pathMarketData' not found")
 
         if (!Files.exists(marketDataPath)) {
@@ -46,7 +42,7 @@ class MarketDataRepository(
 
         val newOrChangedEntries = getNewOrChangedEntries(lastMarketData, data)
 
-        lastMarketData = data;
+        lastMarketData = data
 
         return newOrChangedEntries
 

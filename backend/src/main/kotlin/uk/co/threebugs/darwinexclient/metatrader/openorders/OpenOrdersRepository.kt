@@ -18,14 +18,11 @@ import java.time.*
 
 @Repository
 class OpenOrdersRepository(
-    private val actionsService: ActionsService,
     private val objectMapper: ObjectMapper,
-    private val accountSetupGroupsService: AccountSetupGroupsService,
     private val webSocketController: WebSocketController,
     private val tradeService: TradeService,
     private val clock: Clock
 ) {
-
 
     var openOrders: Orders = Orders(
         accountInfo = AccountInfo(
@@ -55,10 +52,9 @@ class OpenOrdersRepository(
     /*Regularly checks the file for open orders and triggers
 the eventHandler.onOrderEvent() function.
 */
-    fun checkOpenOrders(accountSetupGroupsName: String) {
+    fun checkOpenOrders(accountSetupGroups: AccountSetupGroupsDto) {
 
-        val dwxPath =
-            accountSetupGroupsService.findByName(accountSetupGroupsName)?.account!!.metatraderAdvisorPath.resolve("DWX")
+        val dwxPath = accountSetupGroups.account.metatraderAdvisorPath.resolve("DWX")
 
         val ordersPath =
             dwxPath.resolve("DWX_Orders.json") ?: throw NoSuchElementException("Key 'pathOrders' not found")
@@ -133,10 +129,10 @@ the eventHandler.onOrderEvent() function.
     /*Loads stored orders from file (in case of a restart).
    */
     @Throws(JsonProcessingException::class)
-    internal fun loadOrders(accountSetupGroupsName: String) {
+    internal fun loadOrders(accountSetupGroupsDto: AccountSetupGroupsDto) {
 
         val storedOrdersPath =
-            accountSetupGroupsService.findByName(accountSetupGroupsName)?.account!!.metatraderAdvisorPath.resolve("DWX")
+            accountSetupGroupsDto.account.metatraderAdvisorPath.resolve("DWX")
                 .resolve("DWX_Messages.json")
 
         if (!storedOrdersPath.toFile().exists()) {

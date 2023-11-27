@@ -16,7 +16,7 @@ class AccountSetupGroupsService(
     private val accountSetupGroupsMapper: AccountSetupGroupsMapper,
     private val tradingStanceRepository: TradingStanceRepository
 ) {
-    fun loadAccountSetupGroups(path: Path): List<AccountSetupGroups> {
+    fun loadAccountSetupGroups(path: Path): List<AccountSetupGroupsDto> {
         return accountSetupGroupsFileRepository.load(path)
             .map { accountSetupGroupsDto: AccountSetupGroupsFileDto ->
                 val setupGroups = setupGroupsRepository.findByName(accountSetupGroupsDto.setupGroupName)
@@ -48,7 +48,9 @@ class AccountSetupGroupsService(
 
 
                 savedAccountSetupGroups
-            }
+            }.map { accountSetupGroupsMapper.toDto(it) }
+
+
     }
 
     fun updateTradingStancesFrom(fileAccountSetupGroups: AccountSetupGroupsFileDto) {
