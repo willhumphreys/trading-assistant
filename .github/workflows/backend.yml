@@ -13,7 +13,7 @@ on:
     paths:
       - backend/**
 jobs:
-  build:
+  verify:
     runs-on: ubuntu-latest
 
     steps:
