@@ -47,14 +47,13 @@ class BlackBoxTestIT : AnnotationSpec() {
         setClockToSpecificDateTime(ZonedDateTime.parse("2023-10-30T08:59:40.000Z"))
         startProcessing()
         delay(5000)
+
     }
 
     override suspend fun afterEach(testCase: TestCase, result: TestResult) {
 
         writeEmptyOrders()
-
         delay(SECONDS_5)
-
         stopProcessing()
 
         //deleteFilesBeforeTest(Path.of("test-ea-files/DWX"), "DWX_Commands_", ".txt")

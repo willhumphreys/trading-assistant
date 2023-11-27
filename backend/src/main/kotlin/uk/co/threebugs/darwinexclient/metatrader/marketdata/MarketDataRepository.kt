@@ -8,6 +8,8 @@ import uk.co.threebugs.darwinexclient.metatrader.*
 import uk.co.threebugs.darwinexclient.utils.*
 import java.nio.file.*
 
+private const val MARKET_DATA_FILE_NAME = "DWX_Market_Data.json"
+
 @Repository
 class MarketDataRepository(
     private val objectMapper: ObjectMapper
@@ -15,11 +17,11 @@ class MarketDataRepository(
 
     private var lastMarketData: Map<String, CurrencyInfo> = java.util.Map.of()
 
-    fun loadMarketData(accountSetupGroupsDto: AccountSetupGroupsDto): Map<String, CurrencyInfo> {
+    fun getMarketDataUpdates(accountSetupGroupsDto: AccountSetupGroupsDto): Map<String, CurrencyInfo> {
 
         val marketDataPath =
             accountSetupGroupsDto.account.metatraderAdvisorPath.resolve("DWX")
-                .resolve("DWX_Market_Data.json") ?: throw NoSuchElementException("Key 'pathMarketData' not found")
+                .resolve(MARKET_DATA_FILE_NAME) ?: throw NoSuchElementException("Key 'pathMarketData' not found")
 
         if (!Files.exists(marketDataPath)) {
             logger.warn("Market data file does not exist: $marketDataPath")

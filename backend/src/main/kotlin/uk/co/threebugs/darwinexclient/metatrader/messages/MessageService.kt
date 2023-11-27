@@ -46,4 +46,8 @@ class MessageService(
         webSocketController.sendMessage(WebSocketMessage(id = 0, field = "message", value = "$message"), "/topic/ticks")
 
     }
+
+    fun loadMessages(accountSetupGroups: AccountSetupGroupsDto) {
+        messageRepository.loadMessages(accountSetupGroups)
+    }
 }

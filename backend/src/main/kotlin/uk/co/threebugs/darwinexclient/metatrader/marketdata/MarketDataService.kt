@@ -12,7 +12,8 @@ import java.math.*
 class MarketDataService(
 
     private val webSocketController: WebSocketController,
-    private val tradeService: TradeService
+    private val tradeService: TradeService,
+    private val marketDataRepository: MarketDataRepository
 ) {
 
     @Synchronized
@@ -31,6 +32,16 @@ class MarketDataService(
         tradeService.createTradesToPlaceFromEnabledSetups(symbol, accountSetupGroupsDto)
         tradeService.placeTrades(symbol, bid, ask, accountSetupGroupsDto)
         tradeService.closeTrades(symbol, accountSetupGroupsDto)
+    }
+
+    fun processUpdates(accountSetupGroupsDto: AccountSetupGroupsDto) {
+        val updates = marketDataRepository.getMarketDataUpdates(accountSetupGroupsDto)
+
+        updates.forEach { (symbol, newCurrencyInfo) ->
+
+            onTick(symbol, newCurrencyInfo.bid, newCurrencyInfo.ask, accountSetupGroupsDto)
+
+        }
     }
 
 }

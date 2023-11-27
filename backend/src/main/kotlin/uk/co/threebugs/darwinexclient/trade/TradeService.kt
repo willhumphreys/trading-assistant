@@ -10,6 +10,7 @@ import uk.co.threebugs.darwinexclient.metatrader.*
 import uk.co.threebugs.darwinexclient.metatrader.commands.*
 import uk.co.threebugs.darwinexclient.search.*
 import uk.co.threebugs.darwinexclient.setup.*
+import uk.co.threebugs.darwinexclient.tradingstance.*
 import uk.co.threebugs.darwinexclient.utils.*
 import java.math.*
 import java.time.*
@@ -26,7 +27,8 @@ class TradeService(
     private val slackClient: SlackClient,
     private val clock: MutableClock,
     private val setupRepository: SetupRepository,
-    private val commandService: CommandService
+    private val commandService: CommandService,
+    private val tradingStanceRepository: TradingStanceRepository
     ) {
 
 
@@ -69,7 +71,14 @@ class TradeService(
     fun createTradesToPlaceFromEnabledSetups(symbol: String, accountSetupGroups: AccountSetupGroupsDto) {
 
         val setups = setupRepository.findEnabledSetups(symbol, accountSetupGroups.setupGroups.name)
-        setups.forEach { setup ->
+
+        val tradingStance =
+            tradingStanceRepository.findBySymbolAndAccountSetupGroups_Name(symbol, accountSetupGroups.name)
+                ?: throw IllegalArgumentException("Trading stance not found for symbol: $symbol and accountSetupGroups: ${accountSetupGroups.name}")
+
+        setups.filter { s -> s.direction == tradingStance.direction }
+
+            .forEach { setup ->
             val targetPlaceTime: ZonedDateTime =
                 SetupFileRepository.getNextEventTime(setup.dayOfWeek!!, setup.hourOfDay!!, clock)
             //logger.info("clockNow: ${ZonedDateTime.now()} targetPlaceTime: ${formatter.format(targetPlaceTime)}" + " setup: ${setup.id}" + " accountSetupGroups: ${accountSetupGroups.id}")

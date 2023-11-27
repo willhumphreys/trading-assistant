@@ -47,6 +47,6 @@ class Setup(
             .replace(",", "-")
     }
 
-    val direction: String
-        get() = if (stop!! < limit!!) "LONG" else "SHORT"
+    val direction: Direction
+        get() = if (stop!! < limit!!) Direction.LONG else Direction.SHORT
 }

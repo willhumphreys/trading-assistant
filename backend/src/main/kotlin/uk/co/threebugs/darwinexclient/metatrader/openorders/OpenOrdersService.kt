@@ -19,8 +19,8 @@ import java.time.*
 private const val STORED_ORDERS_FILE_NAME = "DWX_Orders_Stored.json"
 private const val ORDERS_FILE_NAME = "DWX_Orders.json"
 
-@Repository
-class OpenOrdersRepository(
+@Service
+class OpenOrdersService(
     private val objectMapper: ObjectMapper,
     private val webSocketController: WebSocketController,
     private val tradeService: TradeService,

@@ -14,16 +14,14 @@ import kotlin.concurrent.*
 
 @Component
 class Client(
-    private val eventHandler: MarketDataService,
+    private val marketDataService: MarketDataService,
     @param:Value("\${account-setup-groups-name}") private val accountSetupGroupsName: String,
     @param:Value("\${sleep-delay}") private val sleepDelay: Int,
 
     private val actionsService: ActionsService,
-    messageRepository: MessageRepository,
     messageService: MessageService,
-    private val marketDataRepository: MarketDataRepository,
     commandService: CommandService,
-    private val openOrdersRepository: OpenOrdersRepository,
+    private val openOrdersService: OpenOrdersService,
     private val fileDataService: FileDataService,
 ) {
 
@@ -34,7 +32,7 @@ class Client(
 
         val accountSetupGroups = accountSetupGroupsList.first { it.name == accountSetupGroupsName }
 
-        messageRepository.loadMessages(accountSetupGroups)
+        messageService.loadMessages(accountSetupGroups)
 
         thread(name = "openOrdersThread") {
 
@@ -43,7 +41,7 @@ class Client(
                 if (!actionsService.isRunning())
                     continue
 
-                openOrdersRepository.checkOpenOrders(accountSetupGroups)
+                openOrdersService.checkOpenOrders(accountSetupGroups)
             }
 
         }
@@ -51,7 +49,7 @@ class Client(
         thread(name = "checkMarketData") { checkMarketData(accountSetupGroups) }
 
         commandService.resetCommandIDs(accountSetupGroups)
-        openOrdersRepository.loadOrders(accountSetupGroups)
+        openOrdersService.loadOrders(accountSetupGroups)
 
         // subscribe to tick data:
         commandService.subscribeSymbols(symbols, accountSetupGroups)
@@ -69,13 +67,7 @@ class Client(
             if (!actionsService.isRunning())
                 continue
 
-            val data = marketDataRepository.loadMarketData(accountSetupGroupsDto)
-
-            data.forEach { (symbol, newCurrencyInfo) ->
-
-                eventHandler.onTick(symbol, newCurrencyInfo.bid, newCurrencyInfo.ask, accountSetupGroupsDto)
-
-            }
+            marketDataService.processUpdates(accountSetupGroupsDto)
         }
     }
 }

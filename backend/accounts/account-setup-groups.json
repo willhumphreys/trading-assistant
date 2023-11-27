@@ -76,31 +76,31 @@
     "trading-stances": [
       {
         "symbol": "EURUSD",
-        "direction": "LONG"
+        "direction": "SHORT"
       },
       {
         "symbol": "GBPUSD",
-        "direction": "LONG"
+        "direction": "SHORT"
       },
       {
         "symbol": "USDCAD",
-        "direction": "LONG"
+        "direction": "SHORT"
       },
       {
         "symbol": "NZDUSD",
-        "direction": "LONG"
+        "direction": "SHORT"
       },
       {
         "symbol": "AUDUSD",
-        "direction": "LONG"
+        "direction": "SHORT"
       },
       {
         "symbol": "USDJPY",
-        "direction": "LONG"
+        "direction": "SHORT"
       },
       {
         "symbol": "USDCHF",
-        "direction": "LONG"
+        "direction": "SHORT"
       }
     ]
   },
@@ -111,31 +111,31 @@
     "trading-stances": [
       {
         "symbol": "EURUSD",
-        "direction": "LONG"
+        "direction": "SHORT"
       },
       {
         "symbol": "GBPUSD",
-        "direction": "LONG"
+        "direction": "SHORT"
       },
       {
         "symbol": "USDCAD",
-        "direction": "LONG"
+        "direction": "SHORT"
       },
       {
         "symbol": "NZDUSD",
-        "direction": "LONG"
+        "direction": "SHORT"
       },
       {
         "symbol": "AUDUSD",
-        "direction": "LONG"
+        "direction": "SHORT"
       },
       {
         "symbol": "USDJPY",
-        "direction": "LONG"
+        "direction": "SHORT"
       },
       {
         "symbol": "USDCHF",
-        "direction": "LONG"
+        "direction": "SHORT"
       }
     ]
   },
@@ -143,111 +143,6 @@
     "name": "linux-dev",
     "setup-group-name": "long",
     "metatrader-account": "long-dev-linux",
-    "trading-stances": [
-      {
-        "symbol": "EURUSD",
-        "direction": "LONG"
-      },
-      {
-        "symbol": "GBPUSD",
-        "direction": "LONG"
-      },
-      {
-        "symbol": "USDCAD",
-        "direction": "LONG"
-      },
-      {
-        "symbol": "NZDUSD",
-        "direction": "LONG"
-      },
-      {
-        "symbol": "AUDUSD",
-        "direction": "LONG"
-      },
-      {
-        "symbol": "USDJPY",
-        "direction": "LONG"
-      },
-      {
-        "symbol": "USDCHF",
-        "direction": "LONG"
-      }
-    ]
-  },
-  {
-    "name": "test-long",
-    "setup-group-name": "long-test",
-    "metatrader-account": "test",
-    "trading-stances": [
-      {
-        "symbol": "EURUSD",
-        "direction": "LONG"
-      },
-      {
-        "symbol": "GBPUSD",
-        "direction": "LONG"
-      },
-      {
-        "symbol": "USDCAD",
-        "direction": "LONG"
-      },
-      {
-        "symbol": "NZDUSD",
-        "direction": "LONG"
-      },
-      {
-        "symbol": "AUDUSD",
-        "direction": "LONG"
-      },
-      {
-        "symbol": "USDJPY",
-        "direction": "LONG"
-      },
-      {
-        "symbol": "USDCHF",
-        "direction": "LONG"
-      }
-    ]
-  },
-  {
-    "name": "test-short",
-    "setup-group-name": "short-test",
-    "metatrader-account": "test",
-    "trading-stances": [
-      {
-        "symbol": "EURUSD",
-        "direction": "LONG"
-      },
-      {
-        "symbol": "GBPUSD",
-        "direction": "LONG"
-      },
-      {
-        "symbol": "USDCAD",
-        "direction": "LONG"
-      },
-      {
-        "symbol": "NZDUSD",
-        "direction": "LONG"
-      },
-      {
-        "symbol": "AUDUSD",
-        "direction": "LONG"
-      },
-      {
-        "symbol": "USDJPY",
-        "direction": "LONG"
-      },
-      {
-        "symbol": "USDCHF",
-        "direction": "LONG"
-      }
-    ]
-  },
-  {
-    "name": "test-both",
-    "setup-group-name": "both-test",
-    "metatrader-account": "test",
     "trading-stances": [
       {
         "symbol": "EURUSD",
