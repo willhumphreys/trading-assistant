@@ -1,14 +1,10 @@
 package uk.co.threebugs.darwinexclient.metatrader
 
-import org.json.*
 import org.springframework.stereotype.*
-import uk.co.threebugs.darwinexclient.*
 import uk.co.threebugs.darwinexclient.accountsetupgroups.*
 import uk.co.threebugs.darwinexclient.trade.*
-import uk.co.threebugs.darwinexclient.utils.*
 import uk.co.threebugs.darwinexclient.websocket.*
 import java.math.*
-import java.time.*
 
 /*Custom event handler implementing the EventHandler interface.
 */
@@ -17,9 +13,7 @@ class TradeEventHandler(
 
     private val webSocketController: WebSocketController,
     private val tradeService: TradeService,
-    private val slackClient: SlackClient,
-    val accountSetupGroupsMapper: AccountSetupGroupsMapper,
-    private val clock: Clock
+    val accountSetupGroupsMapper: AccountSetupGroupsMapper
 
 ) {
 
@@ -65,53 +59,8 @@ class TradeEventHandler(
     }
 
 
-    @Synchronized
-    fun onMessage(message: JSONObject) {
-        if (message["type"]
-            == "ERROR"
-        ) logger.info(message["type"].toString() + " | " + message["error_type"] + " | " + message["description"]) else if (message["type"]
-            == "INFO"
-        ) logger.info(message["type"].toString() + " | " + message["message"])
-        slackClient.sendSlackNotification("message: $message")
-
-        webSocketController.sendMessage(WebSocketMessage(id = 0, field = "message", value = "$message"), "/topic/ticks")
-
-    }
 
 
-    fun onNewOrder(tradeInfo: TradeInfo, metaTraderId: Int) {
-        webSocketController.sendMessage(
-            WebSocketMessage(
-                id = tradeInfo.magic,
-                field = "trade",
-                value = tradeInfo.toString()
-            ), "/topic/order-change"
-        )
-        tradeService.fillTrade(tradeInfo, metaTraderId)
-    }
 
-    fun onClosedOrder(tradeInfo: TradeInfo) {
-        webSocketController.sendMessage(
-            WebSocketMessage(
-                id = tradeInfo.magic,
-                field = "trade",
-                value = tradeInfo.toString()
-            ), "/topic/order-change"
-        )
-        tradeService.closeTrade(tradeInfo)
-    }
 
-    fun onTradeStateChange(currentValue: TradeInfo, previousValue: TradeInfo) {
-
-        if ((previousValue.type.equals("buylimit") && currentValue.type.equals("buy")) ||
-            (previousValue.type.equals("selllimit") && currentValue.type.equals("sell"))
-        ) {
-            tradeService.findById(currentValue.magic)?.let { trade ->
-                trade.apply {
-                    status = Status.FILLED
-                    filledDateTime = ZonedDateTime.now(clock)
-                }.also { tradeService.save(it) }
-            }
-        }
-    }
 }
