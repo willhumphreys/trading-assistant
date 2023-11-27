@@ -153,7 +153,7 @@ class TradeService(
         return trade
     }
 
-    fun closeTradesAtTime(
+    fun closeTrades(
         symbol: String,
         accountSetupGroups: AccountSetupGroups
     ) {
@@ -163,9 +163,6 @@ class TradeService(
 
                 val closeDateTime = trade.targetPlaceDateTime!!.plusHours(trade.setup!!.tradeDuration!!.toLong())
                 val currentDateTime = ZonedDateTime.now(clock)
-
-                //logger.info("closeDateTime: $closeDateTime currentDateTime: $currentDateTime")
-
                 closeDateTime.isBefore(currentDateTime)
             }.forEach { trade: Trade ->
                 commandService.closeOrdersByMagic(trade.id!!, accountSetupGroups.name!!)
@@ -240,26 +237,26 @@ class TradeService(
         return tradeRepository.findBySetupGroupsName(name).map { tradeMapper.toDto(it) }
     }
 
-    fun closeTrades(accountSetupGroups: AccountSetupGroupsDto, symbol: String): Int {
-
-        val openStatuses = setOf(Status.FILLED, Status.PENDING, Status.ORDER_SENT, Status.PLACED_IN_MT)
-
-        val tradesToClose =
-            tradeRepository.findByAccountSetupGroupsAndSymbol(accountSetupGroups.id!!, symbol)
-
-        tradesToClose.filter { t -> openStatuses.contains(t.status) }.forEach { trade ->
-            trade.apply {
-                status = Status.CLOSED_BY_STANCE
-                closedDateTime = ZonedDateTime.now(clock)
-                lastUpdatedDateTime = ZonedDateTime.now(clock)
-            }.also { tradeRepository.save(it) }
-
-            slackClient.sendSlackNotification("Order closed: ${trade.setup!!.rank} ${trade.setup!!.symbol} ${trade.setup!!.direction} ${trade.profit}")
-        }
-
-        return tradesToClose.size
-
-    }
+//    fun closeTrades(accountSetupGroups: AccountSetupGroupsDto, symbol: String): Int {
+//
+//        val openStatuses = setOf(Status.FILLED, Status.PENDING, Status.ORDER_SENT, Status.PLACED_IN_MT)
+//
+//        val tradesToClose =
+//            tradeRepository.findByAccountSetupGroupsAndSymbol(accountSetupGroups.id!!, symbol)
+//
+//        tradesToClose.filter { t -> openStatuses.contains(t.status) }.forEach { trade ->
+//            trade.apply {
+//                status = Status.CLOSED_BY_STANCE
+//                closedDateTime = ZonedDateTime.now(clock)
+//                lastUpdatedDateTime = ZonedDateTime.now(clock)
+//            }.also { tradeRepository.save(it) }
+//
+//            slackClient.sendSlackNotification("Order closed: ${trade.setup!!.rank} ${trade.setup!!.symbol} ${trade.setup!!.direction} ${trade.profit}")
+//        }
+//
+//        return tradesToClose.size
+//
+//    }
 
     companion object {
         fun addTicks(initialPrice: BigDecimal, ticksToAdd: Int, tickSize: BigDecimal): BigDecimal {

@@ -61,7 +61,7 @@ class TradeEventHandler(
         val accountSetupGroups = accountSetupGroupsMapper.toEntity(accountSetupGroupsDto)
         tradeService.createTradesToPlaceFromEnabledSetups(symbol, accountSetupGroups)
         tradeService.placeTrades(symbol, bid, ask, accountSetupGroups)
-        tradeService.closeTradesAtTime(symbol, accountSetupGroups)
+        tradeService.closeTrades(symbol, accountSetupGroups)
     }
 
 

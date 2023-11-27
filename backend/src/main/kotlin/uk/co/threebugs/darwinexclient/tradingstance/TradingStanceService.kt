@@ -11,7 +11,8 @@ class TradingStanceService(
     private val tradingStanceRepository: TradingStanceRepository,
     private val tradingStanceMapper: TradingStanceMapper,
     private val accountSetupGroupsService: AccountSetupGroupsService,
-    private val tradeService: TradeService
+    private val tradeService: TradeService,
+    private val accountSetupGroupsMapper: AccountSetupGroupsMapper
 ) {
 
     fun findAll(pageable: Pageable): Page<TradingStanceDto> {
@@ -47,7 +48,7 @@ class TradingStanceService(
 
         val savedEntity = tradingStanceRepository.save(updatedEntity)
 
-        tradeService.closeTrades(accountSetupGroups, tradingStanceDto.symbol)
+        tradeService.closeTrades(tradingStanceDto.symbol, accountSetupGroupsMapper.toEntity(accountSetupGroups))
 
         return tradingStanceMapper.toDto(savedEntity)
     }
