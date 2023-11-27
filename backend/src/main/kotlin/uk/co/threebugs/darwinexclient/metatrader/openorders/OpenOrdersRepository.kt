@@ -16,6 +16,9 @@ import java.io.*
 import java.math.*
 import java.time.*
 
+private const val STORED_ORDERS_FILE_NAME = "DWX_Orders_Stored.json"
+private const val ORDERS_FILE_NAME = "DWX_Orders.json"
+
 @Repository
 class OpenOrdersRepository(
     private val objectMapper: ObjectMapper,
@@ -57,14 +60,14 @@ the eventHandler.onOrderEvent() function.
         val dwxPath = accountSetupGroups.account.metatraderAdvisorPath.resolve("DWX")
 
         val ordersPath =
-            dwxPath.resolve("DWX_Orders.json") ?: throw NoSuchElementException("Key 'pathOrders' not found")
+            dwxPath.resolve(ORDERS_FILE_NAME) ?: throw NoSuchElementException("Key 'pathOrders' not found")
 
         if (!ordersPath.toFile().exists()) {
             logger.warn("Orders file does not exist: $ordersPath")
             return
         }
 
-        val storedOrdersPath = dwxPath.resolve("DWX_Orders_Stored.json")
+        val storedOrdersPath = dwxPath.resolve(STORED_ORDERS_FILE_NAME)
             ?: throw NoSuchElementException("Key 'pathOrdersStored' not found")
 
         if (!storedOrdersPath.toFile().exists()) {
@@ -133,7 +136,7 @@ the eventHandler.onOrderEvent() function.
 
         val storedOrdersPath =
             accountSetupGroupsDto.account.metatraderAdvisorPath.resolve("DWX")
-                .resolve("DWX_Messages.json")
+                .resolve(STORED_ORDERS_FILE_NAME)
 
         if (!storedOrdersPath.toFile().exists()) {
             logger.warn("No stored orders found")
@@ -145,7 +148,7 @@ the eventHandler.onOrderEvent() function.
             lastOpenOrders = storedOrders
             openOrders = storedOrders
         } catch (e: Exception) {
-            logger.error("Error loading stored orders", e)
+            logger.error("Error loading stored orders: " + storedOrdersPath.toFile().absolutePath, e)
             val tryReadFile = Helpers.tryReadFile(storedOrdersPath)
             logger.info("Stored orders: $tryReadFile")
         }
