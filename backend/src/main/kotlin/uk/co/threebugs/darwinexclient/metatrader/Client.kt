@@ -14,7 +14,6 @@ import uk.co.threebugs.darwinexclient.metatrader.openorders.*
 import uk.co.threebugs.darwinexclient.setup.*
 import uk.co.threebugs.darwinexclient.setupgroup.*
 import uk.co.threebugs.darwinexclient.utils.*
-import uk.co.threebugs.darwinexclient.websocket.*
 import java.io.*
 import java.nio.file.*
 import java.util.*
@@ -23,7 +22,7 @@ import kotlin.concurrent.*
 
 @Component
 class Client(
-    private val eventHandler: TradeEventHandler,
+    private val eventHandler: MarketDataService,
     private val accountService: AccountService,
     @param:Value("\${account-setup-groups-name}") private val accountSetupGroupsName: String,
     @param:Value("\${sleep-delay}") private val sleepDelay: Int,
@@ -31,14 +30,12 @@ class Client(
     private val setupGroupService: SetupGroupService,
     private val setupRepository: SetupRepository,
     private val setupFileRepository: SetupFileRepository,
-    private val accountSetupGroupsService: AccountSetupGroupsService,
-    private val webSocketController: WebSocketController,
+    accountSetupGroupsService: AccountSetupGroupsService,
     private val actionsService: ActionsService,
-    private val messageRepository: MessageRepository,
+    messageRepository: MessageRepository,
     private val messageService: MessageService,
     private val marketDataRepository: MarketDataRepository,
-    private val marketDataService: MarketDataService,
-    private val commandService: CommandService,
+    commandService: CommandService,
     private val objectMapper: ObjectMapper,
     private val openOrdersRepository: OpenOrdersRepository
 ) {

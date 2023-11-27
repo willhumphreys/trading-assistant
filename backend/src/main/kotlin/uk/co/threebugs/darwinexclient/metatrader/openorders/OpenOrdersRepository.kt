@@ -22,7 +22,6 @@ class OpenOrdersRepository(
     private val objectMapper: ObjectMapper,
     private val accountSetupGroupsService: AccountSetupGroupsService,
     private val webSocketController: WebSocketController,
-    private val slackClient: SlackClient,
     private val tradeService: TradeService,
     private val clock: Clock
 ) {
