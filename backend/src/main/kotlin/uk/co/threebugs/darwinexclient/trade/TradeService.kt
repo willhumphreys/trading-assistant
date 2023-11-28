@@ -188,6 +188,23 @@ class TradeService(
             }
     }
 
+    fun closeTradesOnStanceChange(
+        symbol: String,
+        accountSetupGroups: AccountSetupGroupsDto
+    ) {
+        tradeRepository.findByAccountSetupGroupsSymbolAndStatus(accountSetupGroups.id!!, symbol, Status.FILLED.name)
+            .stream()
+            .forEach { trade: Trade ->
+                commandService.closeOrdersByMagic(trade.id!!, accountSetupGroups)
+                trade.status = Status.CLOSED_BY_STANCE
+                trade.lastUpdatedDateTime = ZonedDateTime.now(clock)
+                //trade.closedDateTime = ZonedDateTime.now()
+                tradeRepository.save(trade)
+                slackClient.sendSlackNotification("Order closed by magic: ${trade.setup!!.rank} ${trade.setup!!.symbol} ${trade.setup!!.direction} ${trade.profit}")
+            }
+    }
+
+
     fun fillTrade(tradeInfo: TradeInfo, metatraderId: Int) {
         tradeRepository.findByIdOrNull(tradeInfo.magic)?.let { trade ->
             if (trade.status == Status.PENDING || trade.status == Status.ORDER_SENT) {

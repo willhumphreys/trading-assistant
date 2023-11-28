@@ -3,9 +3,9 @@
   "scriptsDirectory": "accounts/setups/",
   "setupGroups": [
     {
-      "path": "eurusd_bestTrades_short.csv",
+      "path": "eurusd_bestTrades_long.csv",
       "symbol": "EURUSD",
-      "direction": "SHORT",
+      "direction": "LONG",
       "enabled": true
     },
     {

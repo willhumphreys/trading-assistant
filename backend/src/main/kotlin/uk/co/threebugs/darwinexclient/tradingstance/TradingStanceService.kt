@@ -47,7 +47,7 @@ class TradingStanceService(
 
         val savedEntity = tradingStanceRepository.save(updatedEntity)
 
-        tradeService.closeTrades(tradingStanceDto.symbol, accountSetupGroups)
+        tradeService.closeTradesOnStanceChange(tradingStanceDto.symbol, accountSetupGroups)
 
         return tradingStanceMapper.toDto(savedEntity)
     }

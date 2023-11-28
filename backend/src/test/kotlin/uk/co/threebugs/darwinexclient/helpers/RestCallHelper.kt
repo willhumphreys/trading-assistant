@@ -4,8 +4,11 @@ import com.fasterxml.jackson.datatype.jsr310.*
 import com.fasterxml.jackson.module.kotlin.*
 import io.kotest.assertions.*
 import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
+import uk.co.threebugs.darwinexclient.setupgroup.*
 import uk.co.threebugs.darwinexclient.trade.*
+import uk.co.threebugs.darwinexclient.tradingstance.*
 import uk.co.threebugs.darwinexclient.utils.*
 
 class RestCallHelper {
@@ -44,7 +47,7 @@ class RestCallHelper {
             val response = client.newCall(request).execute()
 
             if (response.isSuccessful) {
-                val responseBodyText = response.body?.string() ?: "Empty Response Body"
+                val responseBodyText = response.body.string()
                 val rowsDeleted = responseBodyText.toIntOrNull() ?: "Failed to parse response body to Int"
                 logger.info("Successfully deleted $rowsDeleted trades for account: $accountName")
             } else {
@@ -63,7 +66,7 @@ class RestCallHelper {
             val response = client.newCall(request).execute()
 
             if (response.isSuccessful) {
-                val responseBodyText = response.body?.string() ?: "Empty Response Body"
+                val responseBodyText = response.body.string()
                 val rowsDeleted = responseBodyText.toIntOrNull() ?: "Failed to parse response body to Int"
                 logger.info("Successfully deleted $rowsDeleted trades for setupGroupsName: $setupGroupsName")
             } else {
@@ -83,7 +86,7 @@ class RestCallHelper {
             val response = client.newCall(request).execute()
 
             if (response.isSuccessful) {
-                val responseBodyText = response.body?.string() ?: "Empty Response Body"
+                val responseBodyText = response.body.string()
 
                 val foundTrades = mapper.readValue<List<TradeDto>>(responseBodyText)
                 logger.info("Successfully retrieved trades: $responseBodyText")
@@ -105,7 +108,7 @@ class RestCallHelper {
             val response = client.newCall(request).execute()
 
             if (response.isSuccessful) {
-                val responseBodyText = response.body?.string() ?: "Empty Response Body"
+                val responseBodyText = response.body.string()
 
                 val foundTrades = mapper.readValue<List<TradeDto>>(responseBodyText)
                 logger.info("Successfully retrieved trades: $responseBodyText")
@@ -116,6 +119,92 @@ class RestCallHelper {
             fail("Failed to retrieve trades: ${response.message}")
 
         }
+
+        fun setTradingStance(
+            symbol: String,
+            direction: Direction,
+            accountSetupGroupsName: String
+        ): List<TradingStanceDto> {
+            val requestAllStances = Request.Builder().url("$HOST/trading-stances").build()
+
+            val responseAllStances = client.newCall(requestAllStances).execute()
+
+            if (responseAllStances.isSuccessful) {
+
+                val tradingStances = mapper.readValue<RootResponse>(responseAllStances.body.string())
+
+                tradingStances.content.first { it.symbol == symbol && it.accountSetupGroups.name == accountSetupGroupsName }
+                    .let { tradingStanceDto ->
+                        val request = Request.Builder()
+                            .url("$HOST/actions/update-trading-stance/${tradingStanceDto.id}")
+                            .post(
+                                mapper.writeValueAsString(
+                                    UpdateTradingStanceDto(
+                                        symbol,
+                                        direction,
+                                        tradingStanceDto.accountSetupGroups.name
+                                    )
+                                )
+                                    .toRequestBody("application/json".toMediaTypeOrNull())
+                            )
+                            .build()
+
+                        val response = client.newCall(request).execute()
+
+                        if (response.isSuccessful) {
+                            logger.info("Successfully set trading stance for symbol: $symbol to $direction")
+                        } else {
+                            logger.info("Failed to set trading stance for symbol: $symbol to $direction")
+                            fail("Failed to set trading stance for symbol: $symbol to $direction")
+                        }
+                    }
+
+
+            } else {
+                fail("Failed to retrieve trading stances")
+            }
+
+            val responseAllStancesAfterUpdate = client.newCall(requestAllStances).execute()
+
+            if (responseAllStancesAfterUpdate.isSuccessful) {
+                val tradingStancesAfterUpdate =
+                    mapper.readValue<RootResponse>(responseAllStancesAfterUpdate.body.string())
+
+                return tradingStancesAfterUpdate.content
+            } else {
+                fail("Failed to retrieve trading stances")
+            }
+
+        }
     }
+
+    data class RootResponse(
+        val content: List<TradingStanceDto>,
+        val pageable: Pageable,
+        val totalPages: Int,
+        val totalElements: Int,
+        val last: Boolean,
+        val first: Boolean,
+        val size: Int,
+        val number: Int,
+        val sort: Sort,
+        val numberOfElements: Int,
+        val empty: Boolean
+    )
+
+    data class Pageable(
+        val pageNumber: Int,
+        val pageSize: Int,
+        val sort: Sort,
+        val offset: Int,
+        val paged: Boolean,
+        val unpaged: Boolean
+    )
+
+    data class Sort(
+        val sorted: Boolean,
+        val unsorted: Boolean,
+        val empty: Boolean
+    )
 
 }
