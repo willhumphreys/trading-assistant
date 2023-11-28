@@ -52,7 +52,6 @@ class BlackBoxTestIT : AnnotationSpec() {
         deleteMarketDataFile()
         getTradesWithSetupGroupsName(setupGroupsName).shouldBeEmpty()
         setClockToSpecificDateTime(ZonedDateTime.parse("2023-10-30T08:59:40.000Z"))
-        //Todo Set Trading Stances
         startProcessing()
         delay(5000)
 
