@@ -8,5 +8,5 @@ data class AccountSetupGroupsFileDto(
     val name: String,
     @JsonProperty("setup-group-name") val setupGroupName: String,
     @JsonProperty("metatrader-account") val metatraderAccount: String,
-    @JsonProperty("trading-stances") val tradingStances: Array<TradingStanceFileDto>
+    @JsonProperty("trading-stances") val tradingStances: List<TradingStanceFileDto>
 )
