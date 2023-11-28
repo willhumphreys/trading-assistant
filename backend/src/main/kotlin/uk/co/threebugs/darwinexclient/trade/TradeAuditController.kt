@@ -26,11 +26,14 @@ class TradeAuditController(
             .add(AuditEntity.id().eq(tradeId))
             .resultList
 
+
         return revisions.map { revision ->
-            val revisionData = revision as Array<Any>
+            val revisionData = revision as Array<*>
             val trade = revisionData[0] as Trade
             val revisionEntity = revisionData[1] as DefaultRevisionEntity
             val revisionType = revisionData[2] as RevisionType
+
+
 
             tradeAuditMapper.toTradeAuditDTO(trade, revisionEntity, revisionType)
         }

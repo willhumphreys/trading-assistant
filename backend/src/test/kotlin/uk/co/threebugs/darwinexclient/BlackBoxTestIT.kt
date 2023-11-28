@@ -1,9 +1,10 @@
+package uk.co.threebugs.darwinexclient
+
 import io.kotest.core.spec.style.*
 import io.kotest.core.test.*
 import io.kotest.matchers.*
 import io.kotest.matchers.collections.*
 import kotlinx.coroutines.*
-import uk.co.threebugs.darwinexclient.*
 import uk.co.threebugs.darwinexclient.helpers.MetaTraderFileHelper.Companion.deleteFilesBeforeTest
 import uk.co.threebugs.darwinexclient.helpers.MetaTraderFileHelper.Companion.deleteMarketDataFile
 import uk.co.threebugs.darwinexclient.helpers.MetaTraderFileHelper.Companion.readOrdersFile
@@ -77,6 +78,30 @@ class BlackBoxTestIT : AnnotationSpec() {
     suspend fun place2EurusdLongTradesAndCloseAtTime() {
         beforeEach(testSetup.setupGroupsName)
         writeMarketData(EURUSD)
+
+        var tempDirection = Direction.SHORT
+        if (testSetup.direction == Direction.SHORT) {
+            tempDirection = Direction.LONG
+        }
+
+        val tradingStances = setTradingStance("EURUSD", tempDirection, testSetup.accountSetupGroupsName)
+
+        tradingStances.filter {
+            it.symbol == "EURUSD" &&
+                    it.accountSetupGroups.name == testSetup.accountSetupGroupsName &&
+                    it.direction == tempDirection
+        }.size shouldBe 1
+
+        writeMarketData(EURUSD)
+
+        val tradingStancesPutBack = setTradingStance("EURUSD", testSetup.direction, testSetup.accountSetupGroupsName)
+
+        tradingStancesPutBack.filter {
+            it.symbol == "EURUSD" &&
+                    it.accountSetupGroups.name == testSetup.accountSetupGroupsName &&
+                    it.direction == testSetup.direction
+        }.size shouldBe 1
+
 
         val nextMondayAt9 = ZonedDateTime.parse("2023-10-30T09:00:00.000Z")
         val nextNextMondayAt9 = ZonedDateTime.parse("2023-11-06T09:00Z")

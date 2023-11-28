@@ -1,19 +1,14 @@
 package uk.co.threebugs.darwinexclient.helpers
 
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
+import com.fasterxml.jackson.datatype.jsr310.*
+import com.fasterxml.jackson.module.kotlin.*
+import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.OkHttpClient
-import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import uk.co.threebugs.darwinexclient.clock.TimeChangeRequest
-import uk.co.threebugs.darwinexclient.clock.TimeDto
-import uk.co.threebugs.darwinexclient.utils.logger
-import java.time.Duration
-import java.time.Instant
-import java.time.ZoneOffset.UTC
-import java.time.ZonedDateTime
+import uk.co.threebugs.darwinexclient.clock.*
+import uk.co.threebugs.darwinexclient.utils.*
+import java.time.*
+import java.time.ZoneOffset.*
 
 class TimeHelper {
 
@@ -51,7 +46,7 @@ class TimeHelper {
 
             val setTimeResponse = client.newCall(setTimeRequest).execute()
 
-            logger.info(setTimeResponse.body?.string() ?: "Empty Response Body")
+            logger.info(setTimeResponse.body.string())
 
             getTime()
         }
@@ -64,15 +59,14 @@ class TimeHelper {
 
             val getTimeResponse = client.newCall(getTimeRequest).execute()
 
-            val responseBodyText = getTimeResponse.body?.string() ?: "Empty Response Body"
+            val responseBodyText = getTimeResponse.body.string()
 
             val timeDto: TimeDto = mapper.readValue(responseBodyText)
 
             val instant = Instant.ofEpochMilli(timeDto.time)
-            val localDateTime = ZonedDateTime.ofInstant(instant, UTC)
 
             //logger.info("Client time is: $localDateTime")
-            return localDateTime
+            return ZonedDateTime.ofInstant(instant, UTC)
         }
 
 //        private fun getDurationBetweenNowAndNextMonday(): Duration {

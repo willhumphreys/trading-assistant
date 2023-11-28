@@ -29,7 +29,7 @@ class FileDataService(
 
         val accountsPath: Path = Paths.get(accounts)
 
-        val accountDtos = loadMetaTraderInstalls(accountsPath.resolve("metatrader_dirs.json"))
+        loadMetaTraderInstalls(accountsPath.resolve("metatrader_dirs.json"))
 
         val setupGroupsPath = Paths.get(accounts, "setup-groups")
         try {

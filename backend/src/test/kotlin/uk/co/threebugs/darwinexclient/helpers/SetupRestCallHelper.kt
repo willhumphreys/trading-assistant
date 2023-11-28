@@ -27,7 +27,7 @@ class SetupRestCallHelper {
             val response = client.newCall(request).execute()
 
             if (response.isSuccessful) {
-                val responseBodyText = response.body?.string() ?: "Empty Response Body"
+                val responseBodyText = response.body.string()
 
                 val foundSetups = mapper.readValue<List<SetupDto>>(responseBodyText)
                 logger.info("Successfully retrieved trades: $responseBodyText")
@@ -48,7 +48,7 @@ class SetupRestCallHelper {
             val response = client.newCall(request).execute()
 
             if (response.isSuccessful) {
-                val responseBodyText = response.body?.string() ?: "Empty Response Body"
+                val responseBodyText = response.body.string()
 
                 val foundSetupGroups = mapper.readValue<List<SetupGroupsDto>>(responseBodyText)
                 logger.info("Successfully retrieved setupGroups: $responseBodyText")
@@ -69,7 +69,7 @@ class SetupRestCallHelper {
             val response = client.newCall(request).execute()
 
             if (response.isSuccessful) {
-                val responseBodyText = response.body?.string() ?: "Empty Response Body"
+                val responseBodyText = response.body.string()
 
                 val foundSetupGroups = mapper.readValue<List<SetupGroupDto>>(responseBodyText)
                 logger.info("Successfully retrieved setupGroup: $responseBodyText")

@@ -10,6 +10,8 @@ abstract class TradeAuditMapper {
         Mapping(source = "revisionEntity.revisionDate", target = "revisionDate"),
         Mapping(source = "revisionType", target = "revisionType"),
         Mapping(source = "trade.id", target = "id"),
+        Mapping(source = "trade.setup.id", target = "setupId"),
+        Mapping(source = "trade.account.id", target = "accountId"),
     )
     abstract fun toTradeAuditDTO(
         trade: Trade,
