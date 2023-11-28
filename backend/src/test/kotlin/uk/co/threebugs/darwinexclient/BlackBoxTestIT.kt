@@ -71,7 +71,6 @@ class BlackBoxTestIT : AnnotationSpec() {
         testSetupMap[getProperty("testSetup")]
             ?: throw IllegalArgumentException("testSetup ${getProperty("testSetup")} not found in testSetupMap")
 
-
     val buySell = if (testSetup.isLong) "buy" else "sell"
 
     @Test
