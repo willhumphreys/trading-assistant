@@ -173,5 +173,40 @@
         "direction": "LONG"
       }
     ]
+  },
+  {
+    "name": "windows-both",
+    "setup-group-name": "both",
+    "metatrader-account": "long-windows-23",
+    "trading-stances": [
+      {
+        "symbol": "EURUSD",
+        "direction": "LONG"
+      },
+      {
+        "symbol": "GBPUSD",
+        "direction": "LONG"
+      },
+      {
+        "symbol": "USDCAD",
+        "direction": "LONG"
+      },
+      {
+        "symbol": "NZDUSD",
+        "direction": "LONG"
+      },
+      {
+        "symbol": "AUDUSD",
+        "direction": "LONG"
+      },
+      {
+        "symbol": "USDJPY",
+        "direction": "LONG"
+      },
+      {
+        "symbol": "USDCHF",
+        "direction": "LONG"
+      }
+    ]
   }
 ]
