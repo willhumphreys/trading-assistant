@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*
 class TradingStanceController(private val tradingStanceService: TradingStanceService) {
 
     @GetMapping("/trading-stances")
-    fun getTradingStances(pageable: Pageable): Page<TradingStanceDto> {
+    fun getTradingStances(pageable: Pageable): Page<TradingStanceDtoIn> {
         return tradingStanceService.findAll(pageable)
     }
 
@@ -24,7 +24,7 @@ class TradingStanceController(private val tradingStanceService: TradingStanceSer
     fun updateTradingStance(
         @PathVariable id: Int,
         @RequestBody tradingStanceDto: UpdateTradingStanceDto
-    ): TradingStanceDto {
+    ): TradingStanceDtoOut {
 
         return tradingStanceService.updateTradingStance(id, tradingStanceDto)
     }

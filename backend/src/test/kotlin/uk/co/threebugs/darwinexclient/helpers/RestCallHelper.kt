@@ -124,7 +124,7 @@ class RestCallHelper {
             symbol: String,
             direction: Direction,
             accountSetupGroupsName: String
-        ): List<TradingStanceDto> {
+        ): List<TradingStanceDtoIn> {
             val requestAllStances = Request.Builder().url("$HOST/trading-stances").build()
 
             val responseAllStances = client.newCall(requestAllStances).execute()
@@ -179,7 +179,7 @@ class RestCallHelper {
     }
 
     data class RootResponse(
-        val content: List<TradingStanceDto>,
+        val content: List<TradingStanceDtoIn>,
         val pageable: Pageable,
         val totalPages: Int,
         val totalElements: Int,

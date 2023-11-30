@@ -107,6 +107,7 @@ export interface TradingStance {
     symbol: string;
     direction: string;
     accountSetupGroups: AccountSetupGroups;
+    trades: Trade[] | undefined;
 }
 
 export interface Query {

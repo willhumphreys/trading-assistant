@@ -15,6 +15,7 @@ export default function TradingStanceTable({tradingStances}: Props) {
         {name: 'accountSetupGroup / Account', entity: ''},
         {name: 'activeSetups', entity: ''},
         {name: 'disabledSetups', entity: ''},
+        {name: 'updated-trades', entity: ''},
     ];
 
 
@@ -49,6 +50,7 @@ export default function TradingStanceTable({tradingStances}: Props) {
                     <td>{tradingStanceInfo.tradingStance.accountSetupGroups.name}: {tradingStanceInfo.tradingStance.accountSetupGroups.account.name}</td>
                     <td>{tradingStanceInfo.enabledSetupCount}</td>
                     <td>{tradingStanceInfo.disabledSetupCount}</td>
+                    <td>{tradingStanceInfo.tradingStance.trades?.length}</td>
                 </tr>))}
             </tbody>
         </table>

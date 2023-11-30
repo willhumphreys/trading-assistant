@@ -15,7 +15,7 @@ class TradingStanceService(
     private val tradeService: TradeService
 ) {
 
-    fun findAll(pageable: Pageable): Page<TradingStanceDto> {
+    fun findAll(pageable: Pageable): Page<TradingStanceDtoIn> {
         return this.tradingStanceRepository.findAll(pageable)
             .map(tradingStanceMapper::toDto)
     }
@@ -24,7 +24,7 @@ class TradingStanceService(
         return this.tradingStanceRepository.findAllByAccountSetupGroupsNameWithSetupCount(groupName, pageable)
     }
 
-    fun updateTradingStance(id: Int, tradingStanceDto: UpdateTradingStanceDto): TradingStanceDto {
+    fun updateTradingStance(id: Int, tradingStanceDto: UpdateTradingStanceDto): TradingStanceDtoOut {
 
         val accountSetupGroups = accountSetupGroupsService.findByName(tradingStanceDto.accountSetupGroupsName)
             ?: throw IllegalArgumentException("AccountSetupGroups with name ${tradingStanceDto.accountSetupGroupsName} not found")
@@ -38,7 +38,7 @@ class TradingStanceService(
 
         // Proceed with updating the trading stance
         val updatedEntity = tradingStanceMapper.toEntity(
-            TradingStanceDto(
+            TradingStanceDtoIn(
                 id = id,
                 symbol = tradingStanceDto.symbol,
                 direction = tradingStanceDto.direction,
@@ -49,7 +49,7 @@ class TradingStanceService(
         val savedEntity = tradingStanceRepository.save(updatedEntity)
 
         //TODO Return the counts with the trading stance
-        listOf(
+        val trades = listOf(
             PENDING to CANCELLED_BY_STANCE,
             ORDER_SENT to CANCELLED_BY_STANCE,
             PLACED_IN_MT to CANCELLED_BY_STANCE,
@@ -64,6 +64,6 @@ class TradingStanceService(
         }.flatten().toList()
 
 
-        return tradingStanceMapper.toDto(savedEntity)
+        return tradingStanceMapper.toDto(savedEntity, trades)
     }
 }

@@ -24,7 +24,7 @@ class ActionsController(
     fun updateTradingStance(
         @PathVariable id: Int,
         @RequestBody tradingStanceDto: UpdateTradingStanceDto
-    ): TradingStanceDto {
+    ): TradingStanceDtoOut {
         return tradingStanceService.updateTradingStance(id, tradingStanceDto)
     }
 

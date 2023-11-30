@@ -20,6 +20,7 @@ const UpdateTradingStanceDirection: FC<UpdateTradingStanceProps> = ({tradingStan
                 .then(r => {
                     console.log(`Updated tradingStance ${JSON.stringify(r)}`);
                     tradingStance.direction = r.direction;
+                    tradingStance.trades = r.trades;
                 });
         }
     };
