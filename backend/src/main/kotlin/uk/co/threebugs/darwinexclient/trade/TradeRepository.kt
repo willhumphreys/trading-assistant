@@ -116,6 +116,6 @@ interface TradeRepository : JpaRepository<Trade, Int>, QueryByExampleExecutor<Tr
         @Param("accountSetupGroupsId") accountSetupGroupsId: Int,
         @Param("setupId") setupId: Int,
         @Param("targetPlaceDateTime") targetPlaceDateTime: String
-    ): Trade?
+    ): List<Trade>
 
 }

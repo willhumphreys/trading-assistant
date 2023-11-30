@@ -29,7 +29,7 @@ class TradeService(
     private val setupRepository: SetupRepository,
     private val commandService: CommandService,
     private val tradingStanceRepository: TradingStanceRepository
-    ) {
+) {
 
 
     val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
@@ -79,33 +79,39 @@ class TradeService(
         setups.filter { s -> s.direction == tradingStance.direction }
 
             .forEach { setup ->
-            val targetPlaceTime: ZonedDateTime =
-                SetupFileRepository.getNextEventTime(setup.dayOfWeek!!, setup.hourOfDay!!, clock)
-            //logger.info("clockNow: ${ZonedDateTime.now()} targetPlaceTime: ${formatter.format(targetPlaceTime)}" + " setup: ${setup.id}" + " accountSetupGroups: ${accountSetupGroups.id}")
+                val targetPlaceTime: ZonedDateTime =
+                    SetupFileRepository.getNextEventTime(setup.dayOfWeek!!, setup.hourOfDay!!, clock)
+                //logger.info("clockNow: ${ZonedDateTime.now()} targetPlaceTime: ${formatter.format(targetPlaceTime)}" + " setup: ${setup.id}" + " accountSetupGroups: ${accountSetupGroups.id}")
 
-                val existingTrade =
-                tradeRepository.findBySetupAndTargetPlaceDateTimeAndAccountSetupGroups(
-                    accountSetupGroups.id!!,
-                    setup.id!!,
-                    formatter.format(targetPlaceTime)
-                )
-                if (existingTrade == null || existingTrade.status == Status.CANCELLED_BY_STANCE) {
-                val now = ZonedDateTime.now(clock)
+                val existingTrades =
+                    tradeRepository.findBySetupAndTargetPlaceDateTimeAndAccountSetupGroups(
+                        accountSetupGroups.id!!,
+                        setup.id!!,
+                        formatter.format(targetPlaceTime)
+                    )
+                if (existingTrades.isEmpty() || existingTrades.all { it.status == Status.CANCELLED_BY_STANCE }) {
+                    val now = ZonedDateTime.now(clock)
 
-                val trade = tradeMapper.toEntity(setup, targetPlaceTime, accountSetupGroups.account, clock)
-                if (now.isAfter(targetPlaceTime.plusHours(setup.outOfTime!!.toLong()))) {
-                    logger.info("Skipping trade as the trade windows has been closed: ${formatter.format(targetPlaceTime)}")
+                    val trade = tradeMapper.toEntity(setup, targetPlaceTime, accountSetupGroups.account, clock)
+                    if (now.isAfter(targetPlaceTime.plusHours(setup.outOfTime!!.toLong()))) {
+                        logger.info(
+                            "Skipping trade as the trade windows has been closed: ${
+                                formatter.format(
+                                    targetPlaceTime
+                                )
+                            }"
+                        )
 
-                    tradeRepository.save(trade.apply {
-                        status = Status.MISSED
-                    })
-                } else {
-                    tradeRepository.save(trade.apply {
-                        status = Status.PENDING
-                    })
+                        tradeRepository.save(trade.apply {
+                            status = Status.MISSED
+                        })
+                    } else {
+                        tradeRepository.save(trade.apply {
+                            status = Status.PENDING
+                        })
+                    }
                 }
             }
-        }
     }
 
 
