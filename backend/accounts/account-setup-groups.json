@@ -141,7 +141,7 @@
   },
   {
     "name": "linux-dev",
-    "setup-group-name": "long",
+    "setup-group-name": "both",
     "metatrader-account": "long-dev-linux",
     "trading-stances": [
       {

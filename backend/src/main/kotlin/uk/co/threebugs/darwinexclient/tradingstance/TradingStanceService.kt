@@ -48,7 +48,8 @@ class TradingStanceService(
 
         val savedEntity = tradingStanceRepository.save(updatedEntity)
 
-        val trades = listOf(
+        //TODO Return the counts with the trading stance
+        listOf(
             PENDING to CANCELLED_BY_STANCE,
             ORDER_SENT to CANCELLED_BY_STANCE,
             PLACED_IN_MT to CANCELLED_BY_STANCE,

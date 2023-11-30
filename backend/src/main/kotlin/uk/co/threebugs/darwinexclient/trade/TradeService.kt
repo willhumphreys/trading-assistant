@@ -82,13 +82,14 @@ class TradeService(
             val targetPlaceTime: ZonedDateTime =
                 SetupFileRepository.getNextEventTime(setup.dayOfWeek!!, setup.hourOfDay!!, clock)
             //logger.info("clockNow: ${ZonedDateTime.now()} targetPlaceTime: ${formatter.format(targetPlaceTime)}" + " setup: ${setup.id}" + " accountSetupGroups: ${accountSetupGroups.id}")
-            val existingTrade =
+
+                val existingTrade =
                 tradeRepository.findBySetupAndTargetPlaceDateTimeAndAccountSetupGroups(
                     accountSetupGroups.id!!,
                     setup.id!!,
                     formatter.format(targetPlaceTime)
                 )
-            if (existingTrade == null) {
+                if (existingTrade == null || existingTrade.status == Status.CANCELLED_BY_STANCE) {
                 val now = ZonedDateTime.now(clock)
 
                 val trade = tradeMapper.toEntity(setup, targetPlaceTime, accountSetupGroups.account, clock)
@@ -208,7 +209,7 @@ class TradeService(
                 trade.lastUpdatedDateTime = ZonedDateTime.now(clock)
                 //trade.closedDateTime = ZonedDateTime.now()
                 tradeRepository.save(trade)
-                slackClient.sendSlackNotification("Order closed by magic: ${trade.setup!!.rank} ${trade.setup!!.symbol} ${trade.setup!!.direction} ${trade.profit}")
+                slackClient.sendSlackNotification("Order closed by tradingStanceChange: ${trade.setup!!.rank} ${trade.setup!!.symbol} ${trade.setup!!.direction} ${trade.profit}")
                 trade
             }.toList()
     }
