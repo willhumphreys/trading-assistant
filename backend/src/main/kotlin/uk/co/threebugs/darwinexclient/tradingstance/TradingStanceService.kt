@@ -3,6 +3,7 @@ package uk.co.threebugs.darwinexclient.tradingstance
 import org.springframework.data.domain.*
 import org.springframework.data.repository.*
 import org.springframework.stereotype.*
+import uk.co.threebugs.darwinexclient.Status.*
 import uk.co.threebugs.darwinexclient.accountsetupgroups.*
 import uk.co.threebugs.darwinexclient.trade.*
 
@@ -47,7 +48,20 @@ class TradingStanceService(
 
         val savedEntity = tradingStanceRepository.save(updatedEntity)
 
-        tradeService.closeTradesOnStanceChange(tradingStanceDto.symbol, accountSetupGroups)
+        val trades = listOf(
+            PENDING to CANCELLED_BY_STANCE,
+            ORDER_SENT to CANCELLED_BY_STANCE,
+            PLACED_IN_MT to CANCELLED_BY_STANCE,
+            FILLED to CLOSED_BY_STANCE
+        ).map { (status, closureReason) ->
+            tradeService.closeTradesOnStanceChange(
+                tradingStanceDto.symbol,
+                accountSetupGroups,
+                status,
+                closureReason
+            )
+        }.flatten().toList()
+
 
         return tradingStanceMapper.toDto(savedEntity)
     }

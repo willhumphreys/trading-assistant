@@ -190,18 +190,27 @@ class TradeService(
 
     fun closeTradesOnStanceChange(
         symbol: String,
-        accountSetupGroups: AccountSetupGroupsDto
-    ) {
-        tradeRepository.findByAccountSetupGroupsSymbolAndStatus(accountSetupGroups.id!!, symbol, Status.FILLED.name)
+        accountSetupGroups: AccountSetupGroupsDto,
+        statusToFind: Status,
+        closingStatus: Status
+    ): List<Trade> {
+        return tradeRepository.findByAccountSetupGroupsSymbolAndStatus(
+            accountSetupGroups.id!!,
+            symbol,
+            statusToFind.name
+        )
             .stream()
-            .forEach { trade: Trade ->
-                commandService.closeOrdersByMagic(trade.id!!, accountSetupGroups)
-                trade.status = Status.CLOSED_BY_STANCE
+            .map { trade: Trade ->
+                if (trade.status == Status.FILLED) {
+                    commandService.closeOrdersByMagic(trade.id!!, accountSetupGroups)
+                }
+                trade.status = closingStatus
                 trade.lastUpdatedDateTime = ZonedDateTime.now(clock)
                 //trade.closedDateTime = ZonedDateTime.now()
                 tradeRepository.save(trade)
                 slackClient.sendSlackNotification("Order closed by magic: ${trade.setup!!.rank} ${trade.setup!!.symbol} ${trade.setup!!.direction} ${trade.profit}")
-            }
+                trade
+            }.toList()
     }
 
 
