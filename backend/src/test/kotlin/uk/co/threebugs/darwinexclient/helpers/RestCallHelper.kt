@@ -124,7 +124,7 @@ class RestCallHelper {
             symbol: String,
             direction: Direction,
             accountSetupGroupsName: String
-        ): List<TradingStanceDtoIn> {
+        ): TradingStanceDtoOut {
             val requestAllStances = Request.Builder().url("$HOST/trading-stances").build()
 
             val responseAllStances = client.newCall(requestAllStances).execute()
@@ -153,6 +153,10 @@ class RestCallHelper {
 
                         if (response.isSuccessful) {
                             logger.info("Successfully set trading stance for symbol: $symbol to $direction")
+                            val tradingStancesAfterUpdate =
+                                mapper.readValue<TradingStanceDtoOut>(response.body.string())
+
+                            return tradingStancesAfterUpdate
                         } else {
                             logger.info("Failed to set trading stance for symbol: $symbol to $direction")
                             fail("Failed to set trading stance for symbol: $symbol to $direction")
@@ -163,18 +167,6 @@ class RestCallHelper {
             } else {
                 fail("Failed to retrieve trading stances")
             }
-
-            val responseAllStancesAfterUpdate = client.newCall(requestAllStances).execute()
-
-            if (responseAllStancesAfterUpdate.isSuccessful) {
-                val tradingStancesAfterUpdate =
-                    mapper.readValue<RootResponse>(responseAllStancesAfterUpdate.body.string())
-
-                return tradingStancesAfterUpdate.content
-            } else {
-                fail("Failed to retrieve trading stances")
-            }
-
         }
     }
 
@@ -191,6 +183,7 @@ class RestCallHelper {
         val numberOfElements: Int,
         val empty: Boolean
     )
+
 
     data class Pageable(
         val pageNumber: Int,

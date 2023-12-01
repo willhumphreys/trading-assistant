@@ -79,6 +79,22 @@ class BlackBoxTestIT : AnnotationSpec() {
         beforeEach(testSetup.setupGroupsName)
         writeMarketData(EURUSD)
 
+
+        waitForCondition(
+            timeout = SECONDS_30,
+            interval = SECONDS_5,
+            logMessage = "Waiting for initial trades"
+        ) {
+            logger.info("Client time ${getTime()}")
+            val foundTrades = getTradesWithSetupGroupsName(testSetup.setupGroupsName)
+
+            if (foundTrades.size == 2) {
+                return@waitForCondition true
+            }
+            false
+        }
+
+
         var tempDirection = Direction.SHORT
         if (testSetup.direction == Direction.SHORT) {
             tempDirection = Direction.LONG
@@ -86,21 +102,52 @@ class BlackBoxTestIT : AnnotationSpec() {
 
         val tradingStances = setTradingStance("EURUSD", tempDirection, testSetup.accountSetupGroupsName)
 
-        tradingStances.filter {
-            it.symbol == "EURUSD" &&
-                    it.accountSetupGroups.name == testSetup.accountSetupGroupsName &&
-                    it.direction == tempDirection
-        }.size shouldBe 1
+        tradingStances.symbol shouldBe "EURUSD"
+        tradingStances.accountSetupGroups.name shouldBe testSetup.accountSetupGroupsName
+        tradingStances.direction shouldBe tempDirection
+        tradingStances.trades.size shouldBe 2
+
+        writeMarketData(EURUSD)
+
+
+        waitForCondition(
+            timeout = SECONDS_30,
+            interval = SECONDS_5,
+            logMessage = "Waiting for initial trades"
+        ) {
+            logger.info("Client time ${getTime()}")
+            val foundTrades = getTradesWithSetupGroupsName(testSetup.setupGroupsName)
+
+            if (foundTrades.size == 4) {
+                return@waitForCondition true
+            }
+            false
+        }
+
 
         writeMarketData(EURUSD)
 
         val tradingStancesPutBack = setTradingStance("EURUSD", testSetup.direction, testSetup.accountSetupGroupsName)
 
-        tradingStancesPutBack.filter {
-            it.symbol == "EURUSD" &&
-                    it.accountSetupGroups.name == testSetup.accountSetupGroupsName &&
-                    it.direction == testSetup.direction
-        }.size shouldBe 1
+        tradingStancesPutBack.symbol shouldBe "EURUSD"
+        tradingStancesPutBack.accountSetupGroups.name shouldBe testSetup.accountSetupGroupsName
+        tradingStancesPutBack.direction shouldBe testSetup.direction
+        //  tradingStancesPutBack.trades.size shouldBe 2
+
+
+        waitForCondition(
+            timeout = SECONDS_30,
+            interval = SECONDS_5,
+            logMessage = "Waiting for initial trades"
+        ) {
+            logger.info("Client time ${getTime()}")
+            val foundTrades = getTradesWithSetupGroupsName(testSetup.setupGroupsName)
+
+            if (foundTrades.size == 6) {
+                return@waitForCondition true
+            }
+            false
+        }
 
 
         val nextMondayAt9 = ZonedDateTime.parse("2023-10-30T09:00:00.000Z")
@@ -108,10 +155,51 @@ class BlackBoxTestIT : AnnotationSpec() {
         waitForCondition(
             timeout = SECONDS_30,
             interval = SECONDS_5,
-            logMessage = "Waiting for trades with status PENDING to be written to the db..."
+            logMessage = "Waiting for trades with status CANCELLED_BY_STANCE to be written to the db..."
         ) {
             logger.info("Client time ${getTime()}")
             val foundTrades = getTradesWithSetupGroupsName(testSetup.setupGroupsName)
+
+            if (foundTrades.filter { it.status == Status.CANCELLED_BY_STANCE }.size == 4) {
+
+                foundTrades.count { it.setup.isLong() } shouldBe 2
+                foundTrades.count { !it.setup.isLong() } shouldBe 4
+
+                foundTrades.filter { t -> t.status == Status.PENDING }.forEach {
+                    logger.info("Found trade: $it")
+                    it.status shouldBe Status.PENDING
+                    it.createdDateTime shouldNotBe null
+                    it.setup shouldNotBe null
+                    it.setup.symbol shouldBe EURUSD
+                    //it.setup.isLong() shouldBe testSetup.isLong
+                    it.targetPlaceDateTime!!.toOffsetDateTime().toString() shouldBe nextMondayAt9
+                        .toString()
+                }
+
+                return@waitForCondition true
+            }
+            false
+        }
+
+        writeMarketData(EURUSD)
+
+
+        val foundTrades = getTradesWithSetupGroupsName(testSetup.setupGroupsName)
+
+
+        val (magicTrade1, magicTrade2) = foundTrades.filter { t -> t.status == Status.PENDING }.take(2).map { it.id }
+
+        writeMarketData(EURUSD)
+
+
+        waitForCondition(
+            timeout = SECONDS_30,
+            interval = SECONDS_5,
+            logMessage = "Waiting for trades with status PENDING to be written to the db..."
+        ) {
+            logger.info("Client time ${getTime()}")
+            val foundTrades =
+                getTradesWithSetupGroupsName(testSetup.setupGroupsName).filter { it.status == Status.PENDING }
 
             if (foundTrades.isNotEmpty()) {
 
@@ -131,14 +219,6 @@ class BlackBoxTestIT : AnnotationSpec() {
             false
         }
 
-        val foundTrades = getTradesWithSetupGroupsName(testSetup.setupGroupsName)
-
-        //We should have 2 trades with status PENDING
-        foundTrades.size shouldBe 2
-
-        val (magicTrade1, magicTrade2) = foundTrades.take(2).map { it.id }
-
-        writeMarketData(EURUSD)
 
 
         waitForCondition(
@@ -196,8 +276,8 @@ class BlackBoxTestIT : AnnotationSpec() {
             logger.info("Client time ${getTime()}")
             val trades = getTradesWithSetupGroupsName(testSetup.setupGroupsName)
 
-            //Once we send the trades to MT we should have 4 trades. 2 with status PENDING and 2 with status PLACED_IN_MT
-            trades.size shouldBe 4
+            //Once we send the trades to MT we should have 4 trades. 2 with status PENDING and 2 with status PLACED_IN_MT and 4 cancelled by stance
+            trades.size shouldBe 8
 
             val allTradesHaveStatusPlacedInMT = trades.count {
                 it.status == Status.PLACED_IN_MT
@@ -247,8 +327,8 @@ class BlackBoxTestIT : AnnotationSpec() {
             logger.info("Client time ${getTime()}")
             val tradesWithSetupGroupName = getTradesWithSetupGroupsName(testSetup.setupGroupsName)
 
-            // 2 trades with status PENDING and 2 trades with status FILLED
-            tradesWithSetupGroupName.size shouldBe 4
+            // 2 trades with status PENDING and 2 trades with status FILLED and 4 CANCELLED_BY_STANCE
+            tradesWithSetupGroupName.size shouldBe 8
 
             val allTradesHaveStatusFilled = tradesWithSetupGroupName.count {
                 it.status == Status.FILLED
@@ -268,7 +348,7 @@ class BlackBoxTestIT : AnnotationSpec() {
 
         val filledTrade1 = filledTrades.first { t -> t.id == magicTrade1 }
 
-        filledTrades.size shouldBe 4
+        filledTrades.size shouldBe 8
 
         val targetPlaceDateTime = filledTrade1.targetPlaceDateTime
         val tradeDurationInHours = filledTrade1.setup.tradeDuration.toLong()
@@ -1019,13 +1099,15 @@ class BlackBoxTestIT : AnnotationSpec() {
 
         Files.exists(Path.of("test-ea-files/DWX/DWX_Commands_4.txt")) shouldBe false
 
+
         val tradingStances = setTradingStance("EURUSD", testSetup.direction, testSetup.accountSetupGroupsName)
 
-        tradingStances.filter {
-            it.symbol == "EURUSD" &&
-                    it.accountSetupGroups.name == testSetup.accountSetupGroupsName &&
-                    it.direction == testSetup.direction
-        }.size shouldBe 1
+        tradingStances.symbol shouldBe "EURUSD"
+        tradingStances.direction shouldBe testSetup.direction
+        tradingStances.accountSetupGroups.name shouldBe testSetup.accountSetupGroupsName
+        tradingStances.trades.size shouldBe 0
+
+        tradingStances.trades.all { it.status == Status.CLOSED_BY_STANCE } shouldBe true
 
     }
 }
