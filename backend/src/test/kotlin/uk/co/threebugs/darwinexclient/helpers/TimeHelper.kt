@@ -13,7 +13,6 @@ import java.time.ZoneOffset.*
 class TimeHelper {
 
     companion object {
-        private const val HOST = "http://localhost:8081"
         private val client = OkHttpClient()
         private val mapper = jacksonObjectMapper().registerModule(JavaTimeModule())
 
@@ -40,7 +39,7 @@ class TimeHelper {
             val body = json.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
 
             val setTimeRequest = Request.Builder()
-                .url("$HOST/time")
+                .url("${RestCallHelper.host}/time")
                 .put(body)
                 .build()
 
@@ -54,7 +53,7 @@ class TimeHelper {
 
         fun getTime(): ZonedDateTime {
             val getTimeRequest = Request.Builder()
-                .url("$HOST/time")
+                .url("${RestCallHelper.host}/time")
                 .build()
 
             val getTimeResponse = client.newCall(getTimeRequest).execute()

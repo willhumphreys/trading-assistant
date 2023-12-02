@@ -10,18 +10,28 @@ import uk.co.threebugs.darwinexclient.setupgroup.*
 import uk.co.threebugs.darwinexclient.trade.*
 import uk.co.threebugs.darwinexclient.tradingstance.*
 import uk.co.threebugs.darwinexclient.utils.*
+import java.util.*
+
+private const val HOST = "app.host"
+private const val TEST_APPLICATION_PROPERTIES = "test-application.properties"
 
 class RestCallHelper {
 
     companion object {
-        private const val HOST = "http://localhost:8081"
+
+        val host: String by lazy {
+            Properties().apply {
+                load(Thread.currentThread().contextClassLoader.getResourceAsStream(TEST_APPLICATION_PROPERTIES))
+            }.getProperty(HOST)
+        }
+
 
         private val client = OkHttpClient()
         private val mapper = jacksonObjectMapper().registerModule(JavaTimeModule())
 
         fun startProcessing() {
             val startProcessingRequest = Request.Builder()
-                .url("$HOST/actions/start")
+                .url("$host/actions/start")
                 .post("".toRequestBody())
                 .build()
 
@@ -30,7 +40,7 @@ class RestCallHelper {
 
         fun stopProcessing() {
             val startProcessingRequest = Request.Builder()
-                .url("$HOST/actions/stop")
+                .url("$host/actions/stop")
                 .post("".toRequestBody())
                 .build()
 
@@ -40,7 +50,7 @@ class RestCallHelper {
         fun deleteTradesFromTestAccount(accountName: String) {
 
             val request = Request.Builder()
-                .url("$HOST/trades?accountName=$accountName")
+                .url("$host/trades?accountName=$accountName")
                 .delete()
                 .build()
 
@@ -59,7 +69,7 @@ class RestCallHelper {
         fun deleteTradesFromSetupGroupsName(setupGroupsName: String) {
 
             val request = Request.Builder()
-                .url("$HOST/trades?setupGroupsName=$setupGroupsName")
+                .url("$host/trades?setupGroupsName=$setupGroupsName")
                 .delete()
                 .build()
 
@@ -80,7 +90,7 @@ class RestCallHelper {
             accountName: String
         ): List<TradeDto> {
             val request = Request.Builder()
-                .url("$HOST/trades?accountName=$accountName")
+                .url("$host/trades?accountName=$accountName")
                 .build()
 
             val response = client.newCall(request).execute()
@@ -102,7 +112,7 @@ class RestCallHelper {
             setupGroupsName: String
         ): List<TradeDto> {
             val request = Request.Builder()
-                .url("$HOST/trades?setupGroupsName=$setupGroupsName")
+                .url("$host/trades?setupGroupsName=$setupGroupsName")
                 .build()
 
             val response = client.newCall(request).execute()
@@ -125,7 +135,7 @@ class RestCallHelper {
             direction: Direction,
             accountSetupGroupsName: String
         ): TradingStanceDtoOut {
-            val requestAllStances = Request.Builder().url("$HOST/trading-stances").build()
+            val requestAllStances = Request.Builder().url("$host/trading-stances").build()
 
             val responseAllStances = client.newCall(requestAllStances).execute()
 
@@ -136,7 +146,7 @@ class RestCallHelper {
                 tradingStances.content.first { it.symbol == symbol && it.accountSetupGroups.name == accountSetupGroupsName }
                     .let { tradingStanceDto ->
                         val request = Request.Builder()
-                            .url("$HOST/actions/update-trading-stance/${tradingStanceDto.id}")
+                            .url("$host/actions/update-trading-stance/${tradingStanceDto.id}")
                             .post(
                                 mapper.writeValueAsString(
                                     UpdateTradingStanceDto(
@@ -199,5 +209,4 @@ class RestCallHelper {
         val unsorted: Boolean,
         val empty: Boolean
     )
-
 }

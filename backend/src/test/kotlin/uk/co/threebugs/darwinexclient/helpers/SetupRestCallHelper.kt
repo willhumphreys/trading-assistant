@@ -12,7 +12,6 @@ import uk.co.threebugs.darwinexclient.utils.*
 class SetupRestCallHelper {
 
     companion object {
-        private const val HOST = "http://localhost:8081"
 
         private val client = OkHttpClient()
         private val mapper = jacksonObjectMapper().registerModule(JavaTimeModule())
@@ -21,7 +20,7 @@ class SetupRestCallHelper {
         fun getSetups(
         ): List<SetupDto> {
             val request = Request.Builder()
-                .url("$HOST/setups")
+                .url("${RestCallHelper.host}/setups")
                 .build()
 
             val response = client.newCall(request).execute()
@@ -42,7 +41,7 @@ class SetupRestCallHelper {
         fun getSetupGroups(
         ): List<SetupGroupsDto> {
             val request = Request.Builder()
-                .url("$HOST/setupGroups")
+                .url("${RestCallHelper.host}/setupGroups")
                 .build()
 
             val response = client.newCall(request).execute()
@@ -63,7 +62,7 @@ class SetupRestCallHelper {
         fun getSetupGroup(
         ): List<SetupGroupDto> {
             val request = Request.Builder()
-                .url("$HOST/setupGroup")
+                .url("${RestCallHelper.host}/setupGroup")
                 .build()
 
             val response = client.newCall(request).execute()

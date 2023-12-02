@@ -76,9 +76,9 @@ class BlackBoxTestIT : AnnotationSpec() {
 
     @Test
     suspend fun place2EurusdLongTradesAndCloseAtTime() {
+
         beforeEach(testSetup.setupGroupsName)
         writeMarketData(EURUSD)
-
 
         waitForCondition(
             timeout = SECONDS_30,
