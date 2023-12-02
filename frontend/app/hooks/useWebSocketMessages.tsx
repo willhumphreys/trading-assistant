@@ -4,7 +4,8 @@ import {Client, IMessage} from '@stomp/stompjs';
 
 
 const newClient = new Client({
-    brokerURL: 'ws://localhost:8080/gs-guide-websocket'
+
+    brokerURL: `${process.env.NEXT_PUBLIC_WEB_SOCKET_HOST}/gs-guide-websocket`
 });
 
 export function useWebSocketMessages(setTrades: React.Dispatch<React.SetStateAction<Trade[]>>) {
