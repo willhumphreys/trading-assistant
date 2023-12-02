@@ -160,10 +160,17 @@ class BlackBoxTestIT : AnnotationSpec() {
             logger.info("Client time ${getTime()}")
             val foundTrades = getTradesWithSetupGroupsName(testSetup.setupGroupsName)
 
-            if (foundTrades.filter { it.status == Status.CANCELLED_BY_STANCE }.size == 4) {
 
+            if (testSetup.isLong) {
+                foundTrades.count { it.setup.isLong() } shouldBe 4
+                foundTrades.count { !it.setup.isLong() } shouldBe 2
+
+            } else {
                 foundTrades.count { it.setup.isLong() } shouldBe 2
                 foundTrades.count { !it.setup.isLong() } shouldBe 4
+            }
+
+            if (foundTrades.filter { it.status == Status.CANCELLED_BY_STANCE }.size == 4) {
 
                 foundTrades.filter { t -> t.status == Status.PENDING }.forEach {
                     logger.info("Found trade: $it")
