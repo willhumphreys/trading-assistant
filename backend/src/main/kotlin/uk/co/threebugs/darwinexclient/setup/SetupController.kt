@@ -22,6 +22,4 @@ class SetupController(private val setupService: SetupService) {
     fun getSetups(): ResponseEntity<List<SetupDto>> {
         return ResponseEntity.ok(setupService.findAll())
     }
-
-
 }

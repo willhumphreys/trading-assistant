@@ -12,6 +12,7 @@ on:
     branches: [ main ]
     paths:
       - backend/**
+permissions: write-all
 jobs:
   verify:
     runs-on: ubuntu-latest
