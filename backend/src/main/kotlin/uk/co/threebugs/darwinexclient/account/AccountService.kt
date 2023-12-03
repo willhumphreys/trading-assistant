@@ -21,8 +21,4 @@ class AccountService(
         return accountRepository.findAll()
             .map { accountMapper.toDto(it) }
     }
-
-    fun findAccountByName(accountName: String): AccountDto? {
-        return accountRepository.findByName(accountName)?.let { accountMapper.toDto(it) }
-    }
 }
