@@ -30,7 +30,6 @@ jobs:
       - name: Build with Maven longtest
         run: mvn -B verify -Dprofile.active=longtest --file pom.xml
 
-      # Use softprops/action-gh-release for creating release and uploading the asset
       - name: Create Release and Upload JAR
         uses: softprops/action-gh-release@v1
         with:
@@ -39,5 +38,3 @@ jobs:
           prerelease: false
           tag_name: "release-${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt }}"
           name: Release ${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt }}
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
