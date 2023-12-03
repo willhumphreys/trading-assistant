@@ -36,7 +36,6 @@ class TradingStanceService(
             throw IllegalArgumentException("No change in direction for TradingStance with id $id")
         }
 
-        // Proceed with updating the trading stance
         val updatedEntity = tradingStanceMapper.toEntity(
             TradingStanceDtoIn(
                 id = id,
@@ -48,7 +47,6 @@ class TradingStanceService(
 
         val savedEntity = tradingStanceRepository.save(updatedEntity)
 
-        //TODO Return the counts with the trading stance
         val trades = listOf(
             PENDING to CANCELLED_BY_STANCE,
             ORDER_SENT to CANCELLED_BY_STANCE,
@@ -62,7 +60,6 @@ class TradingStanceService(
                 closureReason
             )
         }.flatten().toList()
-
 
         return tradingStanceMapper.toDto(savedEntity, trades)
     }
