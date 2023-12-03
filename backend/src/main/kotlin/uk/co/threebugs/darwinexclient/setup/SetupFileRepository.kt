@@ -62,7 +62,6 @@ class SetupFileRepository {
             return nextEventTime
         }
 
-
         private fun getLongShort(stop: Int, limit: Int): String {
             return if (stop < limit) "LONG" else "SHORT"
         }
