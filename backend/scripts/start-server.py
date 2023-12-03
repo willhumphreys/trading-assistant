@@ -34,6 +34,19 @@ os.environ["JAVA_HOME"] = java_home
 # Set the executable based on the OS
 java_executable = 'java.exe' if platform.system() == 'Windows' else 'java'
 
-# Start the server with the provided profile name
+# JMX monitoring port
+jmx_port = "9010"
+
+# JMX enable arguments
+jmx_arguments = [
+    '-Dcom.sun.management.jmxremote',
+    '-Dcom.sun.management.jmxremote.port=' + jmx_port,
+    '-Dcom.sun.management.jmxremote.rmi.port=' + jmx_port,
+    '-Dcom.sun.management.jmxremote.authenticate=false',
+    '-Dcom.sun.management.jmxremote.ssl=false'
+]
+
+# Start the server with JMX enabled and the provided profile name
 subprocess.run(
-    [os.path.join(java_home, 'bin', java_executable), '-jar', jar_path, f'--spring.profiles.active={profile_name}'])
+    [os.path.join(java_home, 'bin', java_executable)] + jmx_arguments + ['-jar', jar_path,
+                                                                         f'--spring.profiles.active={profile_name}'])
