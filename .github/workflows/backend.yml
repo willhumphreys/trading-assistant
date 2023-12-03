@@ -33,7 +33,10 @@ jobs:
       - name: Create Release and Upload JAR
         uses: softprops/action-gh-release@v1
         with:
-          files: backend/target/darwinex-client-0.0.1-SNAPSHOT.jar
+          files: |
+            backend/target/darwinex-client-0.0.1-SNAPSHOT.jar
+            backend/scripts/start-server.py
+            backend/scripts/start-dev.sh
           draft: false
           prerelease: false
           tag_name: "release-${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt }}"
