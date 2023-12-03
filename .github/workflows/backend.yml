@@ -37,7 +37,7 @@ jobs:
           files: backend/target/darwinex-client-0.0.1-SNAPSHOT.jar
           draft: false
           prerelease: false
-          tag_name: ${{ github.ref_name }}
-          name: Release ${{ github.ref_name }}
+          tag_name: "release-${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt }}"
+          name: Release ${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt }}
 #        env:
 #          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
