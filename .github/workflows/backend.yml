@@ -28,23 +28,15 @@ jobs:
         run: mvn -B verify -Dprofile.active=shorttest --file pom.xml
       - name: Build with Maven longtest
         run: mvn -B verify -Dprofile.active=longtest --file pom.xml
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Use softprops/action-gh-release for creating release and uploading the asset
+      - name: Create Release and Upload JAR
+        uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          files: target/darwinex-client-0.0.1-SNAPSHOT.jar
           draft: false
           prerelease: false
-
-      - name: Upload JAR to Release
-        uses: actions/upload-release-asset@v1
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: target/darwinex-client-0.0.1-SNAPSHOT.jar
-          asset_name: darwinex-client-0.0.1-SNAPSHOT.jar
-          asset_content_type: application/java-archive
