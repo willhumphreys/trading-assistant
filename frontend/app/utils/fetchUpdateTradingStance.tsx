@@ -20,5 +20,4 @@ export const fetchUpdateTradingStance = async (
         console.log(`Failed to update tradingStance ${updateTradingStanceDto}`);
         return Promise.reject(new Error(`Failed to update tradingStance ${updateTradingStanceDto}`));
     }
-
 }
