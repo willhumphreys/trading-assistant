@@ -1,15 +1,14 @@
 package uk.co.threebugs.darwinexclient.actions
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
-import uk.co.threebugs.darwinexclient.utils.logger
-import java.util.concurrent.atomic.AtomicBoolean
+import org.springframework.beans.factory.annotation.*
+import org.springframework.stereotype.*
+import uk.co.threebugs.darwinexclient.utils.*
+import java.util.concurrent.atomic.*
 
 @Service
 class ActionsService(@param:Value("\${run-on-startup}") private val runOnStartup: Boolean) {
 
     private val running = AtomicBoolean(runOnStartup)
-
     private val startUpComplete = AtomicBoolean(false)
 
     fun isRunning(): Boolean {
