@@ -1,5 +1,5 @@
 'use client'
-import {useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
     AccountSetupGroups,
     Page,
@@ -17,6 +17,7 @@ import {fetchTradeAudits} from "@/app/utils/fetchTradeAudits";
 import TradingStanceTable from "@/app/components/tradingStancesTable";
 import {useDataFetching} from "@/app/utils/dataFetching";
 import {useWebSocketMessages} from "@/app/hooks/useWebSocketMessages";
+import EnvironmentLabel from "@/app/components/EnvironmentLabel";
 
 export default function FetchTradesClient() {
 
@@ -113,6 +114,7 @@ export default function FetchTradesClient() {
     return (<section className="bg-gray-100 py-10 min-h-screen">
 
         <div className="container mx-auto">
+            <EnvironmentLabel/>
             <div className="w-full h-16 bg-gray-700 flex items-center pl-6 space-x-4">
                 <div>
                     <AccountSelector accountSetupGroups={accountSetupGroups}
