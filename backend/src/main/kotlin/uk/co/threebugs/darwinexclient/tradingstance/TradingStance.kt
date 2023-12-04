@@ -18,4 +18,8 @@ class TradingStance(
     var accountSetupGroups: AccountSetupGroups? = null,
     @Enumerated(EnumType.STRING)
     var direction: Direction? = null
-)
+) {
+    override fun toString(): String {
+        return "TradingStance(id=$id, symbol=$symbol, direction=$direction, accountSetupGroups=${accountSetupGroups?.toString()})"
+    }
+}

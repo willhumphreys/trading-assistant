@@ -19,8 +19,8 @@ class Client(
     @param:Value("\${sleep-delay}") private val sleepDelay: Int,
 
     private val actionsService: ActionsService,
-    messageService: MessageService,
-    commandService: CommandService,
+    private val messageService: MessageService,
+    private val commandService: CommandService,
     private val openOrdersService: OpenOrdersService,
     private val fileDataService: FileDataService,
 ) {

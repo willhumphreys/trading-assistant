@@ -65,7 +65,7 @@ class AccountSetupGroupsService(
             val dbTS = dbTradingStances.find { it.symbol == fileTS.symbol }
 
             if (dbTS != null) {
-                updateTradingStanceIfDifferent(dbTS, fileTS)
+                //updateTradingStanceIfDifferent(dbTS, fileTS)
             } else {
                 tradingStanceRepository.save(
                     TradingStance(
