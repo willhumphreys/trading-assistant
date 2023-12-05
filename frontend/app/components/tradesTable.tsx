@@ -3,11 +3,11 @@ import {useEffect, useState} from "react";
 
 type Props = {
     trades: Trade[];
-    handleHeaderClick: (newSortColumn: string) => void;
+    handleTradesHeaderClick: (newSortColumn: string) => void;
     handleAuditHeaderClick: (tradeAuditId: number) => void;
 };
 
-export default function TradesTable({trades, handleHeaderClick, handleAuditHeaderClick}: Props) {
+export default function TradesTable({trades, handleTradesHeaderClick, handleAuditHeaderClick}: Props) {
 
     type CellColors = { [key: number]: string };
     type PreviousProfits = { [key: number]: number };
@@ -83,7 +83,7 @@ export default function TradesTable({trades, handleHeaderClick, handleAuditHeade
                 {columns.map((col) => (
                     <th
                         key={col.name}
-                        onClick={() => handleHeaderClick(col.entity ? `${col.entity}.${col.name}` : col.name)}
+                        onClick={() => handleTradesHeaderClick(col.entity ? `${col.entity}.${col.name}` : col.name)}
                     >
                         {col.name.charAt(0).toUpperCase() + col.name.slice(1).replace(/([A-Z])/g, ' $1')}
                     </th>

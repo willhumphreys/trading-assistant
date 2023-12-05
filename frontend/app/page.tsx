@@ -52,6 +52,19 @@ export default function FetchTradesClient() {
         });
     };
 
+    const handleTradingStanceSortChange = (newSortColumn: string) => {
+        setTradingStanceSortConfig(prevConfig => {
+            if (newSortColumn === prevConfig.column) {
+                return {
+                    ...prevConfig,
+                    direction: prevConfig.direction === 'ASC' ? 'DESC' : 'ASC'
+                };
+            } else {
+                return {column: newSortColumn, direction: 'ASC'};
+            }
+        });
+    };
+
 
     const [tradeAuditId, setTradeAuditId] = useState(1);
 
@@ -113,9 +126,14 @@ export default function FetchTradesClient() {
         fetchAll();
     }, [query, tradesSortConfig, tradeAuditId, fetchAll]);
 
-    const handleHeaderClick = (newSortColumn: string) => {
+    const handleTradesHeaderClick = (newSortColumn: string) => {
         handleSortChange(newSortColumn);
         updateTrades();
+    };
+
+    const handleTradingStanceHeaderClick = (newSortColumn: string) => {
+        handleTradingStanceSortChange(newSortColumn);
+        fetchAll();
     };
 
 
@@ -164,7 +182,7 @@ export default function FetchTradesClient() {
             <div>
                 <TradesTable
                     trades={trades}
-                    handleHeaderClick={handleHeaderClick}
+                    handleTradesHeaderClick={handleTradesHeaderClick}
                     handleAuditHeaderClick={handleAuditHeaderClick}
                 />
             </div>
@@ -174,7 +192,10 @@ export default function FetchTradesClient() {
                 />
             </div>
             <div>
-                <TradingStanceTable tradingStances={tradingStances}/>
+                <TradingStanceTable
+                    tradingStances={tradingStances}
+                    handleTradingStanceHeaderClick={handleTradingStanceHeaderClick}
+                />
             </div>
 
         </div>

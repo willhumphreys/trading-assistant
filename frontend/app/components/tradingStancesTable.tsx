@@ -3,10 +3,11 @@ import React from "react";
 import UpdateTradingStanceDirection from "@/app/utils/updateTradingStanceDirection";
 
 type Props = {
-    tradingStances?: Page<TradingStanceInfo>
+    tradingStances?: Page<TradingStanceInfo>;
+    handleTradingStanceHeaderClick: (newSortColumn: string) => void;
 };
 
-export default function TradingStanceTable({tradingStances}: Props) {
+export default function TradingStanceTable({tradingStances, handleTradingStanceHeaderClick}: Props) {
     const columns = [
         {name: 'id', entity: ''},
         {name: 'symbol', entity: ''},
@@ -31,7 +32,10 @@ export default function TradingStanceTable({tradingStances}: Props) {
             <thead className="bg-gray-800 text-white">
             <tr>
                 {columns.map((col) => (
-                    <th key={col.name}>
+                    <th
+                        key={col.name}
+                        onClick={() => handleTradingStanceHeaderClick(col.entity ? `${col.entity}.${col.name}` : col.name)}
+                    >
                         {col.name.charAt(0).toUpperCase() + col.name.slice(1).replace(/([A-Z])/g, ' $1')}
                     </th>
                 ))}

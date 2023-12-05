@@ -58,7 +58,8 @@ export function useDataFetching({
         if (tradingStances) {
             setTradingStances(tradingStances);
         }
-    }, [setAccountSetupGroups, setTrades, setTradeAudits, setTradingStances, query, tradesSortConfig, tradeAuditId]);
+    }, [setAccountSetupGroups, setTrades, setTradeAudits, setTradingStances, query, tradesSortConfig, tradeAuditId, tradingStanceSortConfig]);
+
 
     const updateTrades = useCallback(async () => {
         const trades = await fetchTrades(query, tradesSortConfig);
