@@ -7,7 +7,6 @@ import {
     SortConfig,
     Trade,
     TradeAudit,
-    TradingStance,
     TradingStanceInfo
 } from "@/app/types/interfaces";
 import TradesTable from "@/app/components/tradesTable";
@@ -26,22 +25,22 @@ export default function FetchTradesClient() {
 
     const [selectedAccountSetupGroups, setSelectedAccountSetupGroups] = useState<AccountSetupGroups | undefined>();
 
-    const [updatedTradingStance, setUpdatedTradingStance] = useState<TradingStance | undefined>();
-
     const [trades, setTrades] = useState<Trade[]>([]);
     const [tradeAudits, setTradeAudits] = useState<TradeAudit[]>([]);
     const [tradingStances, setTradingStances] = useState<Page<TradingStanceInfo>>();
 
-    // const [sortColumn, setSortColumn] = useState('id');  // Default sort column
-    // const [sortDirection, setSortDirection] = useState('ASC');  // Default sort direction
+    const [tradesSortConfig, setTradesSortConfig] = useState<SortConfig>({
+        column: 'id', // Default sort column
+        direction: 'ASC' // Default sort direction
+    });
 
-    const [sortConfig, setSortConfig] = useState<SortConfig>({
+    const [tradingStanceSortConfig, setTradingStanceSortConfig] = useState<SortConfig>({
         column: 'id', // Default sort column
         direction: 'ASC' // Default sort direction
     });
 
     const handleSortChange = (newSortColumn: string) => {
-        setSortConfig(prevConfig => {
+        setTradesSortConfig(prevConfig => {
             if (newSortColumn === prevConfig.column) {
                 return {
                     ...prevConfig,
@@ -101,9 +100,9 @@ export default function FetchTradesClient() {
         setTradeAudits,
         setTradingStances,
         query,
-        sortConfig,
+        tradesSortConfig: tradesSortConfig,
+        tradingStanceSortConfig: tradingStanceSortConfig,
         tradeAuditId,
-        setSelectedAccountSetupGroups,
         selectedAccountSetupGroups
     });
 
@@ -112,7 +111,7 @@ export default function FetchTradesClient() {
 
     useEffect(() => {
         fetchAll();
-    }, [query, sortConfig, tradeAuditId, fetchAll]);
+    }, [query, tradesSortConfig, tradeAuditId, fetchAll]);
 
     const handleHeaderClick = (newSortColumn: string) => {
         handleSortChange(newSortColumn);
