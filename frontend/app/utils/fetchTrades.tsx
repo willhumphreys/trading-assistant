@@ -1,6 +1,6 @@
-import {Query, Trade} from "@/app/types/interfaces";
+import {Query, SortConfig, Trade} from "@/app/types/interfaces";
 
-export const fetchTrades = async (query: Query, sortColumn: string, sortDirection: string): Promise<Trade[] | null> => {
+export const fetchTrades = async (query: Query, sortConfig: SortConfig): Promise<Trade[] | null> => {
     try {
         const nonEmptyQuery = Object.fromEntries(Object.entries(query).filter(([key, value]) => {
             if (key === 'setup') {
@@ -13,7 +13,7 @@ export const fetchTrades = async (query: Query, sortColumn: string, sortDirectio
             nonEmptyQuery.setup = Object.fromEntries(Object.entries(nonEmptyQuery.setup).filter(([key, value]) => value !== ''));
         }
 
-        const res = await fetch(`/api/trades/searchByExample?sortColumn=${sortColumn}&sortDirection=${sortDirection}`, {
+        const res = await fetch(`/api/trades/searchByExample?sortColumn=${sortConfig.column}&sortDirection=${sortConfig.direction}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

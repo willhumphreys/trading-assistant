@@ -4,6 +4,7 @@ import {
     AccountSetupGroups,
     Page,
     Query,
+    SortConfig,
     Trade,
     TradeAudit,
     TradingStance,
@@ -31,8 +32,27 @@ export default function FetchTradesClient() {
     const [tradeAudits, setTradeAudits] = useState<TradeAudit[]>([]);
     const [tradingStances, setTradingStances] = useState<Page<TradingStanceInfo>>();
 
-    const [sortColumn, setSortColumn] = useState('id');  // Default sort column
-    const [sortDirection, setSortDirection] = useState('ASC');  // Default sort direction
+    // const [sortColumn, setSortColumn] = useState('id');  // Default sort column
+    // const [sortDirection, setSortDirection] = useState('ASC');  // Default sort direction
+
+    const [sortConfig, setSortConfig] = useState<SortConfig>({
+        column: 'id', // Default sort column
+        direction: 'ASC' // Default sort direction
+    });
+
+    const handleSortChange = (newSortColumn: string) => {
+        setSortConfig(prevConfig => {
+            if (newSortColumn === prevConfig.column) {
+                return {
+                    ...prevConfig,
+                    direction: prevConfig.direction === 'ASC' ? 'DESC' : 'ASC'
+                };
+            } else {
+                return {column: newSortColumn, direction: 'ASC'};
+            }
+        });
+    };
+
 
     const [tradeAuditId, setTradeAuditId] = useState(1);
 
@@ -81,8 +101,7 @@ export default function FetchTradesClient() {
         setTradeAudits,
         setTradingStances,
         query,
-        sortColumn,
-        sortDirection,
+        sortConfig,
         tradeAuditId,
         setSelectedAccountSetupGroups,
         selectedAccountSetupGroups
@@ -93,17 +112,13 @@ export default function FetchTradesClient() {
 
     useEffect(() => {
         fetchAll();
-    }, [query, sortColumn, sortDirection, tradeAuditId, fetchAll]);
+    }, [query, sortConfig, tradeAuditId, fetchAll]);
 
     const handleHeaderClick = (newSortColumn: string) => {
-        if (newSortColumn === sortColumn) {
-            setSortDirection(sortDirection === 'ASC' ? 'DESC' : 'ASC');
-        } else {
-            setSortColumn(newSortColumn);
-            setSortDirection('ASC');
-        }
+        handleSortChange(newSortColumn);
         updateTrades();
     };
+
 
     const handleAuditHeaderClick = (tradeAuditId: number) => {
         console.log(`click click tradeAuditId: ${tradeAuditId}`)

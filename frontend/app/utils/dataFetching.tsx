@@ -1,5 +1,13 @@
 import React, {useCallback} from 'react';
-import {AccountSetupGroups, Page, Query, Trade, TradeAudit, TradingStanceInfo} from "@/app/types/interfaces";
+import {
+    AccountSetupGroups,
+    Page,
+    Query,
+    SortConfig,
+    Trade,
+    TradeAudit,
+    TradingStanceInfo
+} from "@/app/types/interfaces";
 import {fetchTrades} from '@/app/utils/fetchTrades';
 import {fetchTradeAudits} from "@/app/utils/fetchTradeAudits";
 import {fetchTradingStances} from "@/app/utils/fetchTradingStances";
@@ -13,8 +21,7 @@ interface UseDataFetchingParams {
     setTradeAudits: React.Dispatch<React.SetStateAction<TradeAudit[]>>;
     setTradingStances: React.Dispatch<React.SetStateAction<Page<TradingStanceInfo> | undefined>>;
     query: Query;
-    sortColumn: string;
-    sortDirection: string;
+    sortConfig: SortConfig;
     tradeAuditId: number;
 }
 
@@ -24,8 +31,7 @@ export function useDataFetching({
                                     setTradeAudits,
                                     setTradingStances,
                                     query,
-                                    sortColumn,
-                                    sortDirection,
+                                    sortConfig,
                                     tradeAuditId,
                                     setSelectedAccountSetupGroups,
                                     selectedAccountSetupGroups
@@ -38,7 +44,7 @@ export function useDataFetching({
             setAccountSetupGroups(accountSetupGroups);
         }
 
-        const trades = await fetchTrades(query, sortColumn, sortDirection);
+        const trades = await fetchTrades(query, sortConfig);
         if (trades) {
             setTrades(trades);
         }
@@ -48,18 +54,18 @@ export function useDataFetching({
             setTradeAudits(tradeAudits);
         }
 
-        const tradingStances = await fetchTradingStances(0, 100, sortColumn, sortDirection, selectedAccountSetupGroups);
+        const tradingStances = await fetchTradingStances(0, 100, sortConfig, selectedAccountSetupGroups);
         if (tradingStances) {
             setTradingStances(tradingStances);
         }
-    }, [setAccountSetupGroups, setTrades, setTradeAudits, setTradingStances, query, sortColumn, sortDirection, tradeAuditId]);
+    }, [setAccountSetupGroups, setTrades, setTradeAudits, setTradingStances, query, sortConfig, tradeAuditId]);
 
     const updateTrades = useCallback(async () => {
-        const trades = await fetchTrades(query, sortColumn, sortDirection);
+        const trades = await fetchTrades(query, sortConfig);
         if (trades) {
             setTrades(trades);
         }
-    }, [query, sortColumn, sortDirection]);
+    }, [query, sortConfig]);
 
     return {fetchAll, updateTrades};
 }

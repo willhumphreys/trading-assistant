@@ -1,14 +1,13 @@
-import {AccountSetupGroups, Page, TradingStanceInfo} from "@/app/types/interfaces";
+import {AccountSetupGroups, Page, SortConfig, TradingStanceInfo} from "@/app/types/interfaces";
 
 export const fetchTradingStances = async (
     page: number,
     size: number,
-    sortColumn: string,
-    sortDirection: string,
+    sortConfig: SortConfig,
     accountSetupGroups: AccountSetupGroups | undefined
 ): Promise<Page<TradingStanceInfo>> => {
 
-    const sort = `${sortColumn},${sortDirection}`;
+    const sort = `${sortConfig.column},${sortConfig.direction}`;
     const queryParams = [
         accountSetupGroups ? `accountSetupGroupsName=${accountSetupGroups.name}` : null,
         `page=${page}`,

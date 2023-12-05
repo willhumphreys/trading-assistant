@@ -143,6 +143,12 @@ export interface Query {
     message: string;
 }
 
+export type SortConfig = {
+    column: string;
+    direction: 'ASC' | 'DESC';
+};
+
+
 export interface Page<T> {
     content: T[];
     pageable: {
