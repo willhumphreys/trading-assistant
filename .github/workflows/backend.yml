@@ -32,7 +32,7 @@ jobs:
       - name: Build with Maven longtest
         run: mvn -B verify -Dprofile.active=longtest --file pom.xml
       - name: Upload JAR
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: darwinex-client-jar
           path: backend/target/darwinex-client-0.0.1-SNAPSHOT.jar
