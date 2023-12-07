@@ -258,7 +258,11 @@ class TradeService(
             } else if (tradeInfo.type.equals("buylimit") || tradeInfo.type.equals("selllimit")) {
                 Status.OUT_OF_TIME
             } else {
-                Status.CLOSED_BY_USER
+                if(trade.status == Status.CLOSED_BY_STANCE) {
+                    Status.CLOSED_BY_STANCE
+                } else {
+                    Status.CLOSED_BY_USER
+                }
             }
 
         trade.apply {
