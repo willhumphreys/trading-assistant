@@ -13,10 +13,6 @@ class MessageRepository {
     private var lastMessagesMillis: Long = 0
 
 
-    init {
-
-    }
-
     /*Loads stored messages from file (in case of a restart).
  */
     fun loadMessages(accountSetupGroups: AccountSetupGroupsDto) {
