@@ -249,6 +249,15 @@ the eventHandler.onOrderEvent() function.
                     .append(" -> ")
                     .append(currentValue.profitAndLoss)
 
+                val currentTrade = tradeService.findById(currentValue.magic)
+
+                currentTrade?.takeIf { it.status == Status.PENDING }?.apply {
+                    status = Status.FILLED
+                    filledDateTime = currentValue.openTime?.atZone(ZoneId.of("Europe/Zurich"))
+                    filledPrice = currentValue.openPrice
+                    logger.warn("Pending trade was filled: $this")
+                    tradeService.save(this)
+                }
 
                 webSocketController.sendMessage(
                     WebSocketMessage(

@@ -2,7 +2,7 @@
   {
     "name": "linux-long",
     "setup-group-name": "long",
-    "metatrader-account": "long",
+    "metatrader-account": "long-23",
     "trading-stances": [
       {
         "symbol": "EURUSD",
@@ -72,7 +72,7 @@
   {
     "name": "linux-short",
     "setup-group-name": "short",
-    "metatrader-account": "short",
+    "metatrader-account": "short-04",
     "trading-stances": [
       {
         "symbol": "EURUSD",
@@ -142,7 +142,7 @@
   {
     "name": "linux-dev",
     "setup-group-name": "both",
-    "metatrader-account": "long-dev-linux",
+    "metatrader-account": "long-dev-linux-84",
     "trading-stances": [
       {
         "symbol": "EURUSD",
