@@ -41,3 +41,23 @@ jobs:
           prerelease: false
           tag_name: "release-${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt }}"
           name: Release ${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt }}
+  build-docker-image:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::573591465159:role/gitHubDeployRole
+          aws-region: eu-central-1
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      - name: Build, tag, and push docker image to Amazon ECR
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: trading-assistant
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
+          docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG

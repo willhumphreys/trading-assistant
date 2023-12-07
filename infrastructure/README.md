@@ -20,3 +20,11 @@ To update the global packages
 ```bash
 npx npm-check --global --update-all
 ```
+
+To set the environmental variables
+```bash
+source ./setprodenv.sh
+```
+
+cdk synth EcrStack
+cdk synth TradingAssistantStack

@@ -38,11 +38,11 @@ jobs:
         run: npm test
         env:
           GITHUB_BRANCH: main
-      - name: CDK synth
+      - name: CDK synth TradingAssistant
         env:
           GITHUB_BRANCH: main
         run: npx cdk synth TradingAssistant
-      - name: CDK deploy
+      - name: CDK deploy TradingAssistant
         env:
           GITHUB_BRANCH: main
         run: npx cdk deploy TradingAssistant
