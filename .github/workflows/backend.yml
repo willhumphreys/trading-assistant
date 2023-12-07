@@ -1,8 +1,5 @@
 name: backend-maven-build
 
-defaults:
-  run:
-    working-directory: backend
 on:
   push:
     branches: [ main ]
@@ -17,7 +14,9 @@ permissions: write-all
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    defaults:
+      run:
+        working-directory: backend
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 21
@@ -34,6 +33,9 @@ jobs:
   release:
     needs: build
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
 
     steps:
       - name: Create Release and Upload JAR
