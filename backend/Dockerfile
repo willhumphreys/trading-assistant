@@ -2,7 +2,7 @@
 
     LABEL maintainer="whumphreys@gmail.com"
 
-    COPY mochi-graphs mochi-graphs
+#    COPY mochi-graphs mochi-graphs
     COPY ./accounts accounts
 
     COPY target/darwinex-client-0.0.1-SNAPSHOT.jar darwinex-client-0.0.1-SNAPSHOT.jar
