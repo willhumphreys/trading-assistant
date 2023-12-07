@@ -25,12 +25,12 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Quick build
-        run: mvn -B install -DskipTests -Dprofile.active=shorttest --file pom.xml
-#      - name: Build with Maven shorttest
-#        run: mvn -B verify -Dprofile.active=shorttest --file pom.xml
-#      - name: Build with Maven longtest
-#        run: mvn -B verify -Dprofile.active=longtest --file pom.xml
+#      - name: Quick build
+#        run: mvn -B install -DskipTests -Dprofile.active=shorttest --file pom.xml
+      - name: Build with Maven shorttest
+        run: mvn -B verify -Dprofile.active=shorttest --file pom.xml
+      - name: Build with Maven longtest
+        run: mvn -B verify -Dprofile.active=longtest --file pom.xml
       - name: Upload JAR
         uses: actions/upload-artifact@v2
         with:
