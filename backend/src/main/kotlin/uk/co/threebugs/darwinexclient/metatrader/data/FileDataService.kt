@@ -25,7 +25,7 @@ class FileDataService(
 ) {
 
 
-    internal fun loadData(symbols: Array<String>): List<AccountSetupGroupsDto> {
+    internal fun loadData(symbols: List<String>, setupLimit: Int): List<AccountSetupGroupsDto> {
 
         val accountsPath: Path = Paths.get(accounts)
 
@@ -36,8 +36,7 @@ class FileDataService(
             Files.list(setupGroupsPath).use { paths ->
                 paths.forEach { setupsPath: Path ->
                     val setupGroups = setupGroupService.loadSetupsFromFile(setupsPath)
-                    Arrays.stream(symbols)
-                        .forEach { symbol: String -> loadDataFromCsv(symbol, setupGroups) }
+                    symbols.forEach { symbol: String -> loadDataFromCsv(symbol, setupGroups, setupLimit) }
                 }
             }
         } catch (e: IOException) {
@@ -70,7 +69,7 @@ class FileDataService(
     }
 
 
-    private fun loadDataFromCsv(symbol: String, setupGroups: List<SetupGroup>): List<Setup> {
+    private fun loadDataFromCsv(symbol: String, setupGroups: List<SetupGroup>, setupLimit: Int): List<Setup> {
         return setupGroups
             .filter { setupGroup: SetupGroup ->
                 setupGroup.symbol
@@ -80,7 +79,8 @@ class FileDataService(
                 setupFileRepository.readCsv(
                     Path.of(setupGroup.path ?: throw RuntimeException("Path not found")),
                     setupGroup.symbol ?: throw RuntimeException("Symbol not found"),
-                    setupGroup
+                    setupGroup,
+                    setupLimit
                 )
             }
             .map { setup: Setup ->

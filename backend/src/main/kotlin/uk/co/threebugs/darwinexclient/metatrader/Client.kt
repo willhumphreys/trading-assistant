@@ -17,18 +17,19 @@ class Client(
     private val marketDataService: MarketDataService,
     @param:Value("\${account-setup-groups-name}") private val accountSetupGroupsName: String,
     @param:Value("\${sleep-delay}") private val sleepDelay: Int,
+    @param:Value("\${setup-limit}") private val setupLimit: Int,
 
     private val actionsService: ActionsService,
     private val messageService: MessageService,
-    private val commandService: CommandService,
+    commandService: CommandService,
     private val openOrdersService: OpenOrdersService,
-    private val fileDataService: FileDataService,
+    fileDataService: FileDataService,
 ) {
 
     init {
-        val symbols = arrayOf("EURUSD", "GBPUSD", "USDCAD", "NZDUSD", "AUDUSD", "USDJPY", "USDCHF")
+        val symbols = listOf("EURUSD", "GBPUSD", "USDCAD", "NZDUSD", "AUDUSD", "USDJPY", "USDCHF")
 
-        val accountSetupGroupsList = fileDataService.loadData(symbols)
+        val accountSetupGroupsList = fileDataService.loadData(symbols, setupLimit)
 
         val accountSetupGroups = accountSetupGroupsList.first { it.name == accountSetupGroupsName }
 

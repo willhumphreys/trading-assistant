@@ -69,8 +69,8 @@ do not use the same commandID or write at the same time.
         On receiving the data the eventHandler.onTick()
         function will be triggered.
     */
-    final fun subscribeSymbols(symbols: Array<String>, accountSetupGroupsName: AccountSetupGroupsDto) {
-        sendCommand("SUBSCRIBE_SYMBOLS", java.lang.String.join(",", *symbols), accountSetupGroupsName)
+    final fun subscribeSymbols(symbols: List<String>, accountSetupGroupsName: AccountSetupGroupsDto) {
+        sendCommand("SUBSCRIBE_SYMBOLS", java.lang.String.join(",", symbols), accountSetupGroupsName)
     }
 
 

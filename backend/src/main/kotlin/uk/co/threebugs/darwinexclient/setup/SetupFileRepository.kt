@@ -8,14 +8,20 @@ import java.time.*
 import java.time.temporal.*
 import java.util.stream.*
 
+private const val MAX_SETUP_LIMIT = 20
+
 @Repository
 class SetupFileRepository {
-    fun readCsv(path: Path, symbol: String, setupGroup: SetupGroup): List<Setup> {
+    fun readCsv(path: Path, symbol: String, setupGroup: SetupGroup, setupLimit: Int): List<Setup> {
+        if(setupLimit > MAX_SETUP_LIMIT) {
+            throw RuntimeException("setupLimit cannot be greater than 20")
+        }
+
         try {
             Files.lines(path).use { lines ->
                 return lines
-                    .skip(1) // Skip the header
-                    .limit(10) // Limit to 10 rows (not including the header)
+                    .skip(1)
+                    .limit(setupLimit.toLong())
                     .map { line: String ->
                         val values = line.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
                         val rank = values[0].replace("\"", "").trim { it <= ' ' }.toInt()
@@ -47,9 +53,6 @@ class SetupFileRepository {
     }
 
     companion object {
-        fun generateStrategy(rank: Int, symbol: String?, placedDateTime: ZonedDateTime, stop: Int, limit: Int): String {
-            return "%d-%s-%d-%s".format(rank, symbol, placedDateTime.toEpochSecond(), getLongShort(stop, limit))
-        }
 
         fun getNextEventTime(dayOfWeek: Int, hourOfDay: Int, clock: Clock): ZonedDateTime {
             val now = ZonedDateTime.now(clock)

@@ -208,5 +208,41 @@
         "direction": "LONG"
       }
     ]
+  },
+  {
+    "name": "currencies",
+    "setup-group-name": "both",
+    "metatrader-account": "currencies",
+    "trading-stances": [
+      {
+        "symbol": "EURUSD",
+        "direction": "FLAT"
+      },
+      {
+        "symbol": "GBPUSD",
+        "direction": "FLAT"
+      },
+      {
+        "symbol": "USDCAD",
+        "direction": "FLAT"
+      },
+      {
+        "symbol": "NZDUSD",
+        "direction": "FLAT"
+      },
+      {
+        "symbol": "AUDUSD",
+        "direction": "FLAT"
+      },
+      {
+        "symbol": "USDJPY",
+        "direction": "FLAT"
+      },
+      {
+        "symbol": "USDCHF",
+        "direction": "FLAT"
+      }
+    ]
   }
+
 ]

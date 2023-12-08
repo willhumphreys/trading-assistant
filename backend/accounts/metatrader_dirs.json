@@ -22,5 +22,9 @@
   {
     "name": "test",
     "dir-path": "test-ea-files"
+  },
+  {
+    "name": "currencies",
+    "dir-path": "C:\\Users\\user\\AppData\\Roaming\\MetaQuotes\\Terminal\\33BCAFEA70BFE62B7C2BC1AAFDFEEDB6\\MQL5\\Files\\"
   }
 ]
