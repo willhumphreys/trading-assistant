@@ -20,4 +20,7 @@ data class SetupDto(
 ) {
     @JsonIgnore
     fun isLong(): Boolean = stop < limit
+
+    @JsonIgnore
+    fun isShort(): Boolean = !isLong()
 }

@@ -185,14 +185,25 @@ class TradeService(
                 val closeDateTime = trade.targetPlaceDateTime!!.plusHours(trade.setup!!.tradeDuration!!.toLong())
                 val currentDateTime = ZonedDateTime.now(clock)
                 closeDateTime.isBefore(currentDateTime)
-            }.forEach { trade: Trade ->
-                commandService.closeOrdersByMagic(trade.id!!, accountSetupGroups)
-                trade.status = Status.CLOSED_BY_MAGIC_SENT
-                trade.lastUpdatedDateTime = ZonedDateTime.now(clock)
-                //trade.closedDateTime = ZonedDateTime.now()
-                tradeRepository.save(trade)
-                slackClient.sendSlackNotification("Order closed by magic: ${trade.setup!!.rank} ${trade.setup!!.symbol} ${trade.setup!!.direction} ${trade.profit}")
+            }.map { t -> tradeMapper.toDto(t) }
+            .forEach { trade ->
+                closeTrade(trade, accountSetupGroups)
             }
+    }
+
+    fun closeTrade(
+        tradeDto: TradeDto,
+        accountSetupGroups: AccountSetupGroupsDto
+    ) {
+
+        val trade = tradeMapper.toEntity(tradeDto, clock)
+
+        commandService.closeOrdersByMagic(trade.id!!, accountSetupGroups)
+        trade.status = Status.CLOSED_BY_MAGIC_SENT
+        trade.lastUpdatedDateTime = ZonedDateTime.now(clock)
+        //trade.closedDateTime = ZonedDateTime.now()
+        tradeRepository.save(trade)
+        slackClient.sendSlackNotification("Order closed by magic: ${trade.setup!!.rank} ${trade.setup!!.symbol} ${trade.setup!!.direction} ${trade.profit}")
     }
 
     fun closeTradesOnStanceChange(
@@ -221,33 +232,38 @@ class TradeService(
     }
 
 
-    fun fillTrade(tradeInfo: TradeInfo, metatraderId: Int) {
-        tradeRepository.findByIdOrNull(tradeInfo.magic)?.let { trade ->
-            if (trade.status == Status.PENDING || trade.status == Status.ORDER_SENT) {
-                trade.apply {
+    fun placeTrade(tradeInfo: TradeInfo, metatraderId: Int, trade: TradeDto, status: Status) {
+
+        if (trade.status == Status.PENDING || trade.status == Status.ORDER_SENT) {
+            trade.apply {
+                val tradeTime = ZonedDateTime.of(tradeInfo.openTime, ZoneId.of("Europe/Zurich"))
+                if(status == Status.FILLED) {
+                   filledPrice = tradeInfo.openPrice
+                   filledDateTime = tradeTime
+                } else {
                     placedPrice = tradeInfo.openPrice
-                    placedDateTime = ZonedDateTime.of(tradeInfo.openTime, ZoneId.of("Europe/Zurich"))
-                    status = Status.PLACED_IN_MT
-                    lastUpdatedDateTime = ZonedDateTime.now(clock)
-                    this.metatraderId = metatraderId
-                }.also {
-                    tradeRepository.save(it)
-                    slackClient.sendSlackNotification("Order placed in MT: $it")
+                    placedDateTime = tradeTime
                 }
+                this.status = status
+                lastUpdatedDateTime = ZonedDateTime.now(clock)
+                this.metatraderId = metatraderId
+            }.also {
+                save(it)
+                slackClient.sendSlackNotification("Order placed in MT: $it")
             }
-        } ?: logger.warn("Trade not found: $tradeInfo")
+        }
     }
 
-    fun closeTrade(tradeInfo: TradeInfo) {
+    fun onClosedTrade(tradeInfo: TradeInfo) {
         tradeRepository.findByIdOrNull(tradeInfo.magic)?.let { trade ->
-            closeTrade(
+            onClosedTrade(
                 tradeInfo,
                 trade
             )
         } ?: logger.warn("Trade not found: $tradeInfo")
     }
 
-    private fun closeTrade(tradeInfo: TradeInfo, trade: Trade) {
+    private fun onClosedTrade(tradeInfo: TradeInfo, trade: Trade) {
 
         val closingStatus =
 
@@ -258,7 +274,7 @@ class TradeService(
             } else if (tradeInfo.type.equals("buylimit") || tradeInfo.type.equals("selllimit")) {
                 Status.OUT_OF_TIME
             } else {
-                if(trade.status == Status.CLOSED_BY_STANCE) {
+                if (trade.status == Status.CLOSED_BY_STANCE) {
                     Status.CLOSED_BY_STANCE
                 } else {
                     Status.CLOSED_BY_USER

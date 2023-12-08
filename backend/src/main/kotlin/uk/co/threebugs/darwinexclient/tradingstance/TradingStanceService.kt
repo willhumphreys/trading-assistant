@@ -63,4 +63,14 @@ class TradingStanceService(
 
         return tradingStanceMapper.toDto(savedEntity, trades)
     }
+
+    fun findBySymbolAndAccountSetupGroupsName(symbol: String, accountSetupGroupsName: String): TradingStanceDtoIn {
+
+        val tradingStance =
+            (tradingStanceRepository.findBySymbolAndAccountSetupGroups_Name(symbol, accountSetupGroupsName)
+                ?: throw IllegalArgumentException("TradingStance with symbol $symbol and accountSetupGroupsName $accountSetupGroupsName not found"))
+
+        return tradingStanceMapper.toDto(tradingStance)
+
+    }
 }

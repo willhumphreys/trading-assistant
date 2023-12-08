@@ -9,7 +9,9 @@ import uk.co.threebugs.darwinexclient.*
 import uk.co.threebugs.darwinexclient.accountsetupgroups.*
 import uk.co.threebugs.darwinexclient.actions.*
 import uk.co.threebugs.darwinexclient.metatrader.*
+import uk.co.threebugs.darwinexclient.setupgroup.*
 import uk.co.threebugs.darwinexclient.trade.*
+import uk.co.threebugs.darwinexclient.tradingstance.*
 import uk.co.threebugs.darwinexclient.utils.*
 import uk.co.threebugs.darwinexclient.websocket.*
 import java.io.*
@@ -24,6 +26,7 @@ class OpenOrdersService(
     private val objectMapper: ObjectMapper,
     private val webSocketController: WebSocketController,
     private val tradeService: TradeService,
+    private val tradingStanceService: TradingStanceService,
     private val clock: Clock
 ) {
 
@@ -109,7 +112,7 @@ the eventHandler.onOrderEvent() function.
                     val previousOrder = lastOpenOrders.orders[key]
 
                     // Compare the TradeInfo objects
-                    compareTradeInfo(key, currentOrder, previousOrder!!)
+                    compareTradeInfo(key, currentOrder, previousOrder!!, accountSetupGroups)
                 } else {
                     // Log new orders that didn't exist in previousDataOrders
                     logger.info("New order: $key, Value: $currentOrder")
@@ -156,7 +159,12 @@ the eventHandler.onOrderEvent() function.
 
     }
 
-    private fun compareTradeInfo(ticket: Int, currentValue: TradeInfo, previousValue: TradeInfo) {
+    private fun compareTradeInfo(
+        ticket: Int,
+        currentValue: TradeInfo,
+        previousValue: TradeInfo,
+        accountSetupGroups: AccountSetupGroupsDto
+    ) {
         var log = false
         if (currentValue != previousValue) {
             val changes = StringBuilder("Changes for Order $ticket: ")
@@ -248,14 +256,21 @@ the eventHandler.onOrderEvent() function.
                     .append(" -> ")
                     .append(currentValue.profitAndLoss)
 
-                val currentTrade = tradeService.findById(currentValue.magic)
+                val tradingStance = tradingStanceService.findBySymbolAndAccountSetupGroupsName(
+                    currentValue.symbol!!,
+                    accountSetupGroups.name
+                )
 
-                currentTrade?.takeIf { it.status == Status.PENDING }?.apply {
-                    status = Status.FILLED
-                    filledDateTime = currentValue.openTime?.atZone(ZoneId.of("Europe/Zurich"))
-                    filledPrice = currentValue.openPrice
-                    logger.warn("Pending trade was filled: $this")
-                    tradeService.save(this)
+                val foundTrade = tradeService.findById(currentValue.magic)
+                    ?: throw IllegalArgumentException("Trade with magic ${currentValue.magic} not found")
+
+                if (tradingStance.direction == Direction.FLAT ||
+                    (foundTrade.setup.isLong() && tradingStance.direction == Direction.SHORT) ||
+                    (foundTrade.setup.isShort() && tradingStance.direction == Direction.LONG)
+                ) {
+                    tradeService.closeTrade(foundTrade, accountSetupGroups)
+                } else {
+                    tradeService.placeTrade(currentValue, currentValue.magic, foundTrade, Status.FILLED)
                 }
 
                 webSocketController.sendMessage(
@@ -301,7 +316,9 @@ the eventHandler.onOrderEvent() function.
                 value = tradeInfo.toString()
             ), "/topic/order-change"
         )
-        tradeService.fillTrade(tradeInfo, metaTraderId)
+        val foundTrade = tradeService.findById(tradeInfo.magic)
+            ?: throw IllegalArgumentException("Trade with magic ${tradeInfo.magic} not found")
+        tradeService.placeTrade(tradeInfo, metaTraderId, foundTrade, Status.PLACED_IN_MT)
     }
 
     fun onClosedOrder(tradeInfo: TradeInfo) {
@@ -312,7 +329,7 @@ the eventHandler.onOrderEvent() function.
                 value = tradeInfo.toString()
             ), "/topic/order-change"
         )
-        tradeService.closeTrade(tradeInfo)
+        tradeService.onClosedTrade(tradeInfo)
     }
 
     fun onTradeStateChange(currentValue: TradeInfo, previousValue: TradeInfo) {
