@@ -29,9 +29,7 @@ class Client(
     init {
         val symbols = listOf("EURUSD", "GBPUSD", "USDCAD", "NZDUSD", "AUDUSD", "USDJPY", "USDCHF")
 
-        val accountSetupGroupsList = fileDataService.loadData(symbols, setupLimit)
-
-        val accountSetupGroups = accountSetupGroupsList.first { it.name == accountSetupGroupsName }
+        val accountSetupGroups = getAccountSetupGroups(fileDataService, symbols)
 
         messageService.loadMessages(accountSetupGroups)
 
@@ -56,6 +54,20 @@ class Client(
         commandService.subscribeSymbols(symbols, accountSetupGroups)
 
         actionsService.startUpComplete()
+    }
+
+    private fun getAccountSetupGroups(
+        fileDataService: FileDataService,
+        symbols: List<String>
+    ): AccountSetupGroupsDto {
+
+        try {
+            val accountSetupGroupsList = fileDataService.loadData(symbols, setupLimit)
+
+            return accountSetupGroupsList.first { it.name == accountSetupGroupsName }
+        } catch (e: NoSuchElementException) {
+            throw RuntimeException("Account setup group $accountSetupGroupsName not found")
+        }
     }
 
 
