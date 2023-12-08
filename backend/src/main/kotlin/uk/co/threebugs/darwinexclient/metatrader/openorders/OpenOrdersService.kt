@@ -124,9 +124,8 @@ the eventHandler.onOrderEvent() function.
         } catch (e1: MismatchedInputException) {
             logger.error("MismatchedInputException checking open orders", e1)
         } catch (e2: FileNotFoundException) {
-            logger.error("File not found", e2)
+            logger.warn("File not found: ${e2.message}")
         }
-
     }
 
     /*Loads stored orders from file (in case of a restart).
