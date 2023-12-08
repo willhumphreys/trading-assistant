@@ -33,7 +33,7 @@ class MarketDataRepository(
                 marketDataPath.toFile(),
                 object : TypeReference<Map<String, CurrencyInfo>>() {})
         }.getOrElse { throwable ->
-            logger.error("An error occurred while reading the marketData file. Returning an emptyMap: $throwable")
+            logger.warn("DWX_Market_Data.json locked: ${throwable.message}")
             emptyMap()
         }
 

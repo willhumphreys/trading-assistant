@@ -127,7 +127,7 @@ the eventHandler.onOrderEvent() function.
         } catch (e1: MismatchedInputException) {
             logger.error("MismatchedInputException checking open orders", e1)
         } catch (e2: FileNotFoundException) {
-            logger.warn("File not found: ${e2.message}")
+            logger.warn("DWX_Orders.json locked: ${e2.message}")
         }
     }
 

@@ -219,7 +219,7 @@ class TradeService(
         )
             .stream()
             .map { trade: Trade ->
-                if (trade.status == Status.FILLED) {
+                if (trade.status == Status.FILLED || trade.status == Status.PLACED_IN_MT) {
                     commandService.closeOrdersByMagic(trade.id!!, accountSetupGroups)
                 }
                 trade.status = closingStatus
@@ -230,6 +230,8 @@ class TradeService(
                 trade
             }.toList()
     }
+
+
 
 
     fun placeTrade(tradeInfo: TradeInfo, metatraderId: Int, trade: TradeDto, status: Status) {

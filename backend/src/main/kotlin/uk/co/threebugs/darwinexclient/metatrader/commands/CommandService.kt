@@ -46,6 +46,7 @@ do not use the same commandID or write at the same time.
 
                 val filePath = dwxPath.resolve("DWX_Commands_$i.txt")
                 if (!filePath.toFile().exists() && Helpers.tryWriteToFile(filePath, text)) {
+                    logger.info("Command sent: $text")
                     success = true
                     break
                 }
