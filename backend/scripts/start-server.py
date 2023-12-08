@@ -3,6 +3,8 @@ import platform
 import subprocess
 import sys
 
+JAVA_VERSION = "temurin-21.0.1"
+
 # Load environment variables from .env file
 with open('.env') as f:
     for line in f:
@@ -21,9 +23,9 @@ print(f"Starting server with profile: {profile_name}")
 
 # Define the JDK path based on the OS
 if platform.system() == 'Windows':
-    java_home = r"C:\Users\user\.jdks\temurin-17.0.9"
+    java_home = r'C:\Users\user\.jdks\{0}'.format(JAVA_VERSION)
 else:
-    java_home = "/home/will/.jdks/temurin-17.0.9"
+    java_home = '/home/will/.jdks/{0}'.format(JAVA_VERSION)
 
 # Define the path to the jar file
 jar_path = "darwinex-client-0.0.1-SNAPSHOT.jar"
