@@ -5,7 +5,14 @@ docker build -t trading-assistant .
 ```
 
 ```bash
-docker run --env-file .env --network="host" trading-assistant
+docker run --env-file .env \
+  --env SPRING_PROFILE=dev \
+  --network="host" \
+  -p 9010:9010 -p 9011:9011 -p 8080:8080 -p 3306:3306 \
+  -v /home/will/code/darwinex-client/backend/accounts:/accounts \
+  -v /home/will/code/darwinex-client/backend/mochi-graphs:/mochi-graphs \
+  -v /home/will/.cxoffice/MetaTrader_5-3_584/drive_c/Program\ Files/MetaTrader\ 5/MQL5/Files/DWX:/home/will/.cxoffice/MetaTrader_5-3_584/drive_c/Program\ Files/MetaTrader\ 5/MQL5/Files/DWX \
+  trading-assistant
 ```
 
 #JMX
