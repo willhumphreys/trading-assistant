@@ -39,5 +39,18 @@ aws ecr describe-images --repository-name trading-assistant
 aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 573591465159.dkr.ecr.eu-central-1.amazonaws.com
 ```
 
-
+## Pull the image
+```bash
 docker pull 573591465159.dkr.ecr.eu-central-1.amazonaws.com/trading-assistant:latest
+```
+
+```bash
+docker run --env-file .env \
+--env SPRING_PROFILE=dev \
+--network="host" \
+-p 9010:9010 -p 9011:9011 -p 8080:8080 -p 3306:3306 \
+-v /home/will/code/darwinex-client/backend/accounts:/accounts \
+-v /home/will/code/darwinex-client/backend/mochi-graphs:/mochi-graphs \
+-v /home/will/.cxoffice/MetaTrader_5-3_584/drive_c/Program\ Files/MetaTrader\ 5/MQL5/Files/DWX:/home/will/.cxoffice/MetaTrader_5-3_584/drive_c/Program\ Files/MetaTrader\ 5/MQL5/Files/DWX \
+573591465159.dkr.ecr.eu-central-1.amazonaws.com/trading-assistant:latest
+```
