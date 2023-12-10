@@ -57,7 +57,7 @@ docker run --env-file .env \
 
 ## Run currencies on Windows
 
-```bash
+```powershell
 docker run --env-file .env `
 --env SPRING_PROFILE=currencies `
 -p 8080:8080 `
@@ -65,4 +65,9 @@ docker run --env-file .env `
 -v C:\\Users\\user\\IdeaProjects\\darwinex-executor\\mochi-graphs:/mochi-graphs `
 -v C:\\Users\\user\\AppData\\Roaming\\MetaQuotes\\Terminal\\33BCAFEA70BFE62B7C2BC1AAFDFEEDB6\\MQL5\\Files:/mt `
 573591465159.dkr.ecr.eu-central-1.amazonaws.com/trading-assistant:latest
+```
+
+How to start mysql
+```powershell
+docker run --name mysql-container -e MYSQL_ROOT_PASSWORD=password -v mysql_data:/var/lib/mysql -p 3306:3306 -d mysql
 ```
