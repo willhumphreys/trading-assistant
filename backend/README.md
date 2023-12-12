@@ -27,3 +27,14 @@ VisualVM is installed here
 ```
 /opt/visualvm/bin/visualvm
 ```
+
+## Azure Deployment
+
+```bash
+az group create --name TradingAssistantResourceGroup --location germanywestcentral
+az container create   --resource-group TradingAssistantResourceGroup   --name tradingAssistantContainer   --image ghcr.io/willhumphreys/trading-assistant:latest   --dns-name-label tradingassistantapp-123   --ports 8080
+az container show   --resource-group TradingAssistantResourceGroup   --name trading-assist-container    --out table
+az container logs   --resource-group TradingAssistantResourceGroup   --name trading-assist-container
+```
+
+
