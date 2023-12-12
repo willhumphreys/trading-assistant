@@ -82,24 +82,6 @@ class AccountSetupGroupsService(
         }
     }
 
-    private fun updateTradingStanceIfDifferent(dbTS: TradingStance, fileTS: TradingStanceFileDto) {
-        var isChanged = false
-
-        if (dbTS.symbol != fileTS.symbol) {
-            dbTS.symbol = fileTS.symbol
-            isChanged = true
-        }
-        if (dbTS.direction != fileTS.direction) {
-            dbTS.direction = fileTS.direction
-            isChanged = true
-        }
-        // Compare and update other fields as needed
-
-        if (isChanged) {
-            tradingStanceRepository.save(dbTS)
-        }
-    }
-
     fun findByName(accountSetupGroupsName: String): AccountSetupGroupsDto? {
         return accountSetupGroupsRepository.findByName(accountSetupGroupsName)?.let {
             accountSetupGroupsMapper.toDto(it)
