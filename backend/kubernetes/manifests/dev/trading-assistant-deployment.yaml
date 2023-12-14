@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trading-assistant
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: trading-assistant
+  template:
+    metadata:
+      labels:
+        app: trading-assistant
+    spec:
+      containers:
+      - name: trading-assistant
+        image: 573591465159.dkr.ecr.eu-central-1.amazonaws.com/trading-assistant:latest
+        ports:
+        - containerPort: 8080
+        envFrom:
+        - configMapRef:
+            name: trading-assistant-env
+        env:
+        - name: SPRING_PROFILE
+          value: "currencies"
+        volumeMounts:
+        - name: accounts-volume
+          mountPath: /accounts
+        - name: mochi-graphs-volume
+          mountPath: /mochi-graphs
+        - name: mt-volume
+          mountPath: /mt
+      volumes:
+        - name: accounts-volume
+          hostPath:
+            path: /run/desktop/mnt/host/c/Users/user/IdeaProjects/darwinex-executor/accounts
+        - name: mochi-graphs-volume
+          hostPath:
+            path: /run/desktop/mnt/host/c/Users/user/IdeaProjects/darwinex-executor/mochi-graphs
+        - name: mt-volume
+          hostPath:
+            path: /run/desktop/mnt/host/c/Users/user/AppData/Roaming/MetaQuotes/Terminal/33BCAFEA70BFE62B7C2BC1AAFDFEEDB6/MQL5/Files
+      imagePullSecrets:
+        - name: regcred

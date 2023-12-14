@@ -13,6 +13,13 @@ Automates trading on Metatrader via the Darwinex API.
 ```bash
 export AWS_PROFILE=AdministratorAccess-573591465159
 ```
+```powershell
+setx AWS_PROFILE "AdministratorAccess-573591465159"
+```
+
+```powershell
+ aws sts get-caller-identity
+```
 
 ## Login to AWS SSO
 ```bash
@@ -43,6 +50,8 @@ aws ecr get-login-password --region eu-central-1 | docker login --username AWS -
 ```bash
 docker pull 573591465159.dkr.ecr.eu-central-1.amazonaws.com/trading-assistant:latest
 ```
+
+
 ## Run dev on Linux
 ```bash
 docker run --env-file .env \
@@ -70,4 +79,27 @@ docker run --env-file .env `
 How to start mysql
 ```powershell
 docker run --name mysql-container -e MYSQL_ROOT_PASSWORD=password -v mysql_data:/var/lib/mysql -p 3306:3306 -d mysql
+```
+
+## Set the profile
+
+```powershell
+$env:AWS_PROFILE="AdministratorAccess-573591465159"
+```
+
+Store the token
+
+```powershell
+aws ecr get-login-password --region eu-central-1 > password.txt
+```
+
+## Create the kubernetes secret for the docker registry
+```powershell
+kubectl delete secret regcred
+kubectl create secret docker-registry regcred --docker-server=573591465159.dkr.ecr.eu-central-1.amazonaws.com --docker-username=AWS --docker-password=$(cat password.txt) --docker-email=whumphreys@gmail.com
+```
+
+```powershell
+kubectl delete configmap trading-assistant-env
+kubectl create configmap trading-assistant-env --from-env-file=.env
 ```
