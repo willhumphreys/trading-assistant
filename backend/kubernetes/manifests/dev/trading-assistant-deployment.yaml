@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: trading-assistant
-        image: 573591465159.dkr.ecr.eu-central-1.amazonaws.com/trading-assistant:latest
+        image: ghcr.io/willhumphreys/trading-assistant:latest
         ports:
         - containerPort: 8080
         envFrom:
