@@ -1,68 +1,164 @@
+// trading-assistant-stateful.ts
+
 import {Construct} from "constructs";
 import {TerraformStack} from "cdktf";
 import * as kubernetes from "@cdktf/provider-kubernetes";
 import * as path from "path";
 import {KubernetesProvider} from "@cdktf/provider-kubernetes/lib/provider";
 import * as dotenv from 'dotenv';
+import {DotenvParseOutput} from 'dotenv';
+import {DEFAULT_HOME_DIR, MYSQL_LABEL, TRADING_ASSISTANT_LABEL} from "../constants";
 
 export class TradingAssistantStatelessStack extends TerraformStack {
     constructor(scope: Construct, name: string) {
         super(scope, name);
 
         new KubernetesProvider(this, 'K8s', {
-            configPath: path.join(process.env.HOME || '/home/will', '.kube/config'),
+            configPath: path.join(process.env.HOME || DEFAULT_HOME_DIR, '.kube/config'),
         });
 
-        const env = dotenv.config().parsed;
+        const env = this.loadEnv();
 
-        if (!env) {
-            throw new Error('Failed to load .env file');
-        }
+        this.createConfigMap(env);
+        this.createDBPasswordSecret(env);
+        this.createTradingAssisantDeployment();
+        this.createTradingAssistantService();
+        this.createMysqlDeployment();
+        this.createMySqlService();
+    }
 
-        new kubernetes.configMap.ConfigMap(this, "trading-assistant-config", {
-            metadata: {
-                name: "trading-assistant-env",
-                labels: {
-                    app: "trading-assistant"
-                }
-            },
-            data: env
-        })
-
-
-        new kubernetes.secret.Secret(this, "mysql-root-password", {
-            metadata: {
-                name: 'mysql-root-password',
-            },
-            data: {password: env.DATABASE_PASSWORD},
-        });
-
-        // Define the trading-assistant deployment
-        new kubernetes.deployment.Deployment(this, "trading-assistant", {
+    private createMySqlService() {
+        new kubernetes.service.Service(this, "mysql-service", {
             metadata: {
                 labels: {
-                    app: 'trading-assistant',
+                    app: MYSQL_LABEL,
                 },
-                name: 'trading-assistant',
+                name: 'mysql-service',
+            },
+            spec: {
+                port: [{
+                    port: 3306,
+                    targetPort: "3306",
+                }],
+                selector: {
+                    app: MYSQL_LABEL,
+                },
+                type: 'LoadBalancer',
+            },
+        });
+    }
+
+    private createMysqlDeployment() {
+        new kubernetes.deployment.Deployment(this, MYSQL_LABEL, {
+            metadata: {
+                labels: {
+                    app: MYSQL_LABEL,
+                },
+                name: 'mysql-container',
             },
             spec: {
                 replicas: '1',
                 selector: {
                     matchLabels: {
-                        app: 'trading-assistant',
+                        app: MYSQL_LABEL,
                     },
                 },
                 template: {
                     metadata: {
                         labels: {
-                            app: 'trading-assistant',
+                            app: MYSQL_LABEL,
+                        },
+                    },
+                    spec: {
+                        container: [
+                            {
+                                image: 'mysql:latest',
+                                name: MYSQL_LABEL,
+                                port: [{
+                                    containerPort: 3306,
+                                }],
+                                env: [{
+                                    name: 'MYSQL_ROOT_PASSWORD',
+                                    valueFrom: {
+                                        secretKeyRef: {
+                                            name: 'mysql-root-password',
+                                            key: 'password',
+                                        },
+                                    },
+                                }],
+                                volumeMount: [
+                                    {
+                                        name: 'mysql-data',
+                                        mountPath: '/var/lib/mysql',
+                                    }],
+                            },
+                        ],
+                        volume: [
+                            {
+                                name: 'mysql-data',
+                                persistentVolumeClaim: {
+                                    claimName: 'mysql-pv-claim'
+                                }
+                                ,
+                            }]
+
+                    },
+                },
+            },
+        });
+    }
+
+    private createTradingAssistantService() {
+        new kubernetes.service.Service(this, "trading-assistant-service", {
+            metadata: {
+                labels: {
+                    app: TRADING_ASSISTANT_LABEL,
+                },
+                name: 'trading-assistant-service',
+            },
+            spec: {
+                port: [
+                    {
+                        port: 8080,
+                        targetPort: "8080",
+                    }
+
+                ],
+
+                selector: {
+                    app: TRADING_ASSISTANT_LABEL,
+                },
+                type: 'LoadBalancer',
+            },
+        });
+    }
+
+    private createTradingAssisantDeployment() {
+        new kubernetes.deployment.Deployment(this, TRADING_ASSISTANT_LABEL, {
+            metadata: {
+                labels: {
+                    app: TRADING_ASSISTANT_LABEL,
+                },
+                name: TRADING_ASSISTANT_LABEL,
+            },
+            spec: {
+                replicas: '1',
+                selector: {
+                    matchLabels: {
+                        app: TRADING_ASSISTANT_LABEL,
+                    },
+                },
+                template: {
+                    metadata: {
+                        labels: {
+                            app: TRADING_ASSISTANT_LABEL,
                         },
                     },
                     spec: {
                         container: [
                             {
                                 image: 'ghcr.io/willhumphreys/trading-assistant:latest',
-                                name: 'trading-assistant',
+                                name: TRADING_ASSISTANT_LABEL,
                                 port: [{
                                     containerPort: 8080,
                                 }],
@@ -114,108 +210,35 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                 },
             },
         });
+    }
 
-        // Define the trading-assistant service
-        new kubernetes.service.Service(this, "trading-assistant-service", {
+    private createDBPasswordSecret(env: DotenvParseOutput) {
+        new kubernetes.secret.Secret(this, "mysql-root-password", {
             metadata: {
-                labels: {
-                    app: 'trading-assistant',
-                },
-                name: 'trading-assistant-service',
+                name: 'mysql-root-password',
             },
-            spec: {
-                port: [
-                    {
-                        port: 8080,
-                        targetPort: "8080",
-                    }
-
-                ],
-
-                selector: {
-                    app: 'trading-assistant',
-                },
-                type: 'LoadBalancer',
-            },
+            data: {password: env.DATABASE_PASSWORD},
         });
+    }
 
-        // Define the mysql deployment
-        new kubernetes.deployment.Deployment(this, "mysql", {
+    private createConfigMap(env: DotenvParseOutput) {
+        new kubernetes.configMap.ConfigMap(this, "trading-assistant-config", {
             metadata: {
+                name: "trading-assistant-env",
                 labels: {
-                    app: 'mysql',
-                },
-                name: 'mysql-container',
+                    app: TRADING_ASSISTANT_LABEL
+                }
             },
-            spec: {
-                replicas: '1',
-                selector: {
-                    matchLabels: {
-                        app: 'mysql',
-                    },
-                },
-                template: {
-                    metadata: {
-                        labels: {
-                            app: 'mysql',
-                        },
-                    },
-                    spec: {
-                        container: [
-                            {
-                                image: 'mysql:latest',
-                                name: 'mysql',
-                                port: [{
-                                    containerPort: 3306,
-                                }],
-                                env: [{
-                                    name: 'MYSQL_ROOT_PASSWORD',
-                                    valueFrom: {
-                                        secretKeyRef: {
-                                            name: 'mysql-root-password',
-                                            key: 'password',
-                                        },
-                                    },
-                                }],
-                                volumeMount: [
-                                    {
-                                        name: 'mysql-data',
-                                        mountPath: '/var/lib/mysql',
-                                    }],
-                            },
-                        ],
-                        volume: [
-                            {
-                                name: 'mysql-data',
-                                persistentVolumeClaim: {
-                                    claimName: 'mysql-pv-claim'
-                                }
-                                ,
-                            }]
+            data: env
+        })
+    }
 
-                    },
-                },
-            },
-        });
+    private loadEnv() {
+        const env = dotenv.config().parsed;
 
-        // Define the mysql service
-        new kubernetes.service.Service(this, "mysql-service", {
-            metadata: {
-                labels: {
-                    app: 'mysql',
-                },
-                name: 'mysql-service',
-            },
-            spec: {
-                port: [{
-                    port: 3306,
-                    targetPort: "3306",
-                }],
-                selector: {
-                    app: 'mysql',
-                },
-                type: 'LoadBalancer',
-            },
-        });
+        if (!env) {
+            throw new Error('Failed to load .env file');
+        }
+        return env;
     }
 }
