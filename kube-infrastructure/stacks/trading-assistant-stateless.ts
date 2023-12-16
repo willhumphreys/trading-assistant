@@ -13,8 +13,6 @@ export class TradingAssistantStatelessStack extends TerraformStack {
             configPath: path.join(process.env.HOME || '/home/will', '.kube/config'),
         });
 
-
-        // Load environment variables from .env file
         const env = dotenv.config().parsed;
 
         if (!env) {
@@ -32,17 +30,12 @@ export class TradingAssistantStatelessStack extends TerraformStack {
         })
 
 
-        // Define the mysql-root-password Secret
         new kubernetes.secret.Secret(this, "mysql-root-password", {
             metadata: {
                 name: 'mysql-root-password',
             },
             data: {password: env.DATABASE_PASSWORD},
         });
-
-
-        console.log("ConfigMap created")
-
 
         // Define the trading-assistant deployment
         new kubernetes.deployment.Deployment(this, "trading-assistant", {

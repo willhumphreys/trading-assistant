@@ -11,14 +11,6 @@ export class TradingAssistantStatefulStack extends TerraformStack {
         new KubernetesProvider(this, 'K8s', {
             configPath: path.join(process.env.HOME || '/home/will', '.kube/config'),
         });
-        //
-        //
-        // // Load environment variables from .env file
-        // const env = dotenv.config().parsed;
-        //
-        // if (!env) {
-        //     throw new Error('Failed to load .env file');
-        // }
 
 
         new kubernetes.persistentVolumeClaim.PersistentVolumeClaim(this, "mysql-pvc", {
