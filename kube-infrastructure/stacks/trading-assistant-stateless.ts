@@ -21,7 +21,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
 
         this.createConfigMap(env);
         this.createDBPasswordSecret(env);
-        this.createTradingAssisantDeployment();
+        this.createTradingAssistantDeployment();
         this.createTradingAssistantService();
         this.createMysqlDeployment();
         this.createMySqlService();
@@ -133,7 +133,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
         });
     }
 
-    private createTradingAssisantDeployment() {
+    private createTradingAssistantDeployment() {
         new kubernetes.deployment.Deployment(this, TRADING_ASSISTANT_LABEL, {
             metadata: {
                 labels: {
@@ -237,7 +237,13 @@ export class TradingAssistantStatelessStack extends TerraformStack {
         const env = dotenv.config().parsed;
 
         if (!env) {
-            throw new Error('Failed to load .env file');
+
+            return {
+                DATABASE_URL: 'jdbc:mysql://mysql-service:3306/metatrader',
+                DATABASE_PASSWORD: 'XXXXX',
+                SLACK_WEBHOOK_URL: 'XXXX',
+                SUMO_LOGIC_WEBHOOK_URL: 'XXXX'
+            }
         }
         return env;
     }
