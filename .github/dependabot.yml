@@ -4,19 +4,15 @@ updates:
     directory: "/backend"
     schedule:
       interval: "daily"
-    automerge: true
   - package-ecosystem: "npm"
     directory: "/infrastructure"
     schedule:
       interval: "daily"
-    automerge: true
   - package-ecosystem: "npm"
     directory: "/kube-infrastructure"
     schedule:
       interval: "daily"
-    automerge: true
   - package-ecosystem: "npm"
     directory: "/frontend"
     schedule:
       interval: "daily"
-    automerge: true
