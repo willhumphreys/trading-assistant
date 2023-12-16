@@ -1,0 +1,35 @@
+name: build-kube-infrastructure
+defaults:
+  run:
+    working-directory: kube-infrastructure
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - kube-infrastructure/**
+  pull_request:
+    branches: [ main ]
+    paths:
+      - kube-infrastructure/**
+  workflow_dispatch: { }
+jobs:
+  deploy:
+    name: Build and Synth Terraform CDK Stacks
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+      - name: Install dependencies
+        run: npm install
+      - name: Run tests
+        run: npm test
+      - name: CDK synth TradingAssistant
+        run: npx cdktf synth
