@@ -13,6 +13,8 @@ export class TradingAssistantStatefulStack extends TerraformStack {
 
         new KubernetesProvider(this, 'K8s', {
             configPath: path.join(process.env.HOME || DEFAULT_HOME_DIR, '.kube/config'),
+            host: "https://kubernetes.default.svc",
+            insecure: true,
         });
         this.createMysqlPVC();
     }
