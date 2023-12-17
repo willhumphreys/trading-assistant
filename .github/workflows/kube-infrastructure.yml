@@ -46,7 +46,7 @@ jobs:
 
       - name: Commit Generated Files
         run: |
-          git add kube-infrastructure/cdktf.out
+          git add cdktf.out
           git commit -m "Update cdktf.out - ${{ github.run_id }}"
 
       - name: Push Changes
