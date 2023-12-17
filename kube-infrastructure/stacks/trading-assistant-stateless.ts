@@ -110,7 +110,8 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                     test2: "I am a test2",
                     test3: "I am a test3",
                     test4: "I am a test4",
-                    test5: "I am a test5"
+                    test5: "I am a test5",
+                    test6: "I am a test6"
                 },
                 name: 'trading-assistant-service',
                 namespace: 'trading-assistant',
