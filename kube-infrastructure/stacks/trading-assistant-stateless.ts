@@ -106,7 +106,8 @@ export class TradingAssistantStatelessStack extends TerraformStack {
             metadata: {
                 labels: {
                     app: TRADING_ASSISTANT_LABEL,
-                    test: "I am a test"
+                    test: "I am a test",
+                    test2: "I am a test2"
                 },
                 name: 'trading-assistant-service',
                 namespace: 'trading-assistant',
