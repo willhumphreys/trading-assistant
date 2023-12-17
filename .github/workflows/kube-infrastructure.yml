@@ -42,7 +42,8 @@ jobs:
 
       - name: Create New Branch
         run: |
-          git checkout -b generated-cdktf-out-${{ github.run_id }}
+          git fetch
+          git checkout terraform-updates || git checkout -b terraform-updates
 
       - name: Commit Generated Files
         run: |
@@ -53,4 +54,5 @@ jobs:
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: generated-cdktf-out-${{ github.run_id }}
+          branch: terraform-updates
+          force: true
