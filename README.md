@@ -5,6 +5,7 @@ Automates trading on Metatrader via the Darwinex API.
 - [Backend Documentation](./backend/README.md)
 - [Infrastructure Documentation](./infrastructure/README.md)
 - [Frontend Documentation](./frontend/README.md)
+- [Kube Infrastructure Documentation](./kube-infrastructure/README.md)
 
 
 # AWS
