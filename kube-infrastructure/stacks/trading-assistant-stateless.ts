@@ -1,12 +1,10 @@
 // trading-assistant-stateful.ts
 
 import {Construct} from "constructs";
-import {TerraformStack} from "cdktf";
+import {TerraformStack, TerraformVariable} from "cdktf";
 import * as kubernetes from "@cdktf/provider-kubernetes";
 import * as path from "path";
 import {KubernetesProvider} from "@cdktf/provider-kubernetes/lib/provider";
-import * as dotenv from 'dotenv';
-import {DotenvParseOutput} from 'dotenv';
 import {DEFAULT_HOME_DIR, MYSQL_LABEL, TRADING_ASSISTANT_LABEL} from "../constants";
 
 export class TradingAssistantStatelessStack extends TerraformStack {
@@ -17,13 +15,11 @@ export class TradingAssistantStatelessStack extends TerraformStack {
             configPath: path.join(process.env.HOME || DEFAULT_HOME_DIR, '.kube/config'),
         });
 
-        const env = this.loadEnv();
 
-        this.createConfigMap(env);
-        this.createDBPasswordSecret(env);
-        this.createTradingAssistantDeployment();
+        let adminPassword = this.createDBTerraformSecret();
+        this.createTradingAssistantDeployment(this.createSlackSecret(), this.createSumoLogicSecret(), adminPassword);
         this.createTradingAssistantService();
-        this.createMysqlDeployment();
+        this.createMysqlDeployment(adminPassword);
         this.createMySqlService();
     }
 
@@ -34,6 +30,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                     app: MYSQL_LABEL,
                 },
                 name: 'mysql-service',
+                namespace: 'trading-assistant',
             },
             spec: {
                 port: [{
@@ -48,13 +45,14 @@ export class TradingAssistantStatelessStack extends TerraformStack {
         });
     }
 
-    private createMysqlDeployment() {
+    private createMysqlDeployment(adminPassword: TerraformVariable) {
         new kubernetes.deployment.Deployment(this, MYSQL_LABEL, {
             metadata: {
                 labels: {
                     app: MYSQL_LABEL,
                 },
                 name: 'mysql-container',
+                namespace: 'trading-assistant',
             },
             spec: {
                 replicas: '1',
@@ -79,12 +77,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                                 }],
                                 env: [{
                                     name: 'MYSQL_ROOT_PASSWORD',
-                                    valueFrom: {
-                                        secretKeyRef: {
-                                            name: 'mysql-root-password',
-                                            key: 'password',
-                                        },
-                                    },
+                                    value: adminPassword.value,
                                 }],
                                 volumeMount: [
                                     {
@@ -115,6 +108,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                     app: TRADING_ASSISTANT_LABEL,
                 },
                 name: 'trading-assistant-service',
+                namespace: 'trading-assistant',
             },
             spec: {
                 port: [
@@ -133,13 +127,14 @@ export class TradingAssistantStatelessStack extends TerraformStack {
         });
     }
 
-    private createTradingAssistantDeployment() {
+    private createTradingAssistantDeployment(slackTerraformVariable: TerraformVariable, sumoLogicTerraformVariable: TerraformVariable, dbPasswordTerraformVariable: TerraformVariable) {
         new kubernetes.deployment.Deployment(this, TRADING_ASSISTANT_LABEL, {
             metadata: {
                 labels: {
                     app: TRADING_ASSISTANT_LABEL,
                 },
                 name: TRADING_ASSISTANT_LABEL,
+                namespace: 'trading-assistant',
             },
             spec: {
                 replicas: '1',
@@ -162,15 +157,23 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                                 port: [{
                                     containerPort: 8080,
                                 }],
-                                envFrom: [{
-                                    configMapRef: {
-                                        name: 'trading-assistant-env',
-                                    },
-                                }],
                                 env: [{
                                     name: 'SPRING_PROFILE',
                                     value: 'currencies',
-                                }],
+                                }, {
+                                    name: 'DATABASE_URL',
+                                    value: 'jdbc:mysql://mysql-service:3306/metatrader',
+                                }, {
+                                    name: 'DATABASE_PASSWORD',
+                                    value: dbPasswordTerraformVariable.value,
+                                }, {
+                                    name: 'SLACK_WEBHOOK_URL',
+                                    value: slackTerraformVariable.value,
+                                }, {
+                                    name: 'SUMO_LOGIC_WEBHOOK_URL',
+                                    value: sumoLogicTerraformVariable.value,
+                                }
+                                ],
                                 volumeMount: [
                                     {
                                         name: 'accounts-volume',
@@ -212,39 +215,30 @@ export class TradingAssistantStatelessStack extends TerraformStack {
         });
     }
 
-    private createDBPasswordSecret(env: DotenvParseOutput) {
-        new kubernetes.secret.Secret(this, "mysql-root-password", {
-            metadata: {
-                name: 'mysql-root-password',
-            },
-            data: {password: env.DATABASE_PASSWORD},
+    private createDBTerraformSecret() {
+
+        return new TerraformVariable(this, "dbPassword", {
+            type: "string",
+            description: "root password for mysql",
+            sensitive: true,
         });
     }
 
-    private createConfigMap(env: DotenvParseOutput) {
-        new kubernetes.configMap.ConfigMap(this, "trading-assistant-config", {
-            metadata: {
-                name: "trading-assistant-env",
-                labels: {
-                    app: TRADING_ASSISTANT_LABEL
-                }
-            },
-            data: env
-        })
+    private createSlackSecret() {
+
+        return new TerraformVariable(this, "slackWebHook", {
+            type: "string",
+            description: "slack webhook url",
+            sensitive: true,
+        });
     }
 
-    private loadEnv() {
-        const env = dotenv.config().parsed;
+    private createSumoLogicSecret() {
 
-        if (!env) {
-
-            return {
-                DATABASE_URL: 'jdbc:mysql://mysql-service:3306/metatrader',
-                DATABASE_PASSWORD: 'XXXXX',
-                SLACK_WEBHOOK_URL: 'XXXX',
-                SUMO_LOGIC_WEBHOOK_URL: 'XXXX'
-            }
-        }
-        return env;
+        return new TerraformVariable(this, "sumoLogicWebHook", {
+            type: "string",
+            description: "sumo logic webhook url",
+            sensitive: true,
+        });
     }
 }

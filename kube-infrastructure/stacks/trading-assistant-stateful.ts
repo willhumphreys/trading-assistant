@@ -17,13 +17,23 @@ export class TradingAssistantStatefulStack extends TerraformStack {
         this.createMysqlPVC();
     }
 
+
     private createMysqlPVC() {
+
+        new kubernetes.namespace.Namespace(this, "trading-assistant-namespace", {
+            metadata: {
+                name: "trading-assistant"
+            }
+        });
+
+
         new kubernetes.persistentVolumeClaim.PersistentVolumeClaim(this, "mysql-pvc", {
             metadata: {
                 labels: {
                     app: 'mysql',
                 },
                 name: 'mysql-pv-claim',
+                namespace: 'trading-assistant',
             },
             spec: {
                 accessModes: ['ReadWriteOnce'],

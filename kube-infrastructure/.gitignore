@@ -1,7 +1,6 @@
 *.d.ts
 *.js
 node_modules
-cdktf.out
 cdktf.log
 *terraform.*.tfstate*
 .gen
