@@ -3,17 +3,22 @@
 import {Construct} from "constructs";
 import {TerraformStack, TerraformVariable} from "cdktf";
 import * as kubernetes from "@cdktf/provider-kubernetes";
-import * as path from "path";
 import {KubernetesProvider} from "@cdktf/provider-kubernetes/lib/provider";
-import {DEFAULT_HOME_DIR, MYSQL_LABEL, TRADING_ASSISTANT_LABEL} from "../constants";
+import {MYSQL_LABEL, TRADING_ASSISTANT_LABEL} from "../constants";
 
 export class TradingAssistantStatelessStack extends TerraformStack {
     constructor(scope: Construct, name: string) {
         super(scope, name);
 
+        const kubernetesToken = process.env.KUBERNETES_TOKEN;
+
+        if (!kubernetesToken) {
+            throw new Error("Kubernetes token not found in environment variables");
+        }
+
         new KubernetesProvider(this, 'K8s', {
-            configPath: path.join(process.env.HOME || DEFAULT_HOME_DIR, '.kube/config'),
-            // host: "https://kubernetes.default.svc",
+            host: "https://localhost:6443",
+            token: kubernetesToken,
             insecure: true,
         });
 
@@ -110,6 +115,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                     app: TRADING_ASSISTANT_LABEL,
                     test: "IAmTest",
                     test2: "IAmTest2",
+                    test3: "IAmTest3",
                 },
                 name: 'trading-assistant-service',
                 namespace: 'trading-assistant',

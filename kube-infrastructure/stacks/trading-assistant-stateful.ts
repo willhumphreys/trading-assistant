@@ -4,16 +4,21 @@ import {Construct} from "constructs";
 import {TerraformStack} from "cdktf";
 import * as kubernetes from "@cdktf/provider-kubernetes";
 import {KubernetesProvider} from "@cdktf/provider-kubernetes/lib/provider";
-import * as path from "path";
-import {DEFAULT_HOME_DIR} from "../constants";
 
 export class TradingAssistantStatefulStack extends TerraformStack {
     constructor(scope: Construct, name: string) {
         super(scope, name);
 
+        const kubernetesToken = process.env.KUBERNETES_TOKEN;
+
+        if (!kubernetesToken) {
+            throw new Error("Kubernetes token not found in environment variables");
+        }
+
+
         new KubernetesProvider(this, 'K8s', {
-            configPath: path.join(process.env.HOME || DEFAULT_HOME_DIR, '.kube/config'),
-            // host: "https://kubernetes.default.svc",
+            host: "https://localhost:6443",
+            token: kubernetesToken,
             insecure: true,
         });
         this.createMysqlPVC();
