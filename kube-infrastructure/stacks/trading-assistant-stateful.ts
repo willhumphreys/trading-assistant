@@ -19,7 +19,6 @@ export class TradingAssistantStatefulStack extends TerraformStack {
         new KubernetesProvider(this, 'K8s', {
             host: "https://localhost:6443",
             token: kubernetesToken,
-            username: "cdktf-service-account",
             insecure: true,
         });
         this.createMysqlPVC();
