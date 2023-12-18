@@ -107,3 +107,5 @@ CREATE USER IF NOT EXISTS 'metatrader'@'localhost' IDENTIFIED WITH mysql_native_
 GRANT ALL PRIVILEGES ON metatrader.* TO 'metatrader'@'%';
 GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
 ```
+
+https://www.reddit.com/r/kubernetes/comments/h7wfnc/how_do_i_derive_certificate_pem_data_from/
