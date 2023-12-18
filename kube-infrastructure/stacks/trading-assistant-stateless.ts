@@ -11,6 +11,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
         super(scope, name);
 
         new KubernetesProvider(this, 'K8s', {
+            host: "https://localhost:6443",
             configPath: this.createHomeVariable().value,
             configContext: "docker-desktop",
         });
