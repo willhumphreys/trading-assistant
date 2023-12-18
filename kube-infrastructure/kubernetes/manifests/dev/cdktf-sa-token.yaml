@@ -1,7 +1,9 @@
 apiVersion: v1
 kind: Secret
 metadata:
-  name: cdktf-service-account-token
+  name: ta-service-account-token
   annotations:
-    kubernetes.io/service-account.name: cdktf-service-account
+    namespace: trading-assistant
+    kubernetes.io/service-account.name: ta-service-account
 type: kubernetes.io/service-account-token
+

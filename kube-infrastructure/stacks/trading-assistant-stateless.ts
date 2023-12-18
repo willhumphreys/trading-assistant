@@ -19,6 +19,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
         new KubernetesProvider(this, 'K8s', {
             host: "https://localhost:6443",
             token: kubernetesToken,
+            username: "cdktf-service-account",
             insecure: true,
         });
 
@@ -116,6 +117,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                     test: "IAmTest",
                     test2: "IAmTest2",
                     test3: "IAmTest3",
+                    test4: "IAmTest4",
                 },
                 name: 'trading-assistant-service',
                 namespace: 'trading-assistant',
