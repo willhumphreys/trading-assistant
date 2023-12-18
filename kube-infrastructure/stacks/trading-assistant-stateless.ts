@@ -10,16 +10,8 @@ export class TradingAssistantStatelessStack extends TerraformStack {
     constructor(scope: Construct, name: string) {
         super(scope, name);
 
-        const kubernetesToken = process.env.KUBERNETES_TOKEN;
-
-        if (!kubernetesToken) {
-            throw new Error("Kubernetes token not found in environment variables");
-        }
-
         new KubernetesProvider(this, 'K8s', {
-            host: "https://localhost:6443",
-            token: kubernetesToken,
-            insecure: true,
+            configPath: this.createHomeVariable().value,
         });
 
 
@@ -113,11 +105,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
             metadata: {
                 labels: {
                     app: TRADING_ASSISTANT_LABEL,
-                    test: "IAmTest",
-                    test2: "IAmTest2",
-                    test3: "IAmTest3",
-                    test4: "IAmTest4",
-                    test5: "IAmTest5",
+                    test: "IAmTest"
                 },
                 name: 'trading-assistant-service',
                 namespace: 'trading-assistant',
@@ -251,6 +239,15 @@ export class TradingAssistantStatelessStack extends TerraformStack {
             type: "string",
             description: "sumo logic webhook url",
             sensitive: true,
+        });
+    }
+
+    private createHomeVariable() {
+
+        return new TerraformVariable(this, "kubeHome", {
+            type: "string",
+            description: "kube home directory",
+            sensitive: false,
         });
     }
 }

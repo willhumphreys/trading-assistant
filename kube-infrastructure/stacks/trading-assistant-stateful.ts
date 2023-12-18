@@ -1,7 +1,7 @@
 // trading-assistant-stateful.ts
 
 import {Construct} from "constructs";
-import {TerraformStack} from "cdktf";
+import {TerraformStack, TerraformVariable} from "cdktf";
 import * as kubernetes from "@cdktf/provider-kubernetes";
 import {KubernetesProvider} from "@cdktf/provider-kubernetes/lib/provider";
 
@@ -9,17 +9,8 @@ export class TradingAssistantStatefulStack extends TerraformStack {
     constructor(scope: Construct, name: string) {
         super(scope, name);
 
-        const kubernetesToken = process.env.KUBERNETES_TOKEN;
-
-        if (!kubernetesToken) {
-            throw new Error("Kubernetes token not found in environment variables");
-        }
-
-
         new KubernetesProvider(this, 'K8s', {
-            host: "https://localhost:6443",
-            token: kubernetesToken,
-            insecure: true,
+            configPath: this.createHomeVariable().value
         });
         this.createMysqlPVC();
     }
@@ -50,6 +41,15 @@ export class TradingAssistantStatefulStack extends TerraformStack {
                     },
                 },
             },
+        })
+    }
+
+    private createHomeVariable() {
+
+        return new TerraformVariable(this, "kubeHome", {
+            type: "string",
+            description: "kube home directory",
+            sensitive: false,
         })
     }
 }
