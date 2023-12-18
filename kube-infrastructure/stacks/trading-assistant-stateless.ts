@@ -12,7 +12,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
 
         new KubernetesProvider(this, 'K8s', {
             host: "https://localhost:6443",
-            configPath: this.createHomeVariable().value,
+            //configPath: this.createHomeVariable().value,
             configContext: "docker-desktop",
         });
 
@@ -245,12 +245,12 @@ export class TradingAssistantStatelessStack extends TerraformStack {
         });
     }
 
-    private createHomeVariable() {
-
-        return new TerraformVariable(this, "kubeHome", {
-            type: "string",
-            description: "kube home directory",
-            sensitive: false,
-        });
-    }
+    // private createHomeVariable() {
+    //
+    //     return new TerraformVariable(this, "kubeHome", {
+    //         type: "string",
+    //         description: "kube home directory",
+    //         sensitive: false,
+    //     });
+    // }
 }

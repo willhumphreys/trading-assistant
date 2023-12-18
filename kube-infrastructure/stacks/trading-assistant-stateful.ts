@@ -1,7 +1,7 @@
 // trading-assistant-stateful.ts
 
 import {Construct} from "constructs";
-import {TerraformStack, TerraformVariable} from "cdktf";
+import {TerraformStack} from "cdktf";
 import * as kubernetes from "@cdktf/provider-kubernetes";
 import {KubernetesProvider} from "@cdktf/provider-kubernetes/lib/provider";
 
@@ -11,12 +11,11 @@ export class TradingAssistantStatefulStack extends TerraformStack {
 
         new KubernetesProvider(this, 'K8s', {
             host: "https://localhost:6443",
-            configPath: this.createHomeVariable().value,
+            // configPath: this.createHomeVariable().value,
             configContext: "docker-desktop",
         });
         this.createMysqlPVC();
     }
-
 
     private createMysqlPVC() {
 
@@ -46,12 +45,12 @@ export class TradingAssistantStatefulStack extends TerraformStack {
         })
     }
 
-    private createHomeVariable() {
-
-        return new TerraformVariable(this, "kubeHome", {
-            type: "string",
-            description: "kube home directory",
-            sensitive: false,
-        })
-    }
+    // private createHomeVariable() {
+    //
+    //     return new TerraformVariable(this, "kubeHome", {
+    //         type: "string",
+    //         description: "kube home directory",
+    //         sensitive: false,
+    //     })
+    // }
 }
