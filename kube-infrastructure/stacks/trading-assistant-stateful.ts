@@ -10,7 +10,8 @@ export class TradingAssistantStatefulStack extends TerraformStack {
         super(scope, name);
 
         new KubernetesProvider(this, 'K8s', {
-            configPath: this.createHomeVariable().value
+            configPath: this.createHomeVariable().value,
+            configContext: "docker-desktop",
         });
         this.createMysqlPVC();
     }
