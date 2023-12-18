@@ -13,7 +13,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
 
         new KubernetesProvider(this, 'K8s', {
             configPath: path.join(process.env.HOME || DEFAULT_HOME_DIR, '.kube/config'),
-            host: "https://kubernetes.default.svc",
+            // host: "https://kubernetes.default.svc",
             insecure: true,
         });
 
@@ -108,7 +108,8 @@ export class TradingAssistantStatelessStack extends TerraformStack {
             metadata: {
                 labels: {
                     app: TRADING_ASSISTANT_LABEL,
-                    test: "IAmTest"
+                    test: "IAmTest",
+                    test2: "IAmTest2",
                 },
                 name: 'trading-assistant-service',
                 namespace: 'trading-assistant',
