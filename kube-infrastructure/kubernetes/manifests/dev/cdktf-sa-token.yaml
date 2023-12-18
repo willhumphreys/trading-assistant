@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Secret
 metadata:
-  name: ta-service-account-token
+  name: sn-service-account-token
   annotations:
-    namespace: trading-assistant
-    kubernetes.io/service-account.name: ta-service-account
+    namespace: flux-system
+    kubernetes.io/service-account.name: flux-sn
 type: kubernetes.io/service-account-token
 
