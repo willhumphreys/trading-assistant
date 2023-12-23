@@ -31,7 +31,6 @@ const AccountSelector: FC<AccountSelectorProps> =
                             id: selectedASG ? selectedASG.account.id : null
                         }
                     });
-
                     setSelectedAccountSetupGroups(selectedASG);
                 }}
             >
