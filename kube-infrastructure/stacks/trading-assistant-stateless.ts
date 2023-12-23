@@ -17,10 +17,11 @@ export class TradingAssistantStatelessStack extends TerraformStack {
         });
         this.createTradingAssistantAndMysqlIngress2();
 
-
         let adminPassword = this.createDBTerraformSecret();
         this.createTradingAssistantDeployment(this.createSlackSecret(), this.createSumoLogicSecret(), adminPassword);
+        this.createTradingAssistantFrontendDeployment();
         this.createTradingAssistantService();
+        this.createTradingAssistantFrontendService();
         this.createMysqlDeployment(adminPassword);
         this.createMySqlService();
     }
@@ -165,6 +166,73 @@ export class TradingAssistantStatelessStack extends TerraformStack {
         });
     }
 
+    private createTradingAssistantFrontendService() {
+        new kubernetes.service.Service(this, "trading-assistant-frontend-service", {
+            metadata: {
+                labels: {
+                    app: TRADING_ASSISTANT_LABEL,
+                },
+                name: 'trading-assistant-frontend-service',
+                namespace: 'trading-assistant',
+            },
+            spec: {
+                port: [
+                    {
+                        port: 3000,
+                        targetPort: "3000",
+                    }
+
+                ],
+
+                selector: {
+                    app: TRADING_ASSISTANT_LABEL,
+                },
+                type: 'NodePort',
+            },
+        });
+    }
+
+
+
+    private createTradingAssistantFrontendDeployment() {
+        new kubernetes.deployment.Deployment(this, TRADING_ASSISTANT_LABEL+ '-frontend', {
+            metadata: {
+                labels: {
+                    app: TRADING_ASSISTANT_LABEL,
+                },
+                name: TRADING_ASSISTANT_LABEL + '-frontend',
+                namespace: 'trading-assistant',
+            },
+            spec: {
+                replicas: '1',
+                selector: {
+                    matchLabels: {
+                        app: TRADING_ASSISTANT_LABEL,
+                    },
+                },
+                template: {
+                    metadata: {
+                        labels: {
+                            app: TRADING_ASSISTANT_LABEL,
+                        },
+                    },
+                    spec: {
+                        container: [
+                            {
+                                image: 'ghcr.io/willhumphreys/trading-assistant:frontend-latest',
+                                name: TRADING_ASSISTANT_LABEL,
+                                port: [{
+                                    containerPort: 3000,
+                                }]
+                            },
+                        ]
+                    },
+                },
+            },
+        });
+    }
+
+
     private createTradingAssistantDeployment(slackTerraformVariable: TerraformVariable, sumoLogicTerraformVariable: TerraformVariable, dbPasswordTerraformVariable: TerraformVariable) {
         new kubernetes.deployment.Deployment(this, TRADING_ASSISTANT_LABEL, {
             metadata: {
@@ -190,7 +258,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                     spec: {
                         container: [
                             {
-                                image: 'ghcr.io/willhumphreys/trading-assistant:latest',
+                                image: 'ghcr.io/willhumphreys/trading-assistant:backend-latest',
                                 name: TRADING_ASSISTANT_LABEL,
                                 port: [{
                                     containerPort: 8080,

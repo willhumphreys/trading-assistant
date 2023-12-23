@@ -1,4 +1,4 @@
-name: deploy-tradingAssistant
+name: deploy-tradingAssistant-aws
 defaults:
   run:
     working-directory: infrastructure
