@@ -42,6 +42,6 @@ jobs:
           GHCR_REPOSITORY: willhumphreys/trading-assistant
           IMAGE_TAG: frontend-${{ github.sha }}
         run: |
-          docker build -t $GHCR_REGISTRY/$GHCR_REPOSITORY:$IMAGE_TAG -t $GHCR_REGISTRY/$GHCR_REPOSITORY:frontend-latest -f frontend/Dockerfile frontend
+          docker build -t $GHCR_REGISTRY/$GHCR_REPOSITORY:$IMAGE_TAG -t $GHCR_REGISTRY/$GHCR_REPOSITORY:frontend-latest -f Dockerfile frontend
           docker push $GHCR_REGISTRY/$GHCR_REPOSITORY:$IMAGE_TAG
           docker push $GHCR_REGISTRY/$GHCR_REPOSITORY:frontend-latest
