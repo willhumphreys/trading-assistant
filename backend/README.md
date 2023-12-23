@@ -74,10 +74,3 @@ kubectl describe deployment trading-assistant
 kubectl get secrets
 kubectl.exe apply -f .\kubernetes\manifests\dev\mysql-service.yaml
 ```
-
-Tunnel to the kubernetes cluster
-https://gist.github.com/alfredodeza/4c262b71fec683a61d7a54df9625a995
-
-```bash
-ssh -N4 -L 6443:127.0.0.1:6443 user@192.168.1.202
-```
