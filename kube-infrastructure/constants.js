@@ -1,0 +1,8 @@
+"use strict";
+// constants.ts
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.TRADING_ASSISTANT_LABEL = exports.MYSQL_LABEL = exports.DEFAULT_HOME_DIR = void 0;
+exports.DEFAULT_HOME_DIR = '/home/will';
+exports.MYSQL_LABEL = 'mysql';
+exports.TRADING_ASSISTANT_LABEL = 'trading-assistant';
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiY29uc3RhbnRzLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiY29uc3RhbnRzLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7QUFBQSxlQUFlOzs7QUFFRixRQUFBLGdCQUFnQixHQUFHLFlBQVksQ0FBQztBQUNoQyxRQUFBLFdBQVcsR0FBRyxPQUFPLENBQUM7QUFFdEIsUUFBQSx1QkFBdUIsR0FBRyxtQkFBbUIsQ0FBQyIsInNvdXJjZXNDb250ZW50IjpbIi8vIGNvbnN0YW50cy50c1xuXG5leHBvcnQgY29uc3QgREVGQVVMVF9IT01FX0RJUiA9ICcvaG9tZS93aWxsJztcbmV4cG9ydCBjb25zdCBNWVNRTF9MQUJFTCA9ICdteXNxbCc7XG5cbmV4cG9ydCBjb25zdCBUUkFESU5HX0FTU0lTVEFOVF9MQUJFTCA9ICd0cmFkaW5nLWFzc2lzdGFudCc7XG5cblxuIl19
