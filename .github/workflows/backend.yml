@@ -112,6 +112,6 @@ jobs:
           GHCR_REPOSITORY: willhumphreys/trading-assistant  # Replace 'username' with your GitHub username or org name
           IMAGE_TAG: backend-${{ github.sha }}
         run: |
-          docker build -t $GHCR_REGISTRY/$GHCR_REPOSITORY:$IMAGE_TAG -t $GHCR_REGISTRY/$GHCR_REPOSITORY:latest -f backend/Dockerfile backend
+          docker build -t $GHCR_REGISTRY/$GHCR_REPOSITORY:$IMAGE_TAG -t $GHCR_REGISTRY/$GHCR_REPOSITORY:backend-latest -f backend/Dockerfile backend
           docker push $GHCR_REGISTRY/$GHCR_REPOSITORY:$IMAGE_TAG
           docker push $GHCR_REGISTRY/$GHCR_REPOSITORY:backend-latest
