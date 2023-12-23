@@ -42,7 +42,6 @@ const AccountSelector: FC<AccountSelectorProps> =
                     </option>
                 ))}
             </select>
-
         );
     };
 
