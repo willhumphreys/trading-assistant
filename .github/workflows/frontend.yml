@@ -31,6 +31,9 @@ jobs:
         run: npm install
       - name: Build
         run: npm run build
+        env:
+          NEXT_PUBLIC_BACKEND_HOST: http://trading-assistant-service:8080
+          NEXT_PUBLIC_WEB_SOCKET_HOST: ws://trading-assistant-service:8080
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v1
         with:
