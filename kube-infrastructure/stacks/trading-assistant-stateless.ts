@@ -192,10 +192,8 @@ export class TradingAssistantStatelessStack extends TerraformStack {
         });
     }
 
-
-
     private createTradingAssistantFrontendDeployment() {
-        new kubernetes.deployment.Deployment(this, TRADING_ASSISTANT_LABEL+ '-frontend', {
+        new kubernetes.deployment.Deployment(this, TRADING_ASSISTANT_LABEL + '-frontend', {
             metadata: {
                 labels: {
                     app: TRADING_ASSISTANT_LABEL,
@@ -223,7 +221,15 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                                 name: TRADING_ASSISTANT_LABEL,
                                 port: [{
                                     containerPort: 3000,
-                                }]
+                                }],
+                                env: [{
+                                    name: 'NEXT_PUBLIC_BACKEND_HOST',
+                                    value: 'http://trading-assistant-service:8080',
+                                }, {
+                                    name: 'NEXT_PUBLIC_WEB_SOCKET_HOST',
+                                    value: 'ws://trading-assistant-service:8080',
+                                }
+                                ]
                             },
                         ]
                     },
