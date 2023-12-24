@@ -34,6 +34,9 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                 metadata: {
                     name: "trading-assistant-ingress",
                     namespace: "trading-assistant",
+                    labels: {
+                        app: TRADING_ASSISTANT_LABEL,
+                    },
                 },
                 spec: {
                     rules: [
@@ -49,6 +52,9 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                                                 name: "trading-assistant-service",
                                                 port: {
                                                     number: 8080,
+                                                },
+                                                selector: {
+                                                    app: TRADING_ASSISTANT_LABEL,
                                                 },
                                             },
                                         },
@@ -170,7 +176,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
         new kubernetes.service.Service(this, "trading-assistant-frontend-service", {
             metadata: {
                 labels: {
-                    app: TRADING_ASSISTANT_LABEL,
+                    app: TRADING_ASSISTANT_LABEL + '-frontend',
                 },
                 name: 'trading-assistant-frontend-service',
                 namespace: 'trading-assistant',
@@ -185,7 +191,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                 ],
 
                 selector: {
-                    app: TRADING_ASSISTANT_LABEL,
+                    app: TRADING_ASSISTANT_LABEL + '-frontend',
                 },
                 type: 'NodePort',
             },
@@ -196,7 +202,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
         new kubernetes.deployment.Deployment(this, TRADING_ASSISTANT_LABEL + '-frontend', {
             metadata: {
                 labels: {
-                    app: TRADING_ASSISTANT_LABEL,
+                    app: TRADING_ASSISTANT_LABEL + '-frontend',
                 },
                 name: TRADING_ASSISTANT_LABEL + '-frontend',
                 namespace: 'trading-assistant',
@@ -205,19 +211,19 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                 replicas: '1',
                 selector: {
                     matchLabels: {
-                        app: TRADING_ASSISTANT_LABEL,
+                        app: TRADING_ASSISTANT_LABEL + '-frontend',
                     },
                 },
                 template: {
                     metadata: {
                         labels: {
-                            app: TRADING_ASSISTANT_LABEL,
+                            app: TRADING_ASSISTANT_LABEL + '-frontend',
                         },
                     },
                     spec: {
                         container: [
                             {
-                                image: 'ghcr.io/willhumphreys/trading-assistant:frontend-71038c37672a01bc27092b2b995f54c6b5e97a4e',
+                                image: 'ghcr.io/willhumphreys/trading-assistant:frontend-bba5e55299454b008cbdfca7cddeb02c52e2a915',
                                 name: TRADING_ASSISTANT_LABEL,
                                 port: [{
                                     containerPort: 3000,
