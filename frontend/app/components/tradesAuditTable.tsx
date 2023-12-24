@@ -11,7 +11,6 @@ export default function TradesAuditTable({trades}: Props) {
     type CellColors = { [key: number]: string };
     type PreviousProfits = { [key: number]: number };
 
-
     const [previousProfits, setPreviousProfits] = useState<PreviousProfits>({});
     const [cellColors, setCellColors] = useState<CellColors>({});
 
