@@ -42,11 +42,11 @@ ENV NODE_ENV production
 # Uncomment the following line in case you want to disable telemetry during runtime.
 # ENV NEXT_TELEMETRY_DISABLED 1
 
-ENV NEXT_PUBLIC_BACKEND_HOST http://trading-assistant-service:8080
-ENV NEXT_PUBLIC_WEB_SOCKET_HOST ws://trading-assistant-service:8080
+ARG NEXT_PUBLIC_BACKEND_HOST
+ARG NEXT_PUBLIC_WEB_SOCKET_HOST
 
-ARG NEXT_PUBLIC_BACKEND_HOST=http://trading-assistant-service:8080
-ARG NEXT_PUBLIC_WEB_SOCKET_HOST=ws://trading-assistant-service:8080
+ENV NEXT_PUBLIC_BACKEND_HOST=${NEXT_PUBLIC_BACKEND_HOST}
+ENV NEXT_PUBLIC_WEB_SOCKET_HOST=${NEXT_PUBLIC_WEB_SOCKET_HOST}
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
