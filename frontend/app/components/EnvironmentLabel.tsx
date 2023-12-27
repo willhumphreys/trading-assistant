@@ -1,9 +1,6 @@
 // EnvironmentLabel.tsx
 import React from 'react';
 
-import getConfig from 'next/config'
-const { publicRuntimeConfig: config } = getConfig()
-
 const EnvironmentLabel: React.FC = () => {
     const envMap: Record<string, { text: string; color: string }> = {
         'http://localhost:8080': {text: 'Development', color: 'bg-green-500'},
