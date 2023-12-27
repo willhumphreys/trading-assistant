@@ -4,8 +4,10 @@ import {Construct} from "constructs";
 import {TerraformStack} from "cdktf";
 import * as kubernetes from "@cdktf/provider-kubernetes";
 import {KubernetesProvider} from "@cdktf/provider-kubernetes/lib/provider";
+import {TRADING_ASSISTANT_NAMESPACE} from "../constants";
 
 export class TradingAssistantStatefulStack extends TerraformStack {
+
     constructor(scope: Construct, name: string) {
         super(scope, name);
 
@@ -21,7 +23,7 @@ export class TradingAssistantStatefulStack extends TerraformStack {
 
         new kubernetes.namespace.Namespace(this, "trading-assistant-namespace", {
             metadata: {
-                name: "trading-assistant"
+                name: TRADING_ASSISTANT_NAMESPACE
             }
         });
 

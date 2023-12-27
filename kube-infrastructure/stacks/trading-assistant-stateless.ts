@@ -3,7 +3,7 @@
 import {Construct} from "constructs";
 import {TerraformStack, TerraformVariable} from "cdktf";
 import {KubernetesProvider} from "@cdktf/provider-kubernetes/lib/provider";
-import {MYSQL_LABEL, TRADING_ASSISTANT_LABEL} from "../constants";
+import {MYSQL_LABEL, TRADING_ASSISTANT_LABEL, TRADING_ASSISTANT_FRONTEND_LABEL, TRADING_ASSISTANT_NAMESPACE} from "../constants";
 import * as kubernetes from "@cdktf/provider-kubernetes";
 
 export class TradingAssistantStatelessStack extends TerraformStack {
@@ -76,7 +76,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                     app: MYSQL_LABEL,
                 },
                 name: 'mysql-service',
-                namespace: 'trading-assistant',
+                namespace: TRADING_ASSISTANT_NAMESPACE,
             },
             spec: {
                 port: [{
@@ -98,7 +98,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                     app: MYSQL_LABEL,
                 },
                 name: 'mysql-container',
-                namespace: 'trading-assistant',
+                namespace: TRADING_ASSISTANT_NAMESPACE,
             },
             spec: {
                 replicas: '1',
@@ -154,7 +154,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                     app: TRADING_ASSISTANT_LABEL,
                 },
                 name: 'trading-assistant-service',
-                namespace: 'trading-assistant',
+                namespace: TRADING_ASSISTANT_NAMESPACE,
             },
             spec: {
                 port: [
@@ -177,10 +177,10 @@ export class TradingAssistantStatelessStack extends TerraformStack {
         new kubernetes.service.Service(this, "trading-assistant-frontend-service", {
             metadata: {
                 labels: {
-                    app: TRADING_ASSISTANT_LABEL + '-frontend',
+                    app: TRADING_ASSISTANT_FRONTEND_LABEL,
                 },
                 name: 'trading-assistant-frontend-service',
-                namespace: 'trading-assistant',
+                namespace: TRADING_ASSISTANT_NAMESPACE,
             },
             spec: {
                 port: [
@@ -193,7 +193,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                 ],
 
                 selector: {
-                    app: TRADING_ASSISTANT_LABEL + '-frontend',
+                    app: TRADING_ASSISTANT_FRONTEND_LABEL,
                 },
                 type: 'LoadBalancer',
             },
@@ -201,31 +201,31 @@ export class TradingAssistantStatelessStack extends TerraformStack {
     }
 
     private createTradingAssistantFrontendDeployment() {
-        new kubernetes.deployment.Deployment(this, TRADING_ASSISTANT_LABEL + '-frontend', {
+        new kubernetes.deployment.Deployment(this, TRADING_ASSISTANT_FRONTEND_LABEL, {
             metadata: {
                 labels: {
-                    app: TRADING_ASSISTANT_LABEL + '-frontend',
+                    app: TRADING_ASSISTANT_FRONTEND_LABEL,
                 },
-                name: TRADING_ASSISTANT_LABEL + '-frontend',
-                namespace: 'trading-assistant',
+                name: TRADING_ASSISTANT_FRONTEND_LABEL,
+                namespace: TRADING_ASSISTANT_NAMESPACE,
             },
             spec: {
-                replicas: '1',
+                replicas: '2',
                 selector: {
                     matchLabels: {
-                        app: TRADING_ASSISTANT_LABEL + '-frontend',
+                        app: TRADING_ASSISTANT_FRONTEND_LABEL,
                     },
                 },
                 template: {
                     metadata: {
                         labels: {
-                            app: TRADING_ASSISTANT_LABEL + '-frontend',
+                            app: TRADING_ASSISTANT_FRONTEND_LABEL,
                         },
                     },
                     spec: {
                         container: [
                             {
-                                image: 'ghcr.io/willhumphreys/trading-assistant:frontend-9a015ec9c508ad2ec46062c57616e18ffa5a6e47',
+                                image: 'ghcr.io/willhumphreys/trading-assistant:frontend-9f36a3d65efb89aff14f7fe6055ea09eaf905937',
                                 name: TRADING_ASSISTANT_LABEL,
                                 port: [{
                                     containerPort: 3000,
@@ -246,7 +246,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                     app: TRADING_ASSISTANT_LABEL,
                 },
                 name: TRADING_ASSISTANT_LABEL,
-                namespace: 'trading-assistant',
+                namespace: TRADING_ASSISTANT_NAMESPACE,
             },
             spec: {
                 replicas: '1',

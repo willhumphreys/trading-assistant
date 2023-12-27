@@ -24,16 +24,8 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Next.js collects completely anonymous telemetry data about general usage.
-# Learn more here: https://nextjs.org/telemetry
-# Uncomment the following line in case you want to disable telemetry during the build.
-# ENV NEXT_TELEMETRY_DISABLED 1
-
-#RUN yarn build
 
 ENV NODE_ENV production
-# Uncomment the following line in case you want to disable telemetry during runtime.
-# ENV NEXT_TELEMETRY_DISABLED 1
 
 ARG NEXT_PUBLIC_BACKEND_HOST
 ARG NEXT_PUBLIC_WEB_SOCKET_HOST
@@ -41,13 +33,11 @@ ARG NEXT_PUBLIC_WEB_SOCKET_HOST
 ENV NEXT_PUBLIC_BACKEND_HOST=${NEXT_PUBLIC_BACKEND_HOST}
 ENV NEXT_PUBLIC_WEB_SOCKET_HOST=${NEXT_PUBLIC_WEB_SOCKET_HOST}
 
-# If using npm comment out above and use below instead
 RUN npm run build
 
 # Production image, copy all the files and run next
 FROM base AS runner
 WORKDIR /app
-
 
 
 RUN addgroup --system --gid 1001 nodejs
