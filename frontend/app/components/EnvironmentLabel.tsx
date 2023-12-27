@@ -5,7 +5,6 @@ import getConfig from 'next/config'
 const { publicRuntimeConfig: config } = getConfig()
 
 const EnvironmentLabel: React.FC = () => {
-    const backendHost = process.env.NEXT_PUBLIC_BACKEND_HOST;
     const envMap: Record<string, { text: string; color: string }> = {
         'http://localhost:8080': {text: 'Development', color: 'bg-green-500'},
         'http://trading-assistant-service:8080': {text: 'Production', color: 'bg-red-500'},
@@ -13,9 +12,9 @@ const EnvironmentLabel: React.FC = () => {
         'default': {text: 'Unknown', color: 'bg-gray-500'}
     };
 
-    const {text, color} = envMap[config.backendHost || 'default'];
+    const {text, color} = envMap[process.env.NEXT_PUBLIC_BACKEND_HOST || 'default'];
 
-    console.log(`backend host ${config.backendHost}`)
+    console.log(`backend host ${process.env.NEXT_PUBLIC_BACKEND_HOST}`)
 
     return (
         <div className={`${color} text-white text-xl p-2`}>
