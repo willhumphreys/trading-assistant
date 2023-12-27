@@ -225,7 +225,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                     spec: {
                         container: [
                             {
-                                image: 'ghcr.io/willhumphreys/trading-assistant:frontend-c10bd3e028f4953687b040cca2b691714eda6932',
+                                image: 'ghcr.io/willhumphreys/trading-assistant:frontend-082fd977c11a8e0d658cb846b0fe1fb7917f8ab6',
                                 name: TRADING_ASSISTANT_LABEL,
                                 port: [{
                                     containerPort: 3000,
