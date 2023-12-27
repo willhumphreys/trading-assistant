@@ -15,7 +15,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
             "configPath": "~/.kube/config",
             "configContext": "kubernetes-admin@kubernetes"
         });
-        this.createTradingAssistantAndMysqlIngress2();
+      //  this.createTradingAssistantFrontendIngress();
 
         let adminPassword = this.createDBTerraformSecret();
         this.createTradingAssistantDeployment(this.createSlackSecret(), this.createSumoLogicSecret(), adminPassword);
@@ -26,47 +26,48 @@ export class TradingAssistantStatelessStack extends TerraformStack {
         this.createMySqlService();
     }
 
-    private createTradingAssistantAndMysqlIngress2() {
-        new kubernetes.manifest.Manifest(this, "trading-assistant-ingress", {
-            manifest: {
-                apiVersion: "networking.k8s.io/v1",
-                kind: "Ingress",
-                metadata: {
-                    name: "trading-assistant-ingress",
-                    namespace: "trading-assistant",
-                    labels: {
-                        app: TRADING_ASSISTANT_LABEL,
-                    },
-                },
-                spec: {
-                    rules: [
-                        {
-                            host: "trading-assistant.mochi-trading.com",
-                            http: {
-                                paths: [
-                                    {
-                                        path: "/",
-                                        pathType: "Prefix",
-                                        backend: {
-                                            service: {
-                                                name: "trading-assistant-service",
-                                                port: {
-                                                    number: 8080,
-                                                },
-                                                selector: {
-                                                    app: TRADING_ASSISTANT_LABEL,
-                                                },
-                                            },
-                                        },
-                                    },
-                                ],
-                            },
-                        },
-                    ],
-                },
-            },
-        });
-    }
+    // private createTradingAssistantFrontendIngress() {
+    //     new kubernetes.manifest.Manifest(this, "trading-assistant-frontend-ingress", {
+    //         manifest: {
+    //             apiVersion: "networking.k8s.io/v1",
+    //             kind: "Ingress",
+    //             metadata: {
+    //                 name: "trading-assistant-ingress",
+    //                 namespace: "trading-assistant",
+    //                 labels: {
+    //                     app: TRADING_ASSISTANT_LABEL + "-frontend"
+    //                 },
+    //             },
+    //             spec: {
+    //                 ingressClassName: "nginx",
+    //                 rules: [
+    //                     {
+    //                         host: "trading-assistant.mochi-trading.com",
+    //                         http: {
+    //                             paths: [
+    //                                 {
+    //                                     path: "/",
+    //                                     pathType: "Prefix",
+    //                                     backend: {
+    //                                         service: {
+    //                                             name: "trading-assistant-frontend-service",
+    //                                             port: {
+    //                                                 number: 3000,
+    //                                             },
+    //                                             selector: {
+    //                                                 app: TRADING_ASSISTANT_LABEL + "-frontend",
+    //                                             },
+    //                                         },
+    //                                     },
+    //                                 },
+    //                             ],
+    //                         },
+    //                     },
+    //                 ],
+    //             },
+    //         },
+    //     });
+    // }
 
     private createMySqlService() {
         new kubernetes.service.Service(this, "mysql-service", {
@@ -184,7 +185,8 @@ export class TradingAssistantStatelessStack extends TerraformStack {
             spec: {
                 port: [
                     {
-                        port: 3000,
+                        name: "http",
+                        port: 80,
                         targetPort: "3000",
                     }
 
@@ -193,7 +195,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                 selector: {
                     app: TRADING_ASSISTANT_LABEL + '-frontend',
                 },
-                type: 'NodePort',
+                type: 'LoadBalancer',
             },
         });
     }

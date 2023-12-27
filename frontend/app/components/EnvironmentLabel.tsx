@@ -12,6 +12,8 @@ const EnvironmentLabel: React.FC = () => {
 
     const {text, color} = envMap[backendHost || 'default'];
 
+    console.log(`backend host ${backendHost}`)
+
     return (
         <div className={`${color} text-white text-xl p-2`}>
             Environment: {text}
