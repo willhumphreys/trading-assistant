@@ -1,6 +1,9 @@
 // EnvironmentLabel.tsx
 import React from 'react';
 
+import getConfig from 'next/config'
+const { publicRuntimeConfig: config } = getConfig()
+
 const EnvironmentLabel: React.FC = () => {
     const backendHost = process.env.NEXT_PUBLIC_BACKEND_HOST;
     const envMap: Record<string, { text: string; color: string }> = {
@@ -10,9 +13,9 @@ const EnvironmentLabel: React.FC = () => {
         'default': {text: 'Unknown', color: 'bg-gray-500'}
     };
 
-    const {text, color} = envMap[backendHost || 'default'];
+    const {text, color} = envMap[config.backendHost || 'default'];
 
-    console.log(`backend host ${backendHost}`)
+    console.log(`backend host ${config.backendHost}`)
 
     return (
         <div className={`${color} text-white text-xl p-2`}>

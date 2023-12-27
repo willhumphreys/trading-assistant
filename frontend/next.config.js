@@ -6,12 +6,12 @@ const nextConfig = {
 
     output: 'standalone',
     async rewrites() {
-        console.log(`backend host config ${this.publicRuntimeConfig.backendHost}`);
-        //const backendHost = process.env.NEXT_PUBLIC_BACKEND_HOST || 'http://trading-assistant-service:8080';
+
+        const backendHost = 'http://trading-assistant-service:8080';
         return [
             {
                 source: '/api/:path*',
-                destination: `${this.publicRuntimeConfig.backendHost}/:path*`, // Dynamic proxy destination
+                destination: `${backendHost}/:path*`, // Dynamic proxy destination
             },
         ];
     },
