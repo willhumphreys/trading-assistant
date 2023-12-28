@@ -225,7 +225,8 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                     spec: {
                         container: [
                             {
-                                image: 'ghcr.io/willhumphreys/trading-assistant:frontend-9f36a3d65efb89aff14f7fe6055ea09eaf905937',
+                                image: 'ghcr.io/willhumphreys/trading-assistant:frontend-latest',
+                                imagePullPolicy: 'Always',
                                 name: TRADING_ASSISTANT_LABEL,
                                 port: [{
                                     containerPort: 3000,
@@ -237,7 +238,6 @@ export class TradingAssistantStatelessStack extends TerraformStack {
             },
         });
     }
-
 
     private createTradingAssistantDeployment(slackTerraformVariable: TerraformVariable, sumoLogicTerraformVariable: TerraformVariable, dbPasswordTerraformVariable: TerraformVariable) {
         new kubernetes.deployment.Deployment(this, TRADING_ASSISTANT_LABEL, {
@@ -265,6 +265,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                         container: [
                             {
                                 image: 'ghcr.io/willhumphreys/trading-assistant:backend-latest',
+                                imagePullPolicy: 'Always',
                                 name: TRADING_ASSISTANT_LABEL,
                                 port: [{
                                     containerPort: 8080,
