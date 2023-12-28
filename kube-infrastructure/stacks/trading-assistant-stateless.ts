@@ -168,7 +168,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                 selector: {
                     app: TRADING_ASSISTANT_LABEL,
                 },
-                type: 'NodePort',
+                type: 'LoadBalancer',
             },
         });
     }
@@ -210,7 +210,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                 namespace: TRADING_ASSISTANT_NAMESPACE,
             },
             spec: {
-                replicas: '2',
+                replicas: '1',
                 selector: {
                     matchLabels: {
                         app: TRADING_ASSISTANT_FRONTEND_LABEL,
