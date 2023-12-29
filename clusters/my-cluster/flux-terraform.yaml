@@ -6,7 +6,7 @@ metadata:
 spec:
   interval: 1m
   approvePlan: auto
-  path: ./
+  path: ./kube-infrastructure/cdktf.out/stacks/trading-assistant-stateful
   sourceRef:
     kind: GitRepository
     name: darwinex-client

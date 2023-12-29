@@ -154,6 +154,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                     app: TRADING_ASSISTANT_LABEL,
                     test: "test",
                     test2: "test2",
+                    test3: "test3",
                 },
                 name: 'trading-assistant-service',
                 namespace: TRADING_ASSISTANT_NAMESPACE,
