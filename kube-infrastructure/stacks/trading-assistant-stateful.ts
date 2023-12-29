@@ -14,7 +14,7 @@ export class TradingAssistantStatefulStack extends TerraformStack {
         new KubernetesProvider(this, 'K8s', {
             "host": "https://192.168.1.202:6443",
             // "configPath": "~/.kube/config",
-            "configContext": "kubernetes-admin@kubernetes"
+            // "configContext": "kubernetes-admin@kubernetes"
         });
 
         this.createMysqlPVC();
