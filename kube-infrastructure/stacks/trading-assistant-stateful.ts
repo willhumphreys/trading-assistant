@@ -12,8 +12,9 @@ export class TradingAssistantStatefulStack extends TerraformStack {
         super(scope, name);
 
         new KubernetesProvider(this, 'K8s', {
-            "host": "https://192.168.1.202:6443",
-            "insecure": true,
+            host: "https://192.168.1.202:6443",
+            token: process.env.TOKEN,
+            insecure: true,
             // "configPath": "~/.kube/config",
             // "configContext": "kubernetes-admin@kubernetes"
         });
