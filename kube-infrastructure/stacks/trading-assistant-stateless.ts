@@ -10,7 +10,6 @@ export class TradingAssistantStatelessStack extends TerraformStack {
     constructor(scope: Construct, name: string) {
         super(scope, name);
 
-
         new KubernetesProvider(this, 'K8s', {
             "host": "https://192.168.1.202:6443",
             "configPath": "~/.kube/config",
