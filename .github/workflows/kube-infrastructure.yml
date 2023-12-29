@@ -35,6 +35,8 @@ jobs:
         run: npm install -g cdktf-cli
       - name: Run tests
         run: npm test
+      - name: clean
+        run: tsc --build --clean
       - name: compile
         run: npm run compile
       - name: CDK synth TradingAssistant
