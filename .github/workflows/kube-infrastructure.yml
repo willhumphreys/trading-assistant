@@ -38,8 +38,12 @@ jobs:
       - name: clean
         run: tsc --build --clean
       - name: compile
+        env:
+          TOKEN: ${{ secrets.TOKEN }}
         run: npm run compile
       - name: CDK synth TradingAssistant
+        env:
+          TOKEN: ${{ secrets.TOKEN }}
         run: npx cdktf synth
       - name: Configure Git
         run: |
