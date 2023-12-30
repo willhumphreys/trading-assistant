@@ -3,7 +3,12 @@
 import {Construct} from "constructs";
 import {TerraformStack, TerraformVariable} from "cdktf";
 import {KubernetesProvider} from "@cdktf/provider-kubernetes/lib/provider";
-import {MYSQL_LABEL, TRADING_ASSISTANT_LABEL, TRADING_ASSISTANT_FRONTEND_LABEL, TRADING_ASSISTANT_NAMESPACE} from "../constants";
+import {
+    MYSQL_LABEL,
+    TRADING_ASSISTANT_FRONTEND_LABEL,
+    TRADING_ASSISTANT_LABEL,
+    TRADING_ASSISTANT_NAMESPACE
+} from "../constants";
 import * as kubernetes from "@cdktf/provider-kubernetes";
 
 export class TradingAssistantStatelessStack extends TerraformStack {
@@ -11,14 +16,14 @@ export class TradingAssistantStatelessStack extends TerraformStack {
         super(scope, name);
 
         new KubernetesProvider(this, 'K8s', {
-            "host": "https://192.168.1.202:6443",
-            // token: process.env.TOKEN,
-            "insecure": true,
+            host: "https://192.168.1.202:6443",
+            token: process.env.TOKEN,
+            insecure: true,
 
             // "configPath": "~/.kube/config",
             // "configContext": "kubernetes-admin@kubernetes"
         });
-      //  this.createTradingAssistantFrontendIngress();
+        //  this.createTradingAssistantFrontendIngress();
 
         let adminPassword = this.createDBTerraformSecret();
         this.createTradingAssistantDeployment(this.createSlackSecret(), this.createSumoLogicSecret());
