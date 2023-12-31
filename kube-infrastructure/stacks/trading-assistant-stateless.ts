@@ -98,7 +98,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                 type: 'LoadBalancer',
             },
             lifecycle: {
-                ignoreChanges: ['metadata[0].annotations["metallb\\.universe\\.tf/ip-allocated-from-pool"]'],
+                ignoreChanges: ['metadata[0].annotations["metallb.universe.tf/ip-allocated-from-pool"]'],
             },
         });
     }
@@ -183,7 +183,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                 type: 'LoadBalancer',
             },
             lifecycle: {
-                ignoreChanges: ['metadata[0].annotations["metallb\\.universe\\.tf/ip-allocated-from-pool"]'],
+                ignoreChanges: ['metadata[0].annotations["metallb.universe.tf/ip-allocated-from-pool"]'],
             },
         });
     }
@@ -213,7 +213,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                 type: 'LoadBalancer',
             },
             lifecycle: {
-                ignoreChanges: ['metadata[0].annotations["metallb\\.universe\\.tf/ip-allocated-from-pool"]'],
+                ignoreChanges: ['metadata[0].annotations["metallb.universe.tf/ip-allocated-from-pool"]'],
             },
         });
     }
