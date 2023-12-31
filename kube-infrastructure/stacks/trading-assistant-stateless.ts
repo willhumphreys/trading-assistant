@@ -94,7 +94,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                 selector: {
                     app: MYSQL_LABEL,
                 },
-                type: 'NodePort',
+                type: 'LoadBalancer',
             },
         });
     }
