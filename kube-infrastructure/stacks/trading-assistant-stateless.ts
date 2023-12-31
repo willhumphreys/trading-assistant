@@ -26,7 +26,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
         //  this.createTradingAssistantFrontendIngress();
 
         let adminPassword = this.createDBTerraformSecret();
-        this.createTradingAssistantDeployment(this.createSlackSecret(), this.createSumoLogicSecret(), this.createDBTerraformSecret());
+        this.createTradingAssistantDeployment(this.createSlackSecret(), this.createSumoLogicSecret(), adminPassword);
         this.createTradingAssistantFrontendDeployment();
         this.createTradingAssistantService();
         this.createTradingAssistantFrontendService();
