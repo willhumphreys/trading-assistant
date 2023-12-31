@@ -19,6 +19,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
             host: "https://192.168.1.202:6443",
             token: process.env.TOKEN,
             insecure: true,
+            ignoreAnnotations: ["metallb\\.universe\\.tf/ip-allocated-from-pool"],
 
             // "configPath": "~/.kube/config",
             // "configContext": "kubernetes-admin@kubernetes"
