@@ -40,3 +40,7 @@ node_modules
 
 *.tfstate*
 *.tsbuildinfo
+/kube-infrastructure/stacks/trading*.js
+/kube-infrastructure/constants.js
+/kube-infrastructure/main.js
+/kube-infrastructure/__tests__/main-test.js
