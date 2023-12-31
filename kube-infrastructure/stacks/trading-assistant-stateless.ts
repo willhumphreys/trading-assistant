@@ -26,7 +26,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
         //  this.createTradingAssistantFrontendIngress();
 
         let adminPassword = this.createDBTerraformSecret();
-        this.createTradingAssistantDeployment(this.createSlackSecret(), this.createSumoLogicSecret());
+        this.createTradingAssistantDeployment(this.createSlackSecret(), this.createSumoLogicSecret(), this.createDBTerraformSecret());
         this.createTradingAssistantFrontendDeployment();
         this.createTradingAssistantService();
         this.createTradingAssistantFrontendService();
@@ -250,7 +250,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
         });
     }
 
-    private createTradingAssistantDeployment(slackTerraformVariable: TerraformVariable, sumoLogicTerraformVariable: TerraformVariable) {
+    private createTradingAssistantDeployment(slackTerraformVariable: TerraformVariable, sumoLogicTerraformVariable: TerraformVariable, dbPasswordTerraformVariable: TerraformVariable) {
         new kubernetes.deployment.Deployment(this, TRADING_ASSISTANT_LABEL, {
             metadata: {
                 labels: {
@@ -289,12 +289,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                                     value: 'jdbc:mysql://mysql-service:3306/metatrader',
                                 }, {
                                     name: 'DATABASE_PASSWORD',
-                                    valueFrom: {
-                                        secretKeyRef: {
-                                            name: 'dbPassword.metadata[0].name',
-                                            key: 'password',
-                                        },
-                                    },
+                                    value: dbPasswordTerraformVariable.value,
                                 }, {
                                     name: 'SLACK_WEBHOOK_URL',
                                     value: slackTerraformVariable.value,
