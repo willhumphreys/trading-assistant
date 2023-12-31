@@ -6,8 +6,15 @@ metadata:
 spec:
   interval: 1m
   approvePlan: auto
-  path: ./kube-infrastructure/cdktf.out/stacks/trading-assistant-stateful
+  path: ./kube-infrastructure/cdktf.out/stacks/trading-assistant-stateless
   sourceRef:
     kind: GitRepository
     name: darwinex-client
     namespace: flux-system
+  vars:
+    - name: dbPassword
+      value: MeanYaq*4
+    - name: slackWebHook
+      value: https://hooks.slack.com/services/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
+    - name: sumoLogicWebHook
+      value: https://collectors.de.sumologic.com/receiver/v1/http/ZaVnC4dhaV3yeUoj4ZFlT9GTV8j914Q2qLmBTLXt1tzQl13VLnRtA6L_btY62BjYmAKyq93KFAQprooYcwQO_8Hlhc6WgHRbPSBJ-Y33rkRitDLpMBKsQw==
