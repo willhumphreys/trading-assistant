@@ -197,6 +197,9 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                 labels: {
                     app: TRADING_ASSISTANT_FRONTEND_LABEL,
                 },
+                annotations: {
+                    "service.beta.kubernetes.io/aws-load-balancer-backend-protocol": "tcp"
+                },
                 name: 'trading-assistant-frontend-service',
                 namespace: TRADING_ASSISTANT_NAMESPACE,
             },
