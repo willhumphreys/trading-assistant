@@ -1,0 +1,29 @@
+apiVersion: infra.contrib.fluxcd.io/v1alpha2
+kind: Terraform
+metadata:
+  name: darwinex-client-stateless
+  namespace: flux-system
+spec:
+  interval: 1m
+  approvePlan: auto
+  path: ./kube-infrastructure/cdktf.out/stacks/trading-assistant-stateless
+  sourceRef:
+    kind: GitRepository
+    name: trading-assistant
+    namespace: flux-system
+  vars:
+    - name: dbPassword
+      valueFrom:
+        secretKeyRef:
+          name: my-secrets
+          key: dbPassword
+    - name: slackWebHook
+      valueFrom:
+        secretKeyRef:
+          name: my-secrets
+          key: slackWebHook
+    - name: sumoLogicWebHook
+      valueFrom:
+        secretKeyRef:
+          name: my-secrets
+          key: sumoLogicWebHook
