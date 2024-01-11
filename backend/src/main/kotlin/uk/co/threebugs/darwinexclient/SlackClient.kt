@@ -1,5 +1,6 @@
 package uk.co.threebugs.darwinexclient
 
+import jakarta.annotation.*
 import org.apache.hc.client5.http.classic.methods.*
 import org.apache.hc.client5.http.impl.classic.*
 import org.apache.hc.core5.http.*
@@ -14,6 +15,12 @@ class SlackClient private constructor(
     @param:Value("\${slack.webhook.url}") private val slackWebhookUrl: String,
     @param:Value("\${slack.webhook.enabled}") private val slackWebhookEnabled: Boolean
 ) {
+
+    @PostConstruct
+    fun logSlackUrl() {
+        logger.info("Slack webhook URL: $slackWebhookUrl")
+    }
+
     fun sendSlackNotification(message: String) {
         if (!slackWebhookEnabled) return
 
