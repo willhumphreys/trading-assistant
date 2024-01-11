@@ -96,6 +96,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                     app: MYSQL_LABEL,
                 },
                 type: 'LoadBalancer',
+                loadBalancerIp: "192.168.1.242"
             },
             lifecycle: {
                 ignoreChanges: ['metadata[0].annotations["metallb.universe.tf/ip-allocated-from-pool"]'],
@@ -188,6 +189,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                     app: TRADING_ASSISTANT_LABEL,
                 },
                 type: 'LoadBalancer',
+                loadBalancerIp: "192.168.1.240"
             },
             lifecycle: {
                 ignoreChanges: ['metadata[0].annotations["metallb.universe.tf/ip-allocated-from-pool"]'],
@@ -221,6 +223,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                     app: TRADING_ASSISTANT_FRONTEND_LABEL,
                 },
                 type: 'LoadBalancer',
+                loadBalancerIp: "192.168.1.241"
             },
             lifecycle: {
                 ignoreChanges: ['metadata[0].annotations["metallb.universe.tf/ip-allocated-from-pool"]'],
