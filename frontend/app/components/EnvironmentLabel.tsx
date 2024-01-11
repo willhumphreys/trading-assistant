@@ -2,24 +2,24 @@
 import React from 'react';
 
 const EnvironmentLabel: React.FC = () => {
-    const envMap: Record<string, { text: string; color: string }> = {
-        'http://localhost:8080': {text: 'Development', color: 'bg-green-500'},
-        'http://trading-assistant-service:8080': {text: 'Production', color: 'bg-red-500'},
-        'http://192.168.86.218:8080': {text: 'Production', color: 'bg-blue-500'},
-        'http://localhost:33497': {text: 'Prod-Local', color: 'bg-red-500'},
-        'http://192.168.1.242:8080': {text: 'Prod-Local', color: 'bg-red-500'},
-        'default': {text: 'Unknown', color: 'bg-gray-500'}
-    };
+    const backendHost = process.env.NEXT_PUBLIC_BACKEND_HOST || 'default';
+    let color: string;
+    let text: string;
 
-    const {text, color} = envMap[process.env.NEXT_PUBLIC_BACKEND_HOST || 'default'];
+    if (backendHost.includes('localhost')) {
+        color = 'bg-green-500';
+        text = 'Development';
+    } else {
+        color = 'bg-red-500';
+        text = 'Production';
+    }
 
-    console.log(`backend host ${process.env.NEXT_PUBLIC_BACKEND_HOST}`)
+    console.log(`backend host ${backendHost}`)
 
     return (
         <div className={`${color} text-white text-xl p-2`}>
             Environment: {text}
         </div>
-
     );
 };
 
