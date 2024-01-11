@@ -118,6 +118,10 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                     matchLabels: {
                         app: MYSQL_LABEL,
                     },
+
+                },
+                strategy: {
+                    type: "Recreate"
                 },
                 template: {
                     metadata: {

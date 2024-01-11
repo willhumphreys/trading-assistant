@@ -7,7 +7,7 @@ const EnvironmentLabel: React.FC = () => {
         'http://trading-assistant-service:8080': {text: 'Production', color: 'bg-red-500'},
         'http://192.168.86.218:8080': {text: 'Production', color: 'bg-blue-500'},
         'http://localhost:33497': {text: 'Prod-Local', color: 'bg-red-500'},
-        'http://192.168.1.241:8080': {text: 'Prod-Local', color: 'bg-red-500'},
+        'http://192.168.1.242:8080': {text: 'Prod-Local', color: 'bg-red-500'},
         'default': {text: 'Unknown', color: 'bg-gray-500'}
     };
 
