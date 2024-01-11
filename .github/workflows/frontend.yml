@@ -43,7 +43,7 @@ jobs:
         run: |
           docker build \
           --build-arg NEXT_PUBLIC_BACKEND_HOST=http://trading-assistant-service:8080 \
-          --build-arg NEXT_PUBLIC_WEB_SOCKET_HOST=ws://192.168.1.241:8080 \
+          --build-arg NEXT_PUBLIC_WEB_SOCKET_HOST=ws://192.168.1.242:8080 \
           -t $GHCR_REGISTRY/$GHCR_REPOSITORY:$IMAGE_TAG \
           -t $GHCR_REGISTRY/$GHCR_REPOSITORY:frontend-latest \
           -f Dockerfile .
