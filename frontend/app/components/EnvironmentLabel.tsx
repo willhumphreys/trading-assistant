@@ -19,6 +19,7 @@ const EnvironmentLabel: React.FC = () => {
         <div className={`${color} text-white text-xl p-2`}>
             Environment: {text}
         </div>
+
     );
 };
 
