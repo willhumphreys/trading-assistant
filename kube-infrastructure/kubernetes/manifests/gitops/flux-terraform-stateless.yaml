@@ -11,19 +11,3 @@ spec:
     kind: GitRepository
     name: trading-assistant
     namespace: flux-system
-  vars:
-    - name: dbPassword
-      valueFrom:
-        secretKeyRef:
-          name: my-secrets
-          key: dbPassword
-    - name: slackWebHook
-      valueFrom:
-        secretKeyRef:
-          name: my-secrets
-          key: slackWebHook
-    - name: sumoLogicWebHook
-      valueFrom:
-        secretKeyRef:
-          name: my-secrets
-          key: sumoLogicWebHook
