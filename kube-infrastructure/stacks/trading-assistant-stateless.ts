@@ -1,7 +1,7 @@
 // trading-assistant-stateful.ts
 
 import {Construct} from "constructs";
-import {TerraformStack, TerraformVariable} from "cdktf";
+import {TerraformStack} from "cdktf";
 import {KubernetesProvider} from "@cdktf/provider-kubernetes/lib/provider";
 import {
     MYSQL_LABEL,
@@ -26,8 +26,8 @@ export class TradingAssistantStatelessStack extends TerraformStack {
         });
         //  this.createTradingAssistantFrontendIngress();
 
-        let adminPassword = this.createDBTerraformSecret();
-        this.createTradingAssistantDeployment(this.createSlackSecret(), this.createSumoLogicSecret(), adminPassword);
+        //let adminPassword = this.createDBTerraformSecret();
+        this.createTradingAssistantDeployment();
         this.createTradingAssistantFrontendDeployment();
         this.createTradingAssistantService();
         this.createTradingAssistantFrontendService();
@@ -275,7 +275,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
         });
     }
 
-    private createTradingAssistantDeployment(slackTerraformVariable: TerraformVariable, sumoLogicTerraformVariable: TerraformVariable, dbPasswordTerraformVariable: TerraformVariable) {
+    private createTradingAssistantDeployment() {
         new kubernetes.deployment.Deployment(this, TRADING_ASSISTANT_LABEL, {
             metadata: {
                 labels: {
@@ -314,13 +314,28 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                                     value: 'jdbc:mysql://mysql-service:3306/metatrader',
                                 }, {
                                     name: 'DATABASE_PASSWORD',
-                                    value: dbPasswordTerraformVariable.value,
+                                    valueFrom: {
+                                        secretKeyRef: {
+                                            name: "my-secrets",
+                                            key: "dbPassword",
+                                        }
+                                    }
                                 }, {
                                     name: 'SLACK_WEBHOOK_URL',
-                                    value: slackTerraformVariable.value,
+                                    valueFrom: {
+                                        secretKeyRef: {
+                                            name: "my-secrets",
+                                            key: "slackWebHook",
+                                        }
+                                    }
                                 }, {
                                     name: 'SUMO_LOGIC_WEBHOOK_URL',
-                                    value: sumoLogicTerraformVariable.value,
+                                    valueFrom: {
+                                        secretKeyRef: {
+                                            name: "my-secrets",
+                                            key: "sumoLogicWebHook",
+                                        }
+                                    }
                                 }
                                 ],
                                 volumeMount: [
@@ -364,32 +379,32 @@ export class TradingAssistantStatelessStack extends TerraformStack {
         });
     }
 
-    private createDBTerraformSecret() {
+    // private createDBTerraformSecret() {
+    //
+    //     return new TerraformVariable(this, "dbPassword", {
+    //         type: "string",
+    //         description: "root password for mysql",
+    //         sensitive: true,
+    //     });
+    // }
 
-        return new TerraformVariable(this, "dbPassword", {
-            type: "string",
-            description: "root password for mysql",
-            sensitive: true,
-        });
-    }
-
-    private createSlackSecret() {
-
-        return new TerraformVariable(this, "slackWebHook", {
-            type: "string",
-            description: "slack webhook url",
-            sensitive: true,
-        });
-    }
-
-    private createSumoLogicSecret() {
-
-        return new TerraformVariable(this, "sumoLogicWebHook", {
-            type: "string",
-            description: "sumo logic webhook url",
-            sensitive: true,
-        });
-    }
+    // private createSlackSecret() {
+    //
+    //     return new TerraformVariable(this, "slackWebHook", {
+    //         type: "string",
+    //         description: "slack webhook url",
+    //         sensitive: true,
+    //     });
+    // }
+    //
+    // private createSumoLogicSecret() {
+    //
+    //     return new TerraformVariable(this, "sumoLogicWebHook", {
+    //         type: "string",
+    //         description: "sumo logic webhook url",
+    //         sensitive: true,
+    //     });
+    // }
 
     // private createHomeVariable() {
     //
