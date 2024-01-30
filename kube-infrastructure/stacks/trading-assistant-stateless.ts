@@ -31,7 +31,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
         this.createTradingAssistantFrontendDeployment();
         this.createTradingAssistantService();
         this.createTradingAssistantFrontendService();
-        this.createMysqlDeployment(adminPassword);
+        this.createMysqlDeployment();
         this.createMySqlService();
     }
 
@@ -104,7 +104,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
         });
     }
 
-    private createMysqlDeployment(adminPassword: TerraformVariable) {
+    private createMysqlDeployment() {
         new kubernetes.deployment.Deployment(this, MYSQL_LABEL, {
             metadata: {
                 labels: {
@@ -140,7 +140,12 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                                 }],
                                 env: [{
                                     name: 'MYSQL_ROOT_PASSWORD',
-                                    value: adminPassword.value,
+                                    valueFrom: {
+                                        secretKeyRef: {
+                                            name: "my-secrets",
+                                            key: "dbPassword",
+                                        }
+                                    }
                                 }],
                                 volumeMount: [
                                     {
