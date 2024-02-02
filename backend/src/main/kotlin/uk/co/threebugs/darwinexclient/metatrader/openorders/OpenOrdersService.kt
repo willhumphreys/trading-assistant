@@ -83,6 +83,8 @@ the eventHandler.onOrderEvent() function.
         try {
             val data: Orders = objectMapper.readValue(ordersPath.toFile())
 
+            logger.info("Orders size: ${data.orders.size}")
+
             //   if (data.orders.isEmpty()) continue
 
             openOrders = data

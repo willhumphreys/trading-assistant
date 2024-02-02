@@ -36,12 +36,8 @@ class MarketDataService(
 
     fun processUpdates(accountSetupGroupsDto: AccountSetupGroupsDto) {
         val updates = marketDataRepository.getMarketDataUpdates(accountSetupGroupsDto)
-
         updates.forEach { (symbol, newCurrencyInfo) ->
-
             onTick(symbol, newCurrencyInfo.bid, newCurrencyInfo.ask, accountSetupGroupsDto)
-
         }
     }
-
 }
