@@ -29,8 +29,7 @@ class OpenOrdersService(
     private val webSocketController: WebSocketController,
     private val tradeService: TradeService,
     private val tradingStanceService: TradingStanceService,
-    private val clock: Clock,
-    private val meterRegistry: MeterRegistry
+    private val clock: Clock
 ) {
 
     var openOrders: Orders = Orders(
@@ -88,9 +87,11 @@ the eventHandler.onOrderEvent() function.
 
             logger.info("Orders size: ${data.orders.size}")
 
-            Gauge.builder("open_orders") { data.orders.size }
+            Gauge.builder("api_open_orders_gauge", data.orders::size)
+                .strongReference(true)
+                .tag("title", "Open Orders")
                 .description("A current number of open orders")
-                .register(meterRegistry)
+                .register(Metrics.globalRegistry)
 
             //   if (data.orders.isEmpty()) continue
 

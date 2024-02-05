@@ -38,8 +38,8 @@ class Client(
         messageService.loadMessages(accountSetupGroups)
 
 
-        val openOrdersThreadCounter = Counter.builder("api_books_get")
-            .tag("title", "Orders")
+        val openOrdersThreadCounter = Counter.builder("api_order_loop_counter")
+            .tag("title", "Order Loop Counter")
             .description("Loops of the open orders thread")
             .register(meterRegistry)
 
