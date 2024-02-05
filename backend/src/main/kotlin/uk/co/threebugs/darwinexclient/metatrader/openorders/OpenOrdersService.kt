@@ -61,7 +61,6 @@ class OpenOrdersService(
 the eventHandler.onOrderEvent() function.
 */
     fun checkOpenOrders(accountSetupGroups: AccountSetupGroupsDto) {
-
         val dwxPath = accountSetupGroups.account.metatraderAdvisorPath.resolve("DWX")
 
         dwxPath.toFile().exists() || throw NoSuchElementException("DWX path not found: {${dwxPath.toAbsolutePath()}")
@@ -78,8 +77,7 @@ the eventHandler.onOrderEvent() function.
             ?: throw NoSuchElementException("Key 'pathOrdersStored' not found")
 
         if (!storedOrdersPath.toFile().exists()) {
-            //logger.warn("Stored orders path not found")
-            return
+            logger.warn("Stored orders path not found")
         }
 
         try {

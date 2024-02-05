@@ -25,7 +25,7 @@ class Client(
     commandService: CommandService,
     private val openOrdersService: OpenOrdersService,
     fileDataService: FileDataService,
-    private val meterRegistry: MeterRegistry
+    meterRegistry: MeterRegistry
 
 
 ) {
@@ -43,6 +43,9 @@ class Client(
             .description("Loops of the open orders thread")
             .register(meterRegistry)
 
+
+        openOrdersService.loadOrders(accountSetupGroups)
+
         thread(name = "openOrdersThread") {
 
             while (true) {
@@ -59,7 +62,7 @@ class Client(
         thread(name = "checkMarketData") { checkMarketData(accountSetupGroups) }
 
         commandService.resetCommandIDs(accountSetupGroups)
-        openOrdersService.loadOrders(accountSetupGroups)
+
 
         // subscribe to tick data:
         commandService.subscribeSymbols(symbols, accountSetupGroups)
