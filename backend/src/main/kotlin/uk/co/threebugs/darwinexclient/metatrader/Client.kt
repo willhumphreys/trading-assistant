@@ -1,5 +1,6 @@
 package uk.co.threebugs.darwinexclient.metatrader
 
+import io.micrometer.core.instrument.*
 import org.springframework.beans.factory.annotation.*
 import org.springframework.stereotype.*
 import uk.co.threebugs.darwinexclient.accountsetupgroups.*
@@ -24,6 +25,9 @@ class Client(
     commandService: CommandService,
     private val openOrdersService: OpenOrdersService,
     fileDataService: FileDataService,
+    private val meterRegistry: MeterRegistry
+
+
 ) {
 
     init {
@@ -33,6 +37,12 @@ class Client(
 
         messageService.loadMessages(accountSetupGroups)
 
+
+        val openOrdersThreadCounter = Counter.builder("api_books_get")
+            .tag("title", "Orders")
+            .description("Loops of the open orders thread")
+            .register(meterRegistry)
+
         thread(name = "openOrdersThread") {
 
             while (true) {
@@ -40,6 +50,7 @@ class Client(
                 if (!actionsService.isRunning())
                     continue
 
+                openOrdersThreadCounter.increment()
                 openOrdersService.checkOpenOrders(accountSetupGroups)
             }
 

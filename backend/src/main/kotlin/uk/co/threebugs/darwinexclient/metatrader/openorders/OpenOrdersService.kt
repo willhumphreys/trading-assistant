@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.*
 import com.fasterxml.jackson.databind.*
 import com.fasterxml.jackson.databind.exc.*
 import com.fasterxml.jackson.module.kotlin.*
+import io.micrometer.core.instrument.*
 import org.springframework.stereotype.*
 import uk.co.threebugs.darwinexclient.*
 import uk.co.threebugs.darwinexclient.accountsetupgroups.*
@@ -17,6 +18,7 @@ import uk.co.threebugs.darwinexclient.websocket.*
 import java.io.*
 import java.math.*
 import java.time.*
+import java.time.Clock
 
 private const val STORED_ORDERS_FILE_NAME = "DWX_Orders_Stored.json"
 private const val ORDERS_FILE_NAME = "DWX_Orders.json"
@@ -27,7 +29,8 @@ class OpenOrdersService(
     private val webSocketController: WebSocketController,
     private val tradeService: TradeService,
     private val tradingStanceService: TradingStanceService,
-    private val clock: Clock
+    private val clock: Clock,
+    private val meterRegistry: MeterRegistry
 ) {
 
     var openOrders: Orders = Orders(
@@ -84,6 +87,10 @@ the eventHandler.onOrderEvent() function.
             val data: Orders = objectMapper.readValue(ordersPath.toFile())
 
             logger.info("Orders size: ${data.orders.size}")
+
+            Gauge.builder("open_orders") { data.orders.size }
+                .description("A current number of open orders")
+                .register(meterRegistry)
 
             //   if (data.orders.isEmpty()) continue
 
