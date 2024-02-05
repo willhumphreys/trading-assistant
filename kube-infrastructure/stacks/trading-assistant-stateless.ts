@@ -179,7 +179,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                 namespace: TRADING_ASSISTANT_NAMESPACE,
                 annotations: {
                     "service.beta.kubernetes.io/aws-load-balancer-proxy-protocol": "*"
-    }
+                }
             },
             spec: {
                 port: [
@@ -189,12 +189,11 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                     }
 
                 ],
-
                 selector: {
                     app: TRADING_ASSISTANT_LABEL,
                 },
                 type: 'LoadBalancer',
-                loadBalancerIp: "192.168.1.240"
+                loadBalancerIp: "192.168.1.240",
             },
             lifecycle: {
                 ignoreChanges: ['metadata[0].annotations["metallb.universe.tf/ip-allocated-from-pool"]'],
@@ -210,7 +209,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                 },
                 annotations: {
                     "service.beta.kubernetes.io/aws-load-balancer-proxy-protocol": "*",
-    },
+                },
                 name: 'trading-assistant-frontend-service',
                 namespace: TRADING_ASSISTANT_NAMESPACE,
             },
@@ -296,6 +295,11 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                         labels: {
                             app: TRADING_ASSISTANT_LABEL,
                         },
+                        annotations: {
+                            "prometheus.io/scrape": "true",
+                            "prometheus.io/path": "/actuator/prometheus",
+                            "prometheus.io/port": "8080",
+                        },
                     },
                     spec: {
                         container: [
@@ -306,6 +310,21 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                                 port: [{
                                     containerPort: 8080,
                                 }],
+                                livenessProbe: {
+                                    httpGet: {
+                                        path: "/actuator/health",
+                                        port: "8080"
+                                    },
+                                    initialDelaySeconds: 30,
+                                    periodSeconds: 2
+                                },
+                                readinessProbe: {
+                                    httpGet: {
+                                        path: "/actuator/health",
+                                        port: "8080"
+                                    },
+                                    initialDelaySeconds: 10
+                                },
                                 env: [{
                                     name: 'SPRING_PROFILE',
                                     value: 'currencies',
