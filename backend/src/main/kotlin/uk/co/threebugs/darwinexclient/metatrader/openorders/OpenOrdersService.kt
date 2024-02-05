@@ -83,8 +83,6 @@ the eventHandler.onOrderEvent() function.
         try {
             val data: Orders = objectMapper.readValue(ordersPath.toFile())
 
-            logger.info("Orders size: ${data.orders.size}")
-
             Gauge.builder("api_open_orders_gauge", data.orders::size)
                 .strongReference(true)
                 .tag("title", "Open Orders")
