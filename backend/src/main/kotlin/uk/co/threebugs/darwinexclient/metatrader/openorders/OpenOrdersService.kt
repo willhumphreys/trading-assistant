@@ -288,9 +288,7 @@ the eventHandler.onOrderEvent() function.
                         value = currentValue.profitAndLoss.toString()
                     ), "/topic/order-change"
                 )
-
                 log = true
-
             }
             if (currentValue.mapType != previousValue.mapType) {
                 changes.append("Map Type: ")
