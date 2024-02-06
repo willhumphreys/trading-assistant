@@ -3,6 +3,7 @@ package uk.co.threebugs.darwinexclient.trade
 import org.springframework.data.domain.*
 import org.springframework.data.repository.*
 import org.springframework.stereotype.*
+import org.springframework.transaction.annotation.*
 import uk.co.threebugs.darwinexclient.*
 import uk.co.threebugs.darwinexclient.accountsetupgroups.*
 import uk.co.threebugs.darwinexclient.clock.*
@@ -17,7 +18,7 @@ import java.time.*
 import java.time.format.*
 import java.util.function.*
 
-
+@Transactional
 @Service
 class TradeService(
     private val tradeRepository: TradeRepository,
