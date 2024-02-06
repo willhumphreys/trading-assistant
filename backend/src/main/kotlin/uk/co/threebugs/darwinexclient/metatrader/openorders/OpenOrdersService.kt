@@ -114,7 +114,6 @@ the eventHandler.onOrderEvent() function.
             }
 
             for ((orderKey, currentOrder) in openOrders.orders) {
-
                 // Check if the key exists in previousDataOrders
                 if (lastOpenOrders.orders.containsKey(orderKey)) {
                     val previousOrder = lastOpenOrders.orders[orderKey]
