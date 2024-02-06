@@ -162,7 +162,6 @@ the eventHandler.onOrderEvent() function.
             val tryReadFile = Helpers.tryReadFile(storedOrdersPath)
             logger.info("Stored orders: $tryReadFile")
         }
-
         logger.info("\nAccount info:\n${openOrders.accountInfo}\n")
 
     }
