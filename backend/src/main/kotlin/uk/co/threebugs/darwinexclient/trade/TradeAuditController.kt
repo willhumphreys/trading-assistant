@@ -47,7 +47,7 @@ class TradeAuditController(
         val status: Status?,
         val setupId: Int?,
         val accountId: Int?,
-        val metatraderId: Int?,
+        val metatraderId: Long?,
         val placedDateTime: ZonedDateTime?,
         val targetPlaceDateTime: ZonedDateTime?,
         val placedPrice: BigDecimal?,

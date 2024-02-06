@@ -1,8 +1,8 @@
 package uk.co.threebugs.darwinexclient.search
 
-import uk.co.threebugs.darwinexclient.Status
-import java.math.BigDecimal
-import java.time.ZonedDateTime
+import uk.co.threebugs.darwinexclient.*
+import java.math.*
+import java.time.*
 
 
 data class TradeSearchDto(
@@ -12,7 +12,7 @@ data class TradeSearchDto(
     var status: Status? = null,
     var setup: SetupSearchDto? = null,
     var account: AccountSearchDto? = null,
-    var metatraderId: Int? = null,
+    var metatraderId: Long? = null,
     var targetPlaceDateTime: ZonedDateTime? = null,
     var placedDateTime: ZonedDateTime? = null,
     var placedPrice: BigDecimal? = null,

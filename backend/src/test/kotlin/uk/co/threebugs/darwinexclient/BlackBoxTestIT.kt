@@ -320,8 +320,8 @@ class BlackBoxTestIT : AnnotationSpec() {
         val ordersAndAccount = readOrdersFile()
         ordersAndAccount.orders.size shouldBe 2
 
-        ordersAndAccount.orders["1"]?.type = buySell
-        ordersAndAccount.orders["2"]?.type = buySell
+        ordersAndAccount.orders[1]?.type = buySell
+        ordersAndAccount.orders[2]?.type = buySell
 
         writeOrdersFile(ordersAndAccount)
 
@@ -597,8 +597,8 @@ class BlackBoxTestIT : AnnotationSpec() {
         val ordersAndAccount = readOrdersFile()
         ordersAndAccount.orders.size shouldBe 2
 
-        ordersAndAccount.orders["1"]?.type = buySell
-        ordersAndAccount.orders["2"]?.type = buySell
+        ordersAndAccount.orders[1]?.type = buySell
+        ordersAndAccount.orders[2]?.type = buySell
 
         writeOrdersFile(ordersAndAccount)
 
@@ -1011,8 +1011,8 @@ class BlackBoxTestIT : AnnotationSpec() {
         val ordersAndAccount = readOrdersFile()
         ordersAndAccount.orders.size shouldBe 2
 
-        ordersAndAccount.orders["1"]?.type = buySell
-        ordersAndAccount.orders["2"]?.type = buySell
+        ordersAndAccount.orders[1]?.type = buySell
+        ordersAndAccount.orders[2]?.type = buySell
 
         writeOrdersFile(ordersAndAccount)
 

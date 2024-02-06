@@ -232,9 +232,7 @@ class TradeService(
     }
 
 
-
-
-    fun placeTrade(tradeInfo: TradeInfo, metatraderId: Int, trade: TradeDto, status: Status) {
+    fun placeTrade(tradeInfo: TradeInfo, metatraderId: Long, trade: TradeDto, status: Status) {
 
         if (trade.status == Status.PENDING || trade.status == Status.ORDER_SENT) {
             trade.apply {

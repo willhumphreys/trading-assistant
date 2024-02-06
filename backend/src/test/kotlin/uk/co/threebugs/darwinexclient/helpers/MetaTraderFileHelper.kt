@@ -100,7 +100,7 @@ class MetaTraderFileHelper {
             val openTradeOrder = Orders(
                 accountInfo,
                 mapOf(
-                    "1" to TradeInfo(
+                    1L to TradeInfo(
                         magic = magicTrade1!!,
                         lots = BigDecimal("0.01"),
                         symbol = symbol,
@@ -112,7 +112,7 @@ class MetaTraderFileHelper {
                         type = type,
                         comment = "test",
                     ),
-                    "2" to TradeInfo(
+                    2L to TradeInfo(
                         magic = magicTrade2!!,
                         lots = BigDecimal("0.01"),
                         symbol = symbol,

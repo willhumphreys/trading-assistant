@@ -29,7 +29,7 @@ data class Trade(
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "account_id")
     var account: Account? = null,
-    var metatraderId: Int? = null,
+    var metatraderId: Long? = null,
     var placedDateTime: ZonedDateTime? = null,
     var targetPlaceDateTime: ZonedDateTime? = null,
     var placedPrice: BigDecimal? = null,

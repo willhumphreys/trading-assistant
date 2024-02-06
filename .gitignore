@@ -44,3 +44,5 @@ node_modules
 /kube-infrastructure/constants.js
 /kube-infrastructure/main.js
 /kube-infrastructure/__tests__/main-test.js
+
+*.log

@@ -168,7 +168,7 @@ the eventHandler.onOrderEvent() function.
     }
 
     private fun compareTradeInfo(
-        orderKey: String,
+        orderKey: Long,
         currentValue: TradeInfo,
         previousValue: TradeInfo,
         accountSetupGroups: AccountSetupGroupsDto
@@ -278,7 +278,7 @@ the eventHandler.onOrderEvent() function.
                 ) {
                     tradeService.closeTrade(foundTrade, accountSetupGroups)
                 } else {
-                    tradeService.placeTrade(currentValue, currentValue.magic, foundTrade, Status.FILLED)
+                    tradeService.placeTrade(currentValue, orderKey, foundTrade, Status.FILLED)
                 }
 
                 webSocketController.sendMessage(
@@ -316,7 +316,7 @@ the eventHandler.onOrderEvent() function.
         }
     }
 
-    fun onNewOrder(tradeInfo: TradeInfo, metaTraderId: String) {
+    fun onNewOrder(tradeInfo: TradeInfo, metaTraderId: Long) {
         webSocketController.sendMessage(
             WebSocketMessage(
                 id = tradeInfo.magic,
@@ -326,7 +326,7 @@ the eventHandler.onOrderEvent() function.
         )
         val foundTrade = tradeService.findById(tradeInfo.magic)
             ?: throw IllegalArgumentException("Trade with magic ${tradeInfo.magic} not found")
-        tradeService.placeTrade(tradeInfo, Integer.valueOf(metaTraderId), foundTrade, Status.PLACED_IN_MT)
+        tradeService.placeTrade(tradeInfo, metaTraderId, foundTrade, Status.PLACED_IN_MT)
     }
 
     fun onClosedOrder(tradeInfo: TradeInfo) {
