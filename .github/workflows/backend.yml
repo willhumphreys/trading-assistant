@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 21
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: 21
           distribution: 'temurin'
@@ -32,7 +32,7 @@ jobs:
       - name: Build with Maven longtest
         run: mvn -B verify -Dprofile.active=longtest --file pom.xml
       - name: Upload JAR
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: darwinex-client-jar
           path: backend/target/darwinex-client-0.0.1-SNAPSHOT.jar
