@@ -1,11 +1,11 @@
 package uk.co.threebugs.darwinexclient.metatrader
 
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.*
 
 data class Orders(
 
     @JsonProperty("account_info")
     var accountInfo: AccountInfo,
-    var orders: Map<Int, TradeInfo>
+    var orders: Map<String, TradeInfo>
 
 )

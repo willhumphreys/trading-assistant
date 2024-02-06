@@ -1,18 +1,15 @@
 package uk.co.threebugs.darwinexclient.helpers
 
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import uk.co.threebugs.darwinexclient.metatrader.AccountInfo
-import uk.co.threebugs.darwinexclient.metatrader.CurrencyInfo
-import uk.co.threebugs.darwinexclient.metatrader.Orders
-import uk.co.threebugs.darwinexclient.metatrader.TradeInfo
-import uk.co.threebugs.darwinexclient.utils.logger
-import java.io.File
-import java.math.BigDecimal
+import com.fasterxml.jackson.datatype.jsr310.*
+import com.fasterxml.jackson.module.kotlin.*
+import uk.co.threebugs.darwinexclient.metatrader.*
+import uk.co.threebugs.darwinexclient.utils.*
+import java.io.*
+import java.math.*
 import java.nio.file.*
-import java.nio.file.attribute.BasicFileAttributes
-import java.time.LocalDateTime
-import kotlin.random.Random
+import java.nio.file.attribute.*
+import java.time.*
+import kotlin.random.*
 
 class MetaTraderFileHelper {
 
@@ -103,7 +100,7 @@ class MetaTraderFileHelper {
             val openTradeOrder = Orders(
                 accountInfo,
                 mapOf(
-                    1 to TradeInfo(
+                    "1" to TradeInfo(
                         magic = magicTrade1!!,
                         lots = BigDecimal("0.01"),
                         symbol = symbol,
@@ -115,7 +112,7 @@ class MetaTraderFileHelper {
                         type = type,
                         comment = "test",
                     ),
-                    2 to TradeInfo(
+                    "2" to TradeInfo(
                         magic = magicTrade2!!,
                         lots = BigDecimal("0.01"),
                         symbol = symbol,

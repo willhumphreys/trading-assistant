@@ -113,17 +113,17 @@ the eventHandler.onOrderEvent() function.
                 openOrders.orders[it]?.let { it1 -> onNewOrder(it1, it) }
             }
 
-            for ((key, currentOrder) in openOrders.orders) {
+            for ((orderKey, currentOrder) in openOrders.orders) {
 
                 // Check if the key exists in previousDataOrders
-                if (lastOpenOrders.orders.containsKey(key)) {
-                    val previousOrder = lastOpenOrders.orders[key]
+                if (lastOpenOrders.orders.containsKey(orderKey)) {
+                    val previousOrder = lastOpenOrders.orders[orderKey]
 
                     // Compare the TradeInfo objects
-                    compareTradeInfo(key, currentOrder, previousOrder!!, accountSetupGroups)
+                    compareTradeInfo(orderKey, currentOrder, previousOrder!!, accountSetupGroups)
                 } else {
                     // Log new orders that didn't exist in previousDataOrders
-                    logger.info("New order: $key, Value: $currentOrder")
+                    logger.info("New order: $orderKey, Value: $currentOrder")
                 }
             }
 
@@ -168,14 +168,14 @@ the eventHandler.onOrderEvent() function.
     }
 
     private fun compareTradeInfo(
-        ticket: Int,
+        orderKey: String,
         currentValue: TradeInfo,
         previousValue: TradeInfo,
         accountSetupGroups: AccountSetupGroupsDto
     ) {
         var log = false
         if (currentValue != previousValue) {
-            val changes = StringBuilder("Changes for Order $ticket: ")
+            val changes = StringBuilder("Changes for Orders $orderKey: ")
             if (currentValue.magic != previousValue.magic) {
                 changes.append("Magic: ")
                     .append(previousValue.magic)
@@ -316,7 +316,7 @@ the eventHandler.onOrderEvent() function.
         }
     }
 
-    fun onNewOrder(tradeInfo: TradeInfo, metaTraderId: Int) {
+    fun onNewOrder(tradeInfo: TradeInfo, metaTraderId: String) {
         webSocketController.sendMessage(
             WebSocketMessage(
                 id = tradeInfo.magic,
@@ -326,7 +326,7 @@ the eventHandler.onOrderEvent() function.
         )
         val foundTrade = tradeService.findById(tradeInfo.magic)
             ?: throw IllegalArgumentException("Trade with magic ${tradeInfo.magic} not found")
-        tradeService.placeTrade(tradeInfo, metaTraderId, foundTrade, Status.PLACED_IN_MT)
+        tradeService.placeTrade(tradeInfo, Integer.valueOf(metaTraderId), foundTrade, Status.PLACED_IN_MT)
     }
 
     fun onClosedOrder(tradeInfo: TradeInfo) {
