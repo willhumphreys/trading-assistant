@@ -1,7 +1,9 @@
 package uk.co.threebugs.darwinexclient.account
 
 import org.springframework.stereotype.*
+import org.springframework.transaction.annotation.*
 
+@Transactional
 @Service
 class AccountService(
     private val accountRepository: AccountRepository,

@@ -2,7 +2,9 @@ package uk.co.threebugs.darwinexclient.setup
 
 import org.springframework.data.repository.*
 import org.springframework.stereotype.*
+import org.springframework.transaction.annotation.*
 
+@Transactional
 @Service
 class SetupService(private val setupRepository: SetupRepository, private val setupMapper: SetupMapper) {
     fun deleteSetupsByAccountName(name: String): Int {

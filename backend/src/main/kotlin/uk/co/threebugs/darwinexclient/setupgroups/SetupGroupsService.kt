@@ -1,7 +1,9 @@
 package uk.co.threebugs.darwinexclient.setupgroups
 
-import org.springframework.stereotype.Service
+import org.springframework.stereotype.*
+import org.springframework.transaction.annotation.*
 
+@Transactional
 @Service
 class SetupGroupsService(
     private val setupGroupsRepository: SetupGroupsRepository,

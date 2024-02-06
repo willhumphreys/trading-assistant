@@ -3,10 +3,12 @@ package uk.co.threebugs.darwinexclient.tradingstance
 import org.springframework.data.domain.*
 import org.springframework.data.repository.*
 import org.springframework.stereotype.*
+import org.springframework.transaction.annotation.*
 import uk.co.threebugs.darwinexclient.Status.*
 import uk.co.threebugs.darwinexclient.accountsetupgroups.*
 import uk.co.threebugs.darwinexclient.trade.*
 
+@Transactional
 @Service
 class TradingStanceService(
     private val tradingStanceRepository: TradingStanceRepository,

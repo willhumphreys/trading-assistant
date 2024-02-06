@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.exc.*
 import com.fasterxml.jackson.module.kotlin.*
 import io.micrometer.core.instrument.*
 import org.springframework.stereotype.*
+import org.springframework.transaction.annotation.*
 import uk.co.threebugs.darwinexclient.*
 import uk.co.threebugs.darwinexclient.accountsetupgroups.*
 import uk.co.threebugs.darwinexclient.actions.*
@@ -23,6 +24,7 @@ import java.time.Clock
 private const val STORED_ORDERS_FILE_NAME = "DWX_Orders_Stored.json"
 private const val ORDERS_FILE_NAME = "DWX_Orders.json"
 
+@Transactional
 @Service
 class OpenOrdersService(
     private val objectMapper: ObjectMapper,

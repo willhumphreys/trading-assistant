@@ -2,12 +2,14 @@ package uk.co.threebugs.darwinexclient.setupgroup
 
 import com.fasterxml.jackson.databind.*
 import org.springframework.stereotype.*
+import org.springframework.transaction.annotation.*
 import uk.co.threebugs.darwinexclient.setupgroups.*
 import uk.co.threebugs.darwinexclient.utils.*
 import java.io.*
 import java.nio.file.*
 import java.util.stream.*
 
+@Transactional
 @Service
 class SetupGroupService(
     private val setupGroupMapper: SetupGroupMapper,
