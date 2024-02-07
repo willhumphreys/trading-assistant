@@ -11,6 +11,7 @@ import uk.co.threebugs.darwinexclient.metatrader.*
 import uk.co.threebugs.darwinexclient.metatrader.commands.*
 import uk.co.threebugs.darwinexclient.search.*
 import uk.co.threebugs.darwinexclient.setup.*
+import uk.co.threebugs.darwinexclient.setupgroup.*
 import uk.co.threebugs.darwinexclient.tradingstance.*
 import uk.co.threebugs.darwinexclient.utils.*
 import java.math.*
@@ -77,7 +78,7 @@ class TradeService(
             tradingStanceRepository.findBySymbolAndAccountSetupGroups_Name(symbol, accountSetupGroups.name)
                 ?: throw IllegalArgumentException("Trading stance not found for symbol: $symbol and accountSetupGroups: ${accountSetupGroups.name}")
 
-        setups.filter { s -> s.direction == tradingStance.direction }
+        setups.filter { s -> s.direction == tradingStance.direction || tradingStance.direction == Direction.BOTH }
 
             .forEach { setup ->
                 val targetPlaceTime: ZonedDateTime =
