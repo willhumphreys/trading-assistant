@@ -6,6 +6,7 @@ import org.springframework.stereotype.*
 import org.springframework.transaction.annotation.*
 import uk.co.threebugs.darwinexclient.Status.*
 import uk.co.threebugs.darwinexclient.accountsetupgroups.*
+import uk.co.threebugs.darwinexclient.setupgroup.*
 import uk.co.threebugs.darwinexclient.trade.*
 
 @Transactional
@@ -49,21 +50,25 @@ class TradingStanceService(
 
         val savedEntity = tradingStanceRepository.save(updatedEntity)
 
-        val trades = listOf(
-            PENDING to CANCELLED_BY_STANCE,
-            ORDER_SENT to CANCELLED_BY_STANCE,
-            PLACED_IN_MT to CANCELLED_BY_STANCE,
-            FILLED to CLOSED_BY_STANCE
-        ).map { (status, closureReason) ->
-            tradeService.closeTradesOnStanceChange(
-                tradingStanceDto.symbol,
-                accountSetupGroups,
-                status,
-                closureReason
-            )
-        }.flatten().toList()
+        // Unless the trading stance is set to BOTH, we need to close any open trades
+        if (tradingStanceDto.direction != Direction.BOTH) {
 
-        return tradingStanceMapper.toDto(savedEntity, trades)
+            val trades = listOf(
+                PENDING to CANCELLED_BY_STANCE,
+                ORDER_SENT to CANCELLED_BY_STANCE,
+                PLACED_IN_MT to CANCELLED_BY_STANCE,
+                FILLED to CLOSED_BY_STANCE
+            ).map { (status, closureReason) ->
+                tradeService.closeTradesOnStanceChange(
+                    tradingStanceDto.symbol,
+                    accountSetupGroups,
+                    status,
+                    closureReason
+                )
+            }.flatten().toList()
+            return tradingStanceMapper.toDto(savedEntity, trades)
+        }
+        return tradingStanceMapper.toDto(savedEntity, listOf())
     }
 
     fun findBySymbolAndAccountSetupGroupsName(symbol: String, accountSetupGroupsName: String): TradingStanceDtoIn {
