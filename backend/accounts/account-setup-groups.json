@@ -35,79 +35,9 @@
     ]
   },
   {
-    "name": "windows-long",
-    "setup-group-name": "long",
-    "metatrader-account": "long-windows-23",
-    "trading-stances": [
-      {
-        "symbol": "EURUSD",
-        "direction": "LONG"
-      },
-      {
-        "symbol": "GBPUSD",
-        "direction": "LONG"
-      },
-      {
-        "symbol": "USDCAD",
-        "direction": "LONG"
-      },
-      {
-        "symbol": "NZDUSD",
-        "direction": "LONG"
-      },
-      {
-        "symbol": "AUDUSD",
-        "direction": "LONG"
-      },
-      {
-        "symbol": "USDJPY",
-        "direction": "LONG"
-      },
-      {
-        "symbol": "USDCHF",
-        "direction": "LONG"
-      }
-    ]
-  },
-  {
     "name": "linux-short",
     "setup-group-name": "short",
     "metatrader-account": "short-04",
-    "trading-stances": [
-      {
-        "symbol": "EURUSD",
-        "direction": "SHORT"
-      },
-      {
-        "symbol": "GBPUSD",
-        "direction": "SHORT"
-      },
-      {
-        "symbol": "USDCAD",
-        "direction": "SHORT"
-      },
-      {
-        "symbol": "NZDUSD",
-        "direction": "SHORT"
-      },
-      {
-        "symbol": "AUDUSD",
-        "direction": "SHORT"
-      },
-      {
-        "symbol": "USDJPY",
-        "direction": "SHORT"
-      },
-      {
-        "symbol": "USDCHF",
-        "direction": "SHORT"
-      }
-    ]
-  },
-  {
-    "name": "windows-short",
-    "setup-group-name": "short",
-    "metatrader-account": "short-windows-04",
     "trading-stances": [
       {
         "symbol": "EURUSD",
@@ -171,41 +101,10 @@
       {
         "symbol": "USDCHF",
         "direction": "LONG"
-      }
-    ]
-  },
-  {
-    "name": "windows-both",
-    "setup-group-name": "both",
-    "metatrader-account": "long-windows-23",
-    "trading-stances": [
-      {
-        "symbol": "EURUSD",
-        "direction": "LONG"
       },
       {
-        "symbol": "GBPUSD",
-        "direction": "LONG"
-      },
-      {
-        "symbol": "USDCAD",
-        "direction": "LONG"
-      },
-      {
-        "symbol": "NZDUSD",
-        "direction": "LONG"
-      },
-      {
-        "symbol": "AUDUSD",
-        "direction": "LONG"
-      },
-      {
-        "symbol": "USDJPY",
-        "direction": "LONG"
-      },
-      {
-        "symbol": "USDCHF",
-        "direction": "LONG"
+        "symbol": "XAUUSD",
+        "direction": "FLAT"
       }
     ]
   },
@@ -240,6 +139,10 @@
       },
       {
         "symbol": "USDCHF",
+        "direction": "FLAT"
+      },
+      {
+        "symbol": "XAUUSD",
         "direction": "FLAT"
       }
     ]

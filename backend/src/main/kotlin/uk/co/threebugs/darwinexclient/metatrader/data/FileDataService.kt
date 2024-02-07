@@ -24,7 +24,7 @@ class FileDataService(
 ) {
 
 
-    internal fun loadData(symbols: List<String>, setupLimit: Int): List<AccountSetupGroupsDto> {
+    internal fun loadData(setupLimit: Int): List<AccountSetupGroupsDto> {
 
         val accountsPath: Path = Paths.get(accounts)
 
@@ -35,7 +35,11 @@ class FileDataService(
             Files.list(setupGroupsPath).use { paths ->
                 paths.forEach { setupsPath: Path ->
                     val setupGroups = setupGroupService.loadSetupsFromFile(setupsPath)
-                    symbols.forEach { symbol: String -> loadDataFromCsv(symbol, setupGroups, setupLimit) }
+
+                    setupGroups.forEach { setupGroup: SetupGroup ->
+                        loadDataFromCsv(setupGroup.symbol!!, setupGroups, setupLimit)
+                    }
+
                 }
             }
         } catch (e: IOException) {

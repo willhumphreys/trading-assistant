@@ -85,6 +85,18 @@
       "symbol": "USDCAD",
       "direction": "SHORT",
       "enabled": true
+    },
+    {
+      "path": "XAUUSD_BT/s_-300..-10..10___l_10..750..10___o_-80..-10..5___d_14..14..7___out_8..8..4/aggregated-XAUUSD_BT_s_-300..-10..10___l_10..750..10___o_-80..-10..5___d_14..14..7___out_8..8..4_aggregationQueryTemplate-all.csv.lzo/XAUUSD_BestTrades/profitperrisk/XAUUSD_bestTrades.csv",
+      "symbol": "XAUUSD",
+      "direction": "LONG",
+      "enabled": true
+    },
+    {
+      "path": "XAUUSD_BT/s_-300..-10..10___l_10..750..10___o_-80..-10..5___d_14..14..7___out_8..8..4___short/aggregated-XAUUSD_BT_s_-300..-10..10___l_10..750..10___o_-80..-10..5___d_14..14..7___out_8..8..4___short_aggregationQueryTemplate-all.csv.lzo/XAUUSD_BestTrades/profitperrisk/XAUUSD_bestTrades.csv",
+      "symbol": "XAUUSD",
+      "direction": "SHORT",
+      "enabled": true
     }
   ]
 }

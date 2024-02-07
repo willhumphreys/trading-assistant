@@ -55,4 +55,12 @@ class SetupGroupService(
             .map { setupGroup: SetupGroup -> setupGroupMapper.toDto(setupGroup) }
             .toList()
     }
+
+    fun findUniqueSymbolsBySetupGroups(setupGroups: SetupGroupsDto): List<String> {
+        return setupGroupRepository.findBySetupGroups(setupGroupsMapper.toEntity(setupGroups))
+            .stream()
+            .map { setupGroup: SetupGroup -> setupGroup.symbol!! }
+            .distinct()
+            .toList()
+    }
 }

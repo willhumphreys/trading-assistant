@@ -74,3 +74,18 @@ kubectl describe deployment trading-assistant
 kubectl get secrets
 kubectl.exe apply -f .\kubernetes\manifests\dev\mysql-service.yaml
 ```
+
+## Copying to config changes to the server
+
+Copy account-setup-groups.json to the server
+
+```bash
+scp /home/will/code/darwinex-client/backend/accounts/account-setup-groups.json will@192.168.1.202:/home/will/accounts
+```
+
+Copy the setup-group-both.json to the server
+
+```bash
+scp /home/will/code/darwinex-client/backend/accounts/setup-groups/setup-group-both.json will@192.168.1.202:/home/will/accounts/setup-groups
+```
+

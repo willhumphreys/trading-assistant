@@ -10,6 +10,7 @@ import uk.co.threebugs.darwinexclient.metatrader.data.*
 import uk.co.threebugs.darwinexclient.metatrader.marketdata.*
 import uk.co.threebugs.darwinexclient.metatrader.messages.*
 import uk.co.threebugs.darwinexclient.metatrader.openorders.*
+import uk.co.threebugs.darwinexclient.setupgroup.*
 import kotlin.concurrent.*
 
 
@@ -22,18 +23,15 @@ class Client(
 
     private val actionsService: ActionsService,
     private val messageService: MessageService,
+    private val setupGroupService: SetupGroupService,
     commandService: CommandService,
     private val openOrdersService: OpenOrdersService,
     fileDataService: FileDataService,
     meterRegistry: MeterRegistry
-
-
 ) {
 
     init {
-        val symbols = listOf("EURUSD", "GBPUSD", "USDCAD", "NZDUSD", "AUDUSD", "USDJPY", "USDCHF")
-
-        val accountSetupGroups = getAccountSetupGroups(fileDataService, symbols)
+        val accountSetupGroups = getAccountSetupGroups(fileDataService)
 
         messageService.loadMessages(accountSetupGroups)
 
@@ -63,20 +61,21 @@ class Client(
 
         commandService.resetCommandIDs(accountSetupGroups)
 
+        val uniqueSymbols =
+            setupGroupService.findUniqueSymbolsBySetupGroups(accountSetupGroups.setupGroups)
 
         // subscribe to tick data:
-        commandService.subscribeSymbols(symbols, accountSetupGroups)
+        commandService.subscribeSymbols(uniqueSymbols, accountSetupGroups)
 
         actionsService.startUpComplete()
     }
 
     private fun getAccountSetupGroups(
-        fileDataService: FileDataService,
-        symbols: List<String>
+        fileDataService: FileDataService
     ): AccountSetupGroupsDto {
 
         try {
-            val accountSetupGroupsList = fileDataService.loadData(symbols, setupLimit)
+            val accountSetupGroupsList = fileDataService.loadData(setupLimit)
 
             return accountSetupGroupsList.first { it.name == accountSetupGroupsName }
         } catch (e: NoSuchElementException) {
