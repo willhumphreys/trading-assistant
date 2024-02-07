@@ -12,4 +12,5 @@
     <include file="classpath:db/changelog/005_add_account_setup_groups.xml"/>
     <include file="classpath:db/changelog/006_add_trading_stance.xml"/>
     <include file="classpath:db/changelog/007_update_trader_id_to_long.xml"/>
+    <include file="classpath:db/changelog/008_add_both_trading_stance.xml"/>
 </databaseChangeLog>
