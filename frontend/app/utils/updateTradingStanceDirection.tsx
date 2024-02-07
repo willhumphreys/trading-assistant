@@ -40,6 +40,7 @@ const UpdateTradingStanceDirection: FC<UpdateTradingStanceProps> = ({tradingStan
                 <option value="long">Long</option>
                 <option value="flat">Flat</option>
                 <option value="short">Short</option>
+                <option value="both">Both</option>
             </select>
             <button
                 className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
