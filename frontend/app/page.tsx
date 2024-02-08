@@ -7,6 +7,7 @@ import {
     SortConfig,
     Trade,
     TradeAudit,
+    TradingStance,
     TradingStanceInfo
 } from "@/app/types/interfaces";
 import TradesTable from "@/app/components/tradesTable";
@@ -136,6 +137,10 @@ export default function FetchTradesClient() {
         fetchAll();
     };
 
+    const handleUpdateTradingStanceClick = (tradingStance: TradingStance) => {
+        fetchAll();
+    }
+
 
     const handleAuditHeaderClick = (tradeAuditId: number) => {
         console.log(`click click tradeAuditId: ${tradeAuditId}`)
@@ -195,6 +200,7 @@ export default function FetchTradesClient() {
                 <TradingStanceTable
                     tradingStances={tradingStances}
                     handleTradingStanceHeaderClick={handleTradingStanceHeaderClick}
+                    handleUpdateTradingStanceClick={handleUpdateTradingStanceClick}
                 />
             </div>
 

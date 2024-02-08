@@ -1,13 +1,18 @@
-import {Page, TradingStanceInfo} from '@/app/types/interfaces';
+import {Page, TradingStance, TradingStanceInfo} from '@/app/types/interfaces';
 import React from "react";
 import UpdateTradingStanceDirection from "@/app/utils/updateTradingStanceDirection";
 
 type Props = {
     tradingStances?: Page<TradingStanceInfo>;
     handleTradingStanceHeaderClick: (newSortColumn: string) => void;
+    handleUpdateTradingStanceClick: (tradingStance: TradingStance) => void;
 };
 
-export default function TradingStanceTable({tradingStances, handleTradingStanceHeaderClick}: Props) {
+export default function TradingStanceTable({
+                                               tradingStances,
+                                               handleTradingStanceHeaderClick,
+                                               handleUpdateTradingStanceClick
+                                           }: Props) {
     const columns = [
         {name: 'id', entity: ''},
         {name: 'symbol', entity: ''},
@@ -48,7 +53,8 @@ export default function TradingStanceTable({tradingStances, handleTradingStanceH
 
                     <td>{tradingStanceInfo.tradingStance.id}</td>
                     <td>{tradingStanceInfo.tradingStance.symbol}</td>
-                    <td><UpdateTradingStanceDirection tradingStance={tradingStanceInfo.tradingStance}/>
+                    <td><UpdateTradingStanceDirection tradingStance={tradingStanceInfo.tradingStance}
+                                                      handleUpdateTradingStanceClick={handleUpdateTradingStanceClick}/>
                     </td>
                     <td>{tradingStanceInfo.tradingStance.direction}</td>
                     <td>{tradingStanceInfo.tradingStance.accountSetupGroups.name}: {tradingStanceInfo.tradingStance.accountSetupGroups.account.name}</td>

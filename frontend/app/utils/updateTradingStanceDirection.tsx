@@ -4,12 +4,19 @@ import {fetchUpdateTradingStance} from "@/app/utils/fetchUpdateTradingStance";
 
 type UpdateTradingStanceProps = {
     tradingStance: TradingStance;
+    handleUpdateTradingStanceClick: (tradingStance: TradingStance) => void;
 };
 
-const UpdateTradingStanceDirection: FC<UpdateTradingStanceProps> = ({tradingStance}) => {
+const UpdateTradingStanceDirection: FC<UpdateTradingStanceProps> = ({
+                                                                        tradingStance,
+                                                                        handleUpdateTradingStanceClick
+                                                                    }) => {
     const [selectedDirection, setSelectedDirection] = useState<string>(tradingStance.direction);
 
     const handleUpdateClick = () => {
+
+        handleUpdateTradingStanceClick(tradingStance);
+
         if (selectedDirection !== tradingStance.direction) {
             const updatedTradingStance = {
                 symbol: tradingStance.symbol,
