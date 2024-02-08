@@ -131,12 +131,11 @@ the eventHandler.onOrderEvent() function.
             lastOpenOrders = data
             Helpers.tryWriteToFile(storedOrdersPath, objectMapper.writeValueAsString(data))
         } catch (e: JsonProcessingException) {
-            logger.error("JsonProcessingException checking open orders", e)
-
+            logger.error("DWX_Orders.json JsonProcessingException: ${e.message}")
         } catch (e1: MismatchedInputException) {
-            logger.error("MismatchedInputException checking open orders", e1)
+            logger.error("DWX_Orders.json MismatchedInputException: ${e1.message}")
         } catch (e2: FileNotFoundException) {
-            logger.warn("DWX_Orders.json locked: ${e2.message}")
+            logger.warn("DWX_Orders.json FileNotFoundException: ${e2.message}")
         }
     }
 
