@@ -137,7 +137,7 @@ the eventHandler.onOrderEvent() function.
     private fun readOrderFile(ordersPath: Path): Orders {
         val fileName = ordersPath.name
         try {
-            objectMapper.readValue(ordersPath.toFile())
+            return objectMapper.readValue(ordersPath.toFile())
         } catch (e: JsonProcessingException) {
             logger.error("$fileName JsonProcessingException: ${e.message}")
         } catch (e1: MismatchedInputException) {
