@@ -1,7 +1,7 @@
 package uk.co.threebugs.darwinexclient.metatrader
 
-import java.nio.file.Files
-import java.nio.file.Path
+import uk.co.threebugs.darwinexclient.utils.*
+import java.nio.file.*
 
 /*Helpers class
 
@@ -44,7 +44,7 @@ object Helpers {
         } else try {
             Files.readString(filePath) // , StandardCharsets.US_ASCII
         } catch (e: Exception) {
-            // e.printStackTrace();
+            logger.error("Unable to read file: $filePath")
             ""
         }
     }
@@ -61,7 +61,7 @@ object Helpers {
             Files.write(filePath, text.toByteArray())
             true
         } catch (e: Exception) {
-            // e.printStackTrace();
+            logger.error("Unable to write file: $filePath")
             false
         }
     }

@@ -18,8 +18,10 @@ import uk.co.threebugs.darwinexclient.utils.*
 import uk.co.threebugs.darwinexclient.websocket.*
 import java.io.*
 import java.math.*
+import java.nio.file.*
 import java.time.*
 import java.time.Clock
+import kotlin.io.path.*
 
 private const val STORED_ORDERS_FILE_NAME = "DWX_Orders_Stored.json"
 private const val ORDERS_FILE_NAME = "DWX_Orders.json"
@@ -82,61 +84,72 @@ the eventHandler.onOrderEvent() function.
             logger.warn("Stored orders path not found")
         }
 
-        try {
-            val data: Orders = objectMapper.readValue(ordersPath.toFile())
+        val data = readOrderFile(ordersPath)
 
-            Gauge.builder("api_open_orders_gauge", data.orders::size)
-                .strongReference(true)
-                .tag("title", "Open Orders")
-                .description("A current number of open orders")
-                .register(Metrics.globalRegistry)
+        Gauge.builder("api_open_orders_gauge", data.orders::size)
+            .strongReference(true)
+            .tag("title", "Open Orders")
+            .description("A current number of open orders")
+            .register(Metrics.globalRegistry)
 
-            //   if (data.orders.isEmpty()) continue
+        //   if (data.orders.isEmpty()) continue
 
-            openOrders = data
+        openOrders = data
 
-            // Get the keys (order IDs) from both maps
-            val openOrderIds = openOrders.orders.keys
-            val lastOpenOrderIds = lastOpenOrders.orders.keys
+        // Get the keys (order IDs) from both maps
+        val openOrderIds = openOrders.orders.keys
+        val lastOpenOrderIds = lastOpenOrders.orders.keys
 
-            // Find IDs that are in openOrderIds but not in lastOpenOrderIds
-            val newOrders = openOrderIds - lastOpenOrderIds
+        // Find IDs that are in openOrderIds but not in lastOpenOrderIds
+        val newOrders = openOrderIds - lastOpenOrderIds
 
-            // Find IDs that are in lastOpenOrderIds but not in openOrderIds
-            val closedOrders = lastOpenOrderIds - openOrderIds
+        // Find IDs that are in lastOpenOrderIds but not in openOrderIds
+        val closedOrders = lastOpenOrderIds - openOrderIds
 
-            closedOrders.forEach {
-                logger.info("Order removed: $it")
-                lastOpenOrders.orders[it]?.let { it1 -> onClosedOrder(it1) }
-            }
-
-            newOrders.forEach {
-                logger.info("Order added: $it")
-                openOrders.orders[it]?.let { it1 -> onNewOrder(it1, it) }
-            }
-
-            for ((orderKey, currentOrder) in openOrders.orders) {
-                // Check if the key exists in previousDataOrders
-                if (lastOpenOrders.orders.containsKey(orderKey)) {
-                    val previousOrder = lastOpenOrders.orders[orderKey]
-
-                    // Compare the TradeInfo objects
-                    compareTradeInfo(orderKey, currentOrder, previousOrder!!, accountSetupGroups)
-                } else {
-                    // Log new orders that didn't exist in previousDataOrders
-                    logger.info("New order: $orderKey, Value: $currentOrder")
-                }
-            }
-
-            lastOpenOrders = data
-            Helpers.tryWriteToFile(storedOrdersPath, objectMapper.writeValueAsString(data))
-        } catch (e: JsonProcessingException) {
-            logger.error("DWX_Orders.json JsonProcessingException: ${e.message}")
-        } catch (e1: MismatchedInputException) {
-            logger.error("DWX_Orders.json MismatchedInputException: ${e1.message}")
-        } catch (e2: FileNotFoundException) {
-            logger.warn("DWX_Orders.json FileNotFoundException: ${e2.message}")
+        closedOrders.forEach {
+            logger.info("Order removed: $it")
+            lastOpenOrders.orders[it]?.let { it1 -> onClosedOrder(it1) }
         }
+
+        newOrders.forEach {
+            logger.info("Order added: $it")
+            openOrders.orders[it]?.let { it1 -> onNewOrder(it1, it) }
+        }
+
+        for ((orderKey, currentOrder) in openOrders.orders) {
+            // Check if the key exists in previousDataOrders
+            if (lastOpenOrders.orders.containsKey(orderKey)) {
+                val previousOrder = lastOpenOrders.orders[orderKey]
+
+                // Compare the TradeInfo objects
+                compareTradeInfo(orderKey, currentOrder, previousOrder!!, accountSetupGroups)
+            } else {
+                // Log new orders that didn't exist in previousDataOrders
+                logger.info("New order: $orderKey, Value: $currentOrder")
+            }
+        }
+
+        lastOpenOrders = data
+        Helpers.tryWriteToFile(storedOrdersPath, objectMapper.writeValueAsString(data))
+
+    }
+
+    private fun readOrderFile(ordersPath: Path): Orders {
+        val fileName = ordersPath.name
+        try {
+            objectMapper.readValue(ordersPath.toFile())
+        } catch (e: JsonProcessingException) {
+            logger.error("$fileName JsonProcessingException: ${e.message}")
+        } catch (e1: MismatchedInputException) {
+            logger.error("$fileName MismatchedInputException: ${e1.message}")
+        } catch (e2: FileNotFoundException) {
+            logger.warn("$fileName FileNotFoundException: ${e2.message}")
+        }
+
+        val tryReadFile = Helpers.tryReadFile(ordersPath)
+        logger.info("$fileName: $tryReadFile")
+
+        throw IOException("Error reading $fileName")
     }
 
     /*Loads stored orders from file (in case of a restart).
@@ -149,21 +162,13 @@ the eventHandler.onOrderEvent() function.
                 .resolve(STORED_ORDERS_FILE_NAME)
 
         if (!storedOrdersPath.toFile().exists()) {
-            logger.warn("No stored orders found")
+            logger.warn("${storedOrdersPath} : No stored orders file not found")
             return
         }
-
-        try {
-            val storedOrders = objectMapper.readValue<Orders>(storedOrdersPath.toFile())
-            lastOpenOrders = storedOrders
-            openOrders = storedOrders
-        } catch (e: Exception) {
-            logger.error("Error loading stored orders: " + storedOrdersPath.toFile().absolutePath, e)
-            val tryReadFile = Helpers.tryReadFile(storedOrdersPath)
-            logger.info("Stored orders: $tryReadFile")
-        }
+        val storedOrders = readOrderFile(storedOrdersPath)
+        lastOpenOrders = storedOrders
+        openOrders = storedOrders
         logger.info("\nAccount info:\n${openOrders.accountInfo}\n")
-
     }
 
     private fun compareTradeInfo(

@@ -11,6 +11,8 @@ import uk.co.threebugs.darwinexclient.metatrader.marketdata.*
 import uk.co.threebugs.darwinexclient.metatrader.messages.*
 import uk.co.threebugs.darwinexclient.metatrader.openorders.*
 import uk.co.threebugs.darwinexclient.setupgroup.*
+import uk.co.threebugs.darwinexclient.utils.*
+import java.io.*
 import kotlin.concurrent.*
 
 
@@ -50,7 +52,11 @@ class Client(
                     continue
 
                 openOrdersThreadCounter.increment()
+                try {
                 openOrdersService.checkOpenOrders(accountSetupGroups)
+                } catch (e: IOException) {
+                    logger.warn("Error checking open orders: ${e.message}")
+                }
             }
 
         }
