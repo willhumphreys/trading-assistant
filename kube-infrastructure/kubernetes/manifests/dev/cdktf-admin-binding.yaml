@@ -8,5 +8,5 @@ roleRef:
   name: cluster-admin
 subjects:
   - kind: ServiceAccount
-    name: flux-sn
+    name: flux-service-account
     namespace: flux-system

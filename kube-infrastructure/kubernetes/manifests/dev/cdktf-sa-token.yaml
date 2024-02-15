@@ -4,6 +4,6 @@ metadata:
   name: sn-service-account-token
   annotations:
     namespace: flux-system
-    kubernetes.io/service-account.name: flux-sn
+    kubernetes.io/service-account.name: flux-service-account
 type: kubernetes.io/service-account-token
 

@@ -302,6 +302,9 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                         },
                     },
                     spec: {
+                        nodeSelector: {
+                            type: "mt5"
+                        },
                         container: [
                             {
                                 image: 'ghcr.io/willhumphreys/trading-assistant:backend-latest',
@@ -388,7 +391,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                             {
                                 name: 'mt-volume',
                                 hostPath: {
-                                    path: '/home/will/.cxoffice/MetaTrader_5/drive_c/Program Files/MetaTrader 5/MQL5/Files',
+                                    path: '/home/will/mt-files',
                                 },
                             },
                         ],
