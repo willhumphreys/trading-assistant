@@ -241,9 +241,9 @@ class TradeService(
         if (trade.status == Status.PENDING || trade.status == Status.ORDER_SENT) {
             trade.apply {
                 val tradeTime = ZonedDateTime.of(tradeInfo.openTime, ZoneId.of("Europe/Zurich"))
-                if(status == Status.FILLED) {
-                   filledPrice = tradeInfo.openPrice
-                   filledDateTime = tradeTime
+                if (status == Status.FILLED) {
+                    filledPrice = tradeInfo.openPrice
+                    filledDateTime = tradeTime
                 } else {
                     placedPrice = tradeInfo.openPrice
                     placedDateTime = tradeTime
@@ -258,13 +258,12 @@ class TradeService(
         }
     }
 
-    fun onClosedTrade(tradeInfo: TradeInfo) {
-        tradeRepository.findByIdOrNull(tradeInfo.magic)?.let { trade ->
-            onClosedTrade(
-                tradeInfo,
-                trade
-            )
-        } ?: logger.warn("Trade not found: $tradeInfo")
+    fun onClosedTrade(tradeInfo: TradeInfo, metatraderId: Long) {
+        val trade = tradeRepository.findByIdOrNull(tradeInfo.magic)
+            ?: tradeRepository.findByMetatraderId(metatraderId)
+
+        trade?.let { onClosedTrade(tradeInfo, it) }
+            ?: logger.warn("Trade not found: $tradeInfo")
     }
 
     private fun onClosedTrade(tradeInfo: TradeInfo, trade: Trade) {

@@ -111,7 +111,7 @@ the eventHandler.onOrderEvent() function.
 
         closedOrders.forEach {
             logger.info("Order removed: $it")
-            lastOpenOrders.orders[it]?.let { it1 -> onClosedOrder(it1) }
+            lastOpenOrders.orders[it]?.let { it1 -> onClosedOrder(it, it1) }
         }
 
         newOrders.forEach {
@@ -519,7 +519,7 @@ the eventHandler.onOrderEvent() function.
         tradeService.placeTrade(tradeInfo, metaTraderId, foundTrade, Status.PLACED_IN_MT)
     }
 
-    fun onClosedOrder(tradeInfo: TradeInfo) {
+    fun onClosedOrder(metatraderId: Long, tradeInfo: TradeInfo) {
         webSocketController.sendMessage(
             WebSocketMessage(
                 id = tradeInfo.magic,
@@ -527,7 +527,7 @@ the eventHandler.onOrderEvent() function.
                 value = tradeInfo.toString()
             ), "/topic/order-change"
         )
-        tradeService.onClosedTrade(tradeInfo)
+        tradeService.onClosedTrade(tradeInfo, metatraderId)
     }
 
     fun onTradeStateChange(currentValue: TradeInfo, previousValue: TradeInfo) {
