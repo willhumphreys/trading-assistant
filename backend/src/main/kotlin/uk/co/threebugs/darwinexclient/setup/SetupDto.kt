@@ -1,8 +1,8 @@
 package uk.co.threebugs.darwinexclient.setup
 
-import com.fasterxml.jackson.annotation.JsonIgnore
-import uk.co.threebugs.darwinexclient.setupgroup.SetupGroupDto
-import java.time.ZonedDateTime
+import com.fasterxml.jackson.annotation.*
+import uk.co.threebugs.darwinexclient.setupgroup.*
+import java.time.*
 
 data class SetupDto(
     var id: Int? = null,
@@ -16,7 +16,8 @@ data class SetupDto(
     val limit: Int,
     val tickOffset: Int,
     val tradeDuration: Int,
-    val outOfTime: Int
+    val outOfTime: Int,
+    val name: String? = null
 ) {
     @JsonIgnore
     fun isLong(): Boolean = stop < limit

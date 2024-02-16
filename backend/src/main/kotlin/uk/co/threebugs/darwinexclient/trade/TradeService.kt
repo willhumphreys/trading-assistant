@@ -9,6 +9,7 @@ import uk.co.threebugs.darwinexclient.accountsetupgroups.*
 import uk.co.threebugs.darwinexclient.clock.*
 import uk.co.threebugs.darwinexclient.metatrader.*
 import uk.co.threebugs.darwinexclient.metatrader.commands.*
+import uk.co.threebugs.darwinexclient.metatrader.data.*
 import uk.co.threebugs.darwinexclient.search.*
 import uk.co.threebugs.darwinexclient.setup.*
 import uk.co.threebugs.darwinexclient.setupgroup.*
@@ -78,7 +79,7 @@ class TradeService(
             tradingStanceRepository.findBySymbolAndAccountSetupGroups_Name(symbol, accountSetupGroups.name)
                 ?: throw IllegalArgumentException("Trading stance not found for symbol: $symbol and accountSetupGroups: ${accountSetupGroups.name}")
 
-        setups.filter { s -> s.direction == tradingStance.direction || tradingStance.direction == Direction.BOTH }
+        setups.filter { s -> (s.direction == tradingStance.direction || tradingStance.direction == Direction.BOTH) && s.name != MANUAL_SETUP_NAME }
 
             .forEach { setup ->
                 val targetPlaceTime: ZonedDateTime =
@@ -182,6 +183,7 @@ class TradeService(
     ) {
         tradeRepository.findByAccountSetupGroupsSymbolAndStatus(accountSetupGroups.id!!, symbol, Status.FILLED.name)
             .stream()
+            .filter { trade: Trade -> trade.setup!!.name != MANUAL_SETUP_NAME }
             .filter { trade: Trade ->
 
                 val closeDateTime = trade.targetPlaceDateTime!!.plusHours(trade.setup!!.tradeDuration!!.toLong())
@@ -304,6 +306,10 @@ class TradeService(
 
     fun findBySetupGroupsName(name: String): List<TradeDto> {
         return tradeRepository.findBySetupGroupsName(name).map { tradeMapper.toDto(it) }
+    }
+
+    fun findByMetatraderId(metatraderId: Long): TradeDto? {
+        return tradeRepository.findByMetatraderId(metatraderId)?.let { tradeMapper.toDto(it) }
     }
 
 //    fun closeTrades(accountSetupGroups: AccountSetupGroupsDto, symbol: String): Int {

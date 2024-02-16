@@ -11,6 +11,8 @@ import uk.co.threebugs.darwinexclient.*
 import uk.co.threebugs.darwinexclient.accountsetupgroups.*
 import uk.co.threebugs.darwinexclient.actions.*
 import uk.co.threebugs.darwinexclient.metatrader.*
+import uk.co.threebugs.darwinexclient.metatrader.data.*
+import uk.co.threebugs.darwinexclient.setup.*
 import uk.co.threebugs.darwinexclient.setupgroup.*
 import uk.co.threebugs.darwinexclient.trade.*
 import uk.co.threebugs.darwinexclient.tradingstance.*
@@ -33,6 +35,7 @@ class OpenOrdersService(
     private val webSocketController: WebSocketController,
     private val tradeService: TradeService,
     private val tradingStanceService: TradingStanceService,
+    private val setupService: SetupService,
     private val clock: Clock
 ) {
 
@@ -113,7 +116,7 @@ the eventHandler.onOrderEvent() function.
 
         newOrders.forEach {
             logger.info("Order added: $it")
-            openOrders.orders[it]?.let { it1 -> onNewOrder(it1, it) }
+            openOrders.orders[it]?.let { it1 -> onNewOrder(it1, it, accountSetupGroups) }
         }
 
         for ((orderKey, currentOrder) in openOrders.orders) {
@@ -180,134 +183,30 @@ the eventHandler.onOrderEvent() function.
         var log = false
         if (currentValue != previousValue) {
             val changes = StringBuilder("Changes for Orders $orderKey: ")
-            if (currentValue.magic != previousValue.magic) {
-                changes.append("Magic: ")
-                    .append(previousValue.magic)
-                    .append(" -> ")
-                    .append(currentValue.magic)
-                    .append(", ")
-                log = true
-            }
-            if (currentValue.lots != previousValue.lots) {
-                changes.append("Lots: ")
-                    .append(previousValue.lots)
-                    .append(" -> ")
-                    .append(currentValue.lots)
-                    .append(", ")
-                log = true
-            }
-            if (currentValue.symbol != previousValue.symbol) {
-                changes.append("Symbol: ")
-                    .append(previousValue.symbol)
-                    .append(" -> ")
-                    .append(currentValue.symbol)
-                    .append(", ")
-                log = true
-            }
-            if (currentValue.swap != previousValue.swap) {
-                changes.append("Swap: ")
-                    .append(previousValue.swap)
-                    .append(" -> ")
-                    .append(currentValue.swap)
-                    .append(", ")
-                log = true
-            }
-            if (currentValue.openTime != previousValue.openTime) {
-                changes.append("Open Time: ")
-                    .append(previousValue.openTime)
-                    .append(" -> ")
-                    .append(currentValue.openTime)
-                    .append(", ")
-                log = true
-            }
-            if (currentValue.stopLoss != previousValue.stopLoss) {
-                changes.append("Stop Loss: ")
-                    .append(previousValue.stopLoss)
-                    .append(" -> ")
-                    .append(currentValue.stopLoss)
-                    .append(", ")
-                log = true
-            }
-            if (currentValue.comment != previousValue.comment) {
-                changes.append("Comment: ")
-                    .append(previousValue.comment)
-                    .append(" -> ")
-                    .append(currentValue.comment)
-                    .append(", ")
-                log = true
-            }
-            if (currentValue.type != previousValue.type) {
-                changes.append("Type: ")
-                    .append(previousValue.type)
-                    .append(" -> ")
-                    .append(currentValue.type)
-                    .append(", ")
+            log = appendMagicChange(currentValue, previousValue, changes, log)
+            log = appendLotsChange(currentValue, previousValue, changes, log)
+            log = appendSymbolChange(currentValue, previousValue, changes, log)
+            log = appendSwapChange(currentValue, previousValue, changes, log)
+            log = appendOpenTimeChange(currentValue, previousValue, changes, log)
+            log = appendStopLossChange(currentValue, previousValue, changes, log)
+            log = appendCommentChange(currentValue, previousValue, changes, log)
+            log = appendTypeChange(currentValue, previousValue, changes, log)
+            log = appendOpenPriceChange(currentValue, previousValue, changes, log)
+            log = appendTakeProfitChange(currentValue, previousValue, changes, log)
 
-                onTradeStateChange(currentValue, previousValue)
-                log = true
-            }
-            if (currentValue.openPrice != previousValue.openPrice) {
-                changes.append("Open Price: ")
-                    .append(previousValue.openPrice)
-                    .append(" -> ")
-                    .append(currentValue.openPrice)
-                    .append(", ")
-                log = true
-            }
-            if (currentValue.takeProfit != previousValue.takeProfit) {
-                changes.append("Take Profit: ")
-                    .append(previousValue.takeProfit)
-                    .append(" -> ")
-                    .append(currentValue.takeProfit)
-                    .append(", ")
-                log = true
-            }
             if (currentValue.profitAndLoss != previousValue.profitAndLoss) {
-                changes.append("Profit and Loss: ")
-                    .append(previousValue.profitAndLoss)
-                    .append(" -> ")
-                    .append(currentValue.profitAndLoss)
 
-                val tradingStance = tradingStanceService.findBySymbolAndAccountSetupGroupsName(
-                    currentValue.symbol!!,
-                    accountSetupGroups.name
-                )
+                handleProfitChange(currentValue, previousValue, changes)
 
-                val foundTrade = tradeService.findById(currentValue.magic)
-                    ?: throw IllegalArgumentException("Trade with magic ${currentValue.magic} not found")
+                val foundTrade = handleNewManualTrade(currentValue, accountSetupGroups, orderKey)
 
-                if (tradingStance.direction == Direction.FLAT ||
-                    (foundTrade.setup.isLong() && tradingStance.direction == Direction.SHORT) ||
-                    (foundTrade.setup.isShort() && tradingStance.direction == Direction.LONG)
-                ) {
-                    tradeService.closeTrade(foundTrade, accountSetupGroups)
-                } else {
-                    tradeService.placeTrade(currentValue, orderKey, foundTrade, Status.FILLED)
-                }
+                handleStanceChange(currentValue, accountSetupGroups, orderKey, foundTrade)
 
-                webSocketController.sendMessage(
-                    WebSocketMessage(
-                        id = currentValue.magic,
-                        field = "profitAndLoss",
-                        value = currentValue.profitAndLoss.toString()
-                    ), "/topic/order-change"
-                )
                 log = true
             }
-            if (currentValue.mapType != previousValue.mapType) {
-                changes.append("Map Type: ")
-                    .append(previousValue.mapType)
-                    .append(" -> ")
-                    .append(currentValue.mapType)
-                    .append(", ")
-                log = true
-            }
-            if (currentValue.empty != previousValue.empty) {
-                changes.append("Empty: ")
-                    .append(previousValue.empty)
-                    .append(" -> ")
-                    .append(currentValue.empty)
-            }
+
+            log = appendMapTypeChange(currentValue, previousValue, changes, log)
+            appendEmptyChange(currentValue, previousValue, changes)
             if (log) {
 //                webSocketController.sendMessage(webSocketMessage(
 //                        id = currentValue.magic,
@@ -316,9 +215,297 @@ the eventHandler.onOrderEvent() function.
 //                        ), "/topic/order-change")
             }
         }
+
     }
 
-    fun onNewOrder(tradeInfo: TradeInfo, metaTraderId: Long) {
+    private fun handleNewManualTrade(
+        currentValue: TradeInfo,
+        accountSetupGroups: AccountSetupGroupsDto,
+        orderKey: Long
+    ): TradeDto {
+        val foundTrade = tradeService.findById(currentValue.magic) ?: run {
+
+            val foundByMetaTraderIdDto = tradeService.findByMetatraderId(orderKey)
+
+            if (foundByMetaTraderIdDto != null) return foundByMetaTraderIdDto
+
+            val setups = setupService.findBySymbolAndName(currentValue.symbol!!, MANUAL_SETUP_NAME)
+
+            val setup = setups.first { it.setupGroup.setupGroups.id == accountSetupGroups.setupGroups.id }
+
+            val tradeDto = TradeDto(
+                status = Status.FILLED,
+                setup = setup,
+                account = accountSetupGroups.account,
+                metatraderId = orderKey,
+                profit = currentValue.profitAndLoss,
+                message = "Manual trade from mt5"
+            )
+
+            tradeService.save(tradeDto)
+            tradeDto
+        }
+        return foundTrade
+    }
+
+    private fun appendEmptyChange(
+        currentValue: TradeInfo,
+        previousValue: TradeInfo,
+        changes: StringBuilder
+    ) {
+        if (currentValue.empty != previousValue.empty) {
+            changes.append("Empty: ")
+                .append(previousValue.empty)
+                .append(" -> ")
+                .append(currentValue.empty)
+        }
+    }
+
+    private fun appendMapTypeChange(
+        currentValue: TradeInfo,
+        previousValue: TradeInfo,
+        changes: StringBuilder,
+        log: Boolean
+    ): Boolean {
+        var log1 = log
+        if (currentValue.mapType != previousValue.mapType) {
+            changes.append("Map Type: ")
+                .append(previousValue.mapType)
+                .append(" -> ")
+                .append(currentValue.mapType)
+                .append(", ")
+            log1 = true
+        }
+        return log1
+    }
+
+    private fun handleProfitChange(
+        currentValue: TradeInfo,
+        previousValue: TradeInfo,
+        changes: StringBuilder
+    ) {
+
+
+        changes.append("Profit and Loss: ")
+            .append(previousValue.profitAndLoss)
+            .append(" -> ")
+            .append(currentValue.profitAndLoss)
+
+
+        webSocketController.sendMessage(
+            WebSocketMessage(
+                id = currentValue.magic,
+                field = "profitAndLoss",
+                value = currentValue.profitAndLoss.toString()
+            ), "/topic/order-change"
+        )
+    }
+
+    private fun handleStanceChange(
+        currentValue: TradeInfo,
+        accountSetupGroups: AccountSetupGroupsDto,
+        orderKey: Long,
+        foundTrade: TradeDto
+    ) {
+        val tradingStance = tradingStanceService.findBySymbolAndAccountSetupGroupsName(
+            currentValue.symbol!!,
+            accountSetupGroups.name
+        )
+
+        if (foundTrade.setup.name == MANUAL_SETUP_NAME) return
+        if (tradingStance.direction == Direction.FLAT ||
+            (foundTrade.setup.isLong() && tradingStance.direction == Direction.SHORT) ||
+            (foundTrade.setup.isShort() && tradingStance.direction == Direction.LONG)
+        ) {
+            tradeService.closeTrade(foundTrade, accountSetupGroups)
+        } else {
+            tradeService.placeTrade(currentValue, orderKey, foundTrade, Status.FILLED)
+        }
+    }
+
+    private fun appendTakeProfitChange(
+        currentValue: TradeInfo,
+        previousValue: TradeInfo,
+        changes: StringBuilder,
+        log: Boolean
+    ): Boolean {
+        var log1 = log
+        if (currentValue.takeProfit != previousValue.takeProfit) {
+            changes.append("Take Profit: ")
+                .append(previousValue.takeProfit)
+                .append(" -> ")
+                .append(currentValue.takeProfit)
+                .append(", ")
+            log1 = true
+        }
+        return log1
+    }
+
+    private fun appendOpenPriceChange(
+        currentValue: TradeInfo,
+        previousValue: TradeInfo,
+        changes: StringBuilder,
+        log: Boolean
+    ): Boolean {
+        var log1 = log
+        if (currentValue.openPrice != previousValue.openPrice) {
+            changes.append("Open Price: ")
+                .append(previousValue.openPrice)
+                .append(" -> ")
+                .append(currentValue.openPrice)
+                .append(", ")
+            log1 = true
+        }
+        return log1
+    }
+
+    private fun appendTypeChange(
+        currentValue: TradeInfo,
+        previousValue: TradeInfo,
+        changes: StringBuilder,
+        log: Boolean
+    ): Boolean {
+        var log1 = log
+        if (currentValue.type != previousValue.type) {
+            changes.append("Type: ")
+                .append(previousValue.type)
+                .append(" -> ")
+                .append(currentValue.type)
+                .append(", ")
+
+            onTradeStateChange(currentValue, previousValue)
+            log1 = true
+        }
+        return log1
+    }
+
+    private fun appendCommentChange(
+        currentValue: TradeInfo,
+        previousValue: TradeInfo,
+        changes: StringBuilder,
+        log: Boolean
+    ): Boolean {
+        var log1 = log
+        if (currentValue.comment != previousValue.comment) {
+            changes.append("Comment: ")
+                .append(previousValue.comment)
+                .append(" -> ")
+                .append(currentValue.comment)
+                .append(", ")
+            log1 = true
+        }
+        return log1
+    }
+
+    private fun appendStopLossChange(
+        currentValue: TradeInfo,
+        previousValue: TradeInfo,
+        changes: StringBuilder,
+        log: Boolean
+    ): Boolean {
+        var log1 = log
+        if (currentValue.stopLoss != previousValue.stopLoss) {
+            changes.append("Stop Loss: ")
+                .append(previousValue.stopLoss)
+                .append(" -> ")
+                .append(currentValue.stopLoss)
+                .append(", ")
+            log1 = true
+        }
+        return log1
+    }
+
+    private fun appendOpenTimeChange(
+        currentValue: TradeInfo,
+        previousValue: TradeInfo,
+        changes: StringBuilder,
+        log: Boolean
+    ): Boolean {
+        var log1 = log
+        if (currentValue.openTime != previousValue.openTime) {
+            changes.append("Open Time: ")
+                .append(previousValue.openTime)
+                .append(" -> ")
+                .append(currentValue.openTime)
+                .append(", ")
+            log1 = true
+        }
+        return log1
+    }
+
+    private fun appendSwapChange(
+        currentValue: TradeInfo,
+        previousValue: TradeInfo,
+        changes: StringBuilder,
+        log: Boolean
+    ): Boolean {
+        var log1 = log
+        if (currentValue.swap != previousValue.swap) {
+            changes.append("Swap: ")
+                .append(previousValue.swap)
+                .append(" -> ")
+                .append(currentValue.swap)
+                .append(", ")
+            log1 = true
+        }
+        return log1
+    }
+
+    private fun appendSymbolChange(
+        currentValue: TradeInfo,
+        previousValue: TradeInfo,
+        changes: StringBuilder,
+        log: Boolean
+    ): Boolean {
+        var log1 = log
+        if (currentValue.symbol != previousValue.symbol) {
+            changes.append("Symbol: ")
+                .append(previousValue.symbol)
+                .append(" -> ")
+                .append(currentValue.symbol)
+                .append(", ")
+            log1 = true
+        }
+        return log1
+    }
+
+    private fun appendLotsChange(
+        currentValue: TradeInfo,
+        previousValue: TradeInfo,
+        changes: StringBuilder,
+        log: Boolean
+    ): Boolean {
+        var log1 = log
+        if (currentValue.lots != previousValue.lots) {
+            changes.append("Lots: ")
+                .append(previousValue.lots)
+                .append(" -> ")
+                .append(currentValue.lots)
+                .append(", ")
+            log1 = true
+        }
+        return log1
+    }
+
+    private fun appendMagicChange(
+        currentValue: TradeInfo,
+        previousValue: TradeInfo,
+        changes: StringBuilder,
+        log: Boolean
+    ): Boolean {
+        var log1 = log
+        if (currentValue.magic != previousValue.magic) {
+            changes.append("Magic: ")
+                .append(previousValue.magic)
+                .append(" -> ")
+                .append(currentValue.magic)
+                .append(", ")
+            log1 = true
+        }
+        return log1
+    }
+
+    fun onNewOrder(tradeInfo: TradeInfo, metaTraderId: Long, accountSetupGroups: AccountSetupGroupsDto) {
         webSocketController.sendMessage(
             WebSocketMessage(
                 id = tradeInfo.magic,
@@ -326,8 +513,9 @@ the eventHandler.onOrderEvent() function.
                 value = tradeInfo.toString()
             ), "/topic/order-change"
         )
-        val foundTrade = tradeService.findById(tradeInfo.magic)
-            ?: throw IllegalArgumentException("Trade with magic ${tradeInfo.magic} not found")
+
+        val foundTrade = handleNewManualTrade(tradeInfo, accountSetupGroups, metaTraderId)
+
         tradeService.placeTrade(tradeInfo, metaTraderId, foundTrade, Status.PLACED_IN_MT)
     }
 

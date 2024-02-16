@@ -32,4 +32,6 @@ interface SetupRepository : JpaRepository<Setup, Int>, QueryByExampleExecutor<Se
     )
     fun deleteSetupsByAccountName(@Param("name") name: String): Int
 
+    fun findBySymbolAndName(symbol: String, name: String): List<Setup>
+
 }

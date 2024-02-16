@@ -18,7 +18,7 @@ class SetupGroupService(
     private val setupGroupsMapper: SetupGroupsMapper,
     private val objectMapper: ObjectMapper
 ) {
-    fun loadSetupsFromFile(setupsPath: Path): List<SetupGroup> {
+    fun loadSetupGroupsFromFile(setupsPath: Path): List<SetupGroup> {
         return try {
             val setupGroupsFile = objectMapper.readValue(setupsPath.toFile(), SetupGroupsFile::class.java)
             val scriptsDirectory = Paths.get(setupGroupsFile.scriptsDirectory)

@@ -31,7 +31,8 @@ class Setup(
     var limit: Int? = null,
     var tickOffset: Int? = null,
     var tradeDuration: Int? = null,
-    var outOfTime: Int? = null
+    var outOfTime: Int? = null,
+    var name: String? = null
 ) {
 
     @PrePersist

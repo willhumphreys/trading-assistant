@@ -118,4 +118,6 @@ interface TradeRepository : JpaRepository<Trade, Int>, QueryByExampleExecutor<Tr
         @Param("targetPlaceDateTime") targetPlaceDateTime: String
     ): List<Trade>
 
+    fun findByMetatraderId(metatraderId: Long): Trade?
+
 }

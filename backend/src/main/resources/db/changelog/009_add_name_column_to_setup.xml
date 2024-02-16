@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="add_name_column_to_setup_table" author="will">
+        <addColumn tableName="setup">
+            <column name="name" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="add_index_to_name_column_in_setup_table" author="will">
+        <createIndex indexName="idx_setup_name" tableName="setup">
+            <column name="name"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="add_name_column_to_setup_aud_table" author="will">
+        <addColumn tableName="setup_aud">
+            <column name="name" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

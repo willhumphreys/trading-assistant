@@ -12,6 +12,8 @@ import uk.co.threebugs.darwinexclient.utils.*
 import java.io.*
 import java.nio.file.*
 
+const val MANUAL_SETUP_NAME = "MANUAL"
+
 @Service
 class FileDataService(
     private val setupGroupService: SetupGroupService,
@@ -34,7 +36,7 @@ class FileDataService(
         try {
             Files.list(setupGroupsPath).use { paths ->
                 paths.forEach { setupsPath: Path ->
-                    val setupGroups = setupGroupService.loadSetupsFromFile(setupsPath)
+                    val setupGroups = setupGroupService.loadSetupGroupsFromFile(setupsPath)
 
                     setupGroups.forEach { setupGroup: SetupGroup ->
                         loadDataFromCsv(setupGroup.symbol!!, setupGroups, setupLimit)
@@ -79,12 +81,28 @@ class FileDataService(
                     .equals(symbol, ignoreCase = true)
             } //.filter(SetupGroup::getEnabled)
             .flatMap { setupGroup: SetupGroup ->
-                setupFileRepository.readCsv(
+                val readCsv = setupFileRepository.readCsv(
                     Path.of(setupGroup.path ?: throw RuntimeException("Path not found")),
                     setupGroup.symbol ?: throw RuntimeException("Symbol not found"),
                     setupGroup,
                     setupLimit
                 )
+
+                val manualSetup = Setup(
+                    setupGroup = setupGroup,
+                    symbol = symbol,
+                    rank = -1,
+                    dayOfWeek = -1,
+                    hourOfDay = -1,
+                    stop = -1,
+                    limit = -1,
+                    tickOffset = -1,
+                    tradeDuration = -1,
+                    outOfTime = -1,
+                    name = MANUAL_SETUP_NAME
+                )
+
+                readCsv + manualSetup
             }
             .map { setup: Setup ->
                 val setup1 = setupRepository.findBySymbolAndRankAndSetupGroup(symbol, setup.rank!!, setup.setupGroup!!)

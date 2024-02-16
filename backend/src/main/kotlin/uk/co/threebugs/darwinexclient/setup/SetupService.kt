@@ -20,5 +20,9 @@ class SetupService(private val setupRepository: SetupRepository, private val set
         return setupRepository.findAll().stream().map { setupMapper.toDto(it) }.toList()
     }
 
+    fun findBySymbolAndName(symbol: String, setupName: String): List<SetupDto> {
+        return setupRepository.findBySymbolAndName(symbol, setupName).stream().map { setupMapper.toDto(it) }.toList()
+    }
+
 }
 

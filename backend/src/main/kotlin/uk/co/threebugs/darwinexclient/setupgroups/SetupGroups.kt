@@ -11,5 +11,5 @@ class SetupGroups(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Int? = null,
     var name: String? = null,
-    var scriptsDirectory: String? = null
+    var scriptsDirectory: String? = null,
 )
