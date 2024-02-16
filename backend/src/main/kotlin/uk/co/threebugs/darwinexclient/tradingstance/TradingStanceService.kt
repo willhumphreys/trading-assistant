@@ -60,7 +60,7 @@ class TradingStanceService(
                 FILLED to CLOSED_BY_STANCE
             ).map { (status, closureReason) ->
                 tradeService.closeTradesOnStanceChange(
-                    tradingStanceDto.symbol,
+                    tradingStanceDto,
                     accountSetupGroups,
                     status,
                     closureReason

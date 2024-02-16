@@ -211,17 +211,18 @@ class TradeService(
     }
 
     fun closeTradesOnStanceChange(
-        symbol: String,
+        tradingStanceDto: UpdateTradingStanceDto,
         accountSetupGroups: AccountSetupGroupsDto,
         statusToFind: Status,
         closingStatus: Status
     ): List<Trade> {
         return tradeRepository.findByAccountSetupGroupsSymbolAndStatus(
             accountSetupGroups.id!!,
-            symbol,
+            tradingStanceDto.symbol,
             statusToFind.name
         )
             .stream()
+            .filter { trade: Trade -> trade.setup!!.direction != tradingStanceDto.direction }
             .map { trade: Trade ->
                 if (trade.status == Status.FILLED || trade.status == Status.PLACED_IN_MT) {
                     commandService.closeOrdersByMagic(trade.id!!, accountSetupGroups)
