@@ -1,5 +1,5 @@
 {
-  "name": "darwinex-client",
+  "name": "trading-assistant",
   "version": "0.1.0",
   "bin": {
     "trading-assistant": "bin/trading-assistant.js"

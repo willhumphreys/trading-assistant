@@ -29,7 +29,7 @@ test('TradingAssistantStack', () => {
 
     template.hasResourceProperties('AWS::Amplify::App', {
         Name: "tradingAssistantAmplify",
-        Repository: "https://github.com/willhumphreys/darwinex-client",
+        Repository: "https://github.com/willhumphreys/trading-assistant",
         EnvironmentVariables: [
             {
                 Name: "AMPLIFY_DIFF_DEPLOY",

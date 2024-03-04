@@ -28,7 +28,7 @@ else:
     java_home = '/home/will/.jdks/{0}'.format(JAVA_VERSION)
 
 # Define the path to the jar file
-jar_path = "darwinex-client-0.0.1-SNAPSHOT.jar"
+jar_path = "trading-assistant-backend-0.0.1-SNAPSHOT.jar"
 
 # Set JAVA_HOME for this session
 os.environ["JAVA_HOME"] = java_home

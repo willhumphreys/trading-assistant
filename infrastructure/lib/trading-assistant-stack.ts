@@ -56,7 +56,7 @@ export class TradingAssistantStack extends cdk.Stack {
     const amplifyApp = new amplify.App(this, "tradingAssistantAmplify", {
       sourceCodeProvider: new amplify.GitHubSourceCodeProvider({
         owner: "willhumphreys",
-        repository: "darwinex-client",
+        repository: "trading-assistant",
         oauthToken: SecretValue.secretsManager("github-token"),
       }),
       environmentVariables: {
