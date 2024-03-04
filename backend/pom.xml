@@ -10,7 +10,7 @@
     </parent>
 
     <groupId>uk.co.threebugs</groupId>
-    <artifactId>darwinex-client</artifactId>
+    <artifactId>trading-assistant-backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>trading-assistant-backend</name>
     <description>trading-assistant-backend</description>
