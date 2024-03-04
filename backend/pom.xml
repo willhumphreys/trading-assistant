@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.2</version>
+        <version>3.2.3</version>
         <relativePath/>
     </parent>
 
@@ -120,7 +120,7 @@
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
-            <version>20240205</version>
+            <version>20240303</version>
         </dependency>
 
         <dependency>
@@ -217,7 +217,7 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>3.2.2</version>
+                <version>3.2.3</version>
                 <executions>
                     <!-- Start Spring Boot application before integration tests are run -->
                     <execution>
