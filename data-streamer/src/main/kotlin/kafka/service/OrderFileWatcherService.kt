@@ -6,8 +6,7 @@ import com.fasterxml.jackson.module.kotlin.*
 import kafka.domain.*
 import org.apache.logging.log4j.*
 import org.springframework.beans.factory.annotation.*
-import org.springframework.boot.context.event.*
-import org.springframework.context.event.*
+import org.springframework.context.annotation.*
 import org.springframework.kafka.core.*
 import org.springframework.scheduling.annotation.*
 import org.springframework.stereotype.*
@@ -16,6 +15,8 @@ import java.nio.charset.*
 import java.nio.file.*
 import java.security.*
 
+@Configuration
+@EnableScheduling
 @Service
 open class OrderFileWatcherService(
     private val kafkaTemplate: KafkaTemplate<String, String>,
@@ -29,51 +30,19 @@ open class OrderFileWatcherService(
         ObjectMapper().registerModule(KotlinModule()).registerModule(JavaTimeModule())
     private val fileHashes: MutableMap<String, String> = HashMap()
 
-    @EventListener(ApplicationStartedEvent::class)
-    @Async
-    open fun watchFileChanges() {
-        try {
-            FileSystems.getDefault().newWatchService().use { watchService ->
-                val path = Paths.get(directory)
-                path.register(
-                    watchService,
-                    StandardWatchEventKinds.ENTRY_CREATE,
-                    StandardWatchEventKinds.ENTRY_DELETE,
-                    StandardWatchEventKinds.ENTRY_MODIFY
-                )
-                logger.info("Monitoring directory for changes...")
-                while (!Thread.currentThread().isInterrupted) {
-                    val key = watchService.take()
-                    for (event in key.pollEvents()) {
-                        val kind = event.kind()
-
-                        if (kind === StandardWatchEventKinds.ENTRY_MODIFY) {
-                            val ev = event as WatchEvent<Path>
-                            val fileName = ev.context().toString()
-
-                            if ("DWX_Orders.json" == fileName) {
-                                val filePath = path.resolve(fileName)
-                                val currentHash = getFileContentHash(filePath)
-
-                                if (currentHash != fileHashes[fileName]) {
-                                    fileHashes[fileName] = currentHash
-                                    processFile(filePath, fileName)
-                                }
-                            }
-                        }
-                    }
-                    val valid = key.reset()
-                    if (!valid) {
-                        break
-                    }
+    @Scheduled(fixedDelay = 1000)
+    fun checkFileChange() {
+        val filePath = Paths.get(directory, "DWX_Orders.json")
+        if (Files.exists(filePath)) {
+            try {
+                val currentHash = getFileContentHash(filePath)
+                if (currentHash != fileHashes["DWX_Orders.json"]) {
+                    fileHashes["DWX_Orders.json"] = currentHash
+                    processFile(filePath, "DWX_Orders.json")
                 }
+            } catch (e: IOException) {
+                logger.error("Error while checking file: DWX_Orders.json", e)
             }
-        } catch (e: IOException) {
-            Thread.currentThread().interrupt()
-            logger.error("File monitoring interrupted.", e)
-        } catch (e: InterruptedException) {
-            Thread.currentThread().interrupt()
-            logger.error("File monitoring interrupted.", e)
         }
     }
 
@@ -95,7 +64,7 @@ open class OrderFileWatcherService(
             Files.newBufferedReader(filePath, StandardCharsets.UTF_8).use { reader ->
                 val orders =
                     objectMapper.readValue(reader, Orders::class.java)
-                logger.info("Deserialized orders: $orders")
+                //logger.info("Deserialized orders: $orders")
 
                 val ordersJson = objectMapper.writeValueAsString(orders)
                 kafkaTemplate.send(ordersTopic, ordersJson)
