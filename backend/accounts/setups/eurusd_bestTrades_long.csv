@@ -1,3 +1,2 @@
 "","traderid","dayofweek","hourofday","stop","limit","tickoffset","tradeduration","outoftime","totalprofit","tradecount","besttrade","worsttrade","wincount","lostCount","winningyears","averagenetprofit","profitperrisk","winningticks","losingticks","averagewinner","averageloser","winnerprobability","loserprobability","appt","profitColumn","hourDay"
-"1",431356,"1","9",-10,10,-20,72,8,1366,219,206,-43,112,98,8,6.24,0.62,2601,-1235,23,-12,0.53,0.47,17.83,0.62,"5-18"
-"2",1562559,"1","9",-30,440,-25,72,8,2659,379,441,-83,84,293,12,7.02,0.23,12983,-10324,154,-35,0.22,0.78,61.18,0.23,"3-3"
+"47",564765,"2","17",-1100,2600,-100,336,8,-70026,738,2610,-107152,318,419,15,-94.89,-0.09,604877,-674903,1902,-1610,0.43,0.57,1735.56,1735.56,"2-17"

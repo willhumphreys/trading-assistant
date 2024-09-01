@@ -146,7 +146,13 @@ class TradeService(
         accountSetupGroupsDto: AccountSetupGroupsDto
     ): Trade {
         val fillPrice = if (trade.setup!!.isLong) ask else bid
-        val orderType = if (trade.setup!!.isLong) "buylimit" else "selllimit"
+        val orderType = when {
+            trade.setup!!.isLong && trade.setup!!.tickOffset!! > 0 -> "buystop"
+            trade.setup!!.isLong && trade.setup!!.tickOffset!! <= 0 -> "buylimit"
+            !trade.setup!!.isLong && trade.setup!!.tickOffset!! < 0 -> "sellstop"
+            !trade.setup!!.isLong && trade.setup!!.tickOffset!! >= 0 -> "selllimit"
+            else -> throw IllegalArgumentException("Cannot determine order type for trade ID: ${trade.id}")
+        }
         var tickSize = BigDecimal("0.00001")
         if (trade.setup!!.symbol.equals(Constants.USDJPY, ignoreCase = true)) {
             tickSize = BigDecimal("0.01")
