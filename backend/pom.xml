@@ -20,6 +20,7 @@
         <kotlin.version>1.9.22</kotlin.version>
         <org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
         <profile.active>shorttest</profile.active>
+        <project.version>1.0.1</project.version>
     </properties>
     <dependencies>
         <dependency>
@@ -159,10 +160,7 @@
             <version>3.25.3</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
+
 
         <dependency>
             <groupId>io.kotest</groupId>
