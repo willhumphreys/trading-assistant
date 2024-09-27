@@ -3,13 +3,13 @@
   "scriptsDirectory": "mochi-graphs/",
   "setupGroups": [
     {
-      "path": "eurusd-1m-btmH/s_-3000..-100..100___l_100..7500..100___o_-800..-100..50___d_14..14..7___out_8..8..4/aggregated-eurusd-1m-btmH_s_-3000..-100..100___l_100..7500..100___o_-800..-100..50___d_14..14..7___out_8..8..4_aggregationQueryTemplate-all.csv.lzo/eurusd_BestTrades/profitperrisk/eurusd_bestTrades.csv",
+      "path": "eurusd-long.csv",
       "symbol": "EURUSD",
       "direction": "LONG",
       "enabled": true
     },
     {
-      "path": "gbpusd-1m-btmH/s_-3000..-100..100___l_100..7500..100___o_-800..-100..50___d_14..14..7___out_8..8..4/aggregated-gbpusd-1m-btmH_s_-3000..-100..100___l_100..7500..100___o_-800..-100..50___d_14..14..7___out_8..8..4_aggregationQueryTemplate-all.csv.lzo/gbpusd_BestTrades/profitperrisk/gbpusd_bestTrades.csv",
+      "path": "gbpusd-long.csv",
       "symbol": "GBPUSD",
       "direction": "LONG",
       "enabled": true
@@ -45,13 +45,13 @@
       "enabled": true
     },
     {
-      "path": "eurusd-1m-btmH/s_-3000..-100..100___l_100..7500..100___o_-800..-100..50___d_14..14..7___out_8..8..4___short/aggregated-eurusd-1m-btmH_s_-3000..-100..100___l_100..7500..100___o_-800..-100..50___d_14..14..7___out_8..8..4___short_aggregationQueryTemplate-all.csv.lzo/eurusd_BestTrades/profitperrisk/eurusd_bestTrades.csv",
+      "path": "eurusd-short.csv",
       "symbol": "EURUSD",
       "direction": "SHORT",
       "enabled": true
     },
     {
-      "path": "gbpusd-1m-btmH/s_-3000..-100..100___l_100..7500..100___o_-800..-100..50___d_14..14..7___out_8..8..4___short/aggregated-gbpusd-1m-btmH_s_-3000..-100..100___l_100..7500..100___o_-800..-100..50___d_14..14..7___out_8..8..4___short_aggregationQueryTemplate-all.csv.lzo/gbpusd_BestTrades/profitperrisk/gbpusd_bestTrades.csv",
+      "path": "gbpusd-short.csv",
       "symbol": "GBPUSD",
       "direction": "SHORT",
       "enabled": true

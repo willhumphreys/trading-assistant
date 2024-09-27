@@ -231,7 +231,7 @@ the eventHandler.onOrderEvent() function.
 
             val setups = setupService.findBySymbolAndName(currentValue.symbol!!, MANUAL_SETUP_NAME)
 
-            val setup = setups.first { it.setupGroup.setupGroups.id == accountSetupGroups.setupGroups.id }
+            val setup = setups.first { it.setupGroup.symbol == currentValue.symbol && it.setupGroup.setupGroups.id == accountSetupGroups.setupGroups.id }
 
             val tradeDto = TradeDto(
                 status = Status.FILLED,
