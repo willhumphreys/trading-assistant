@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                    https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="alter_metatrader_id_nullable_and_unique" author="will">
+        <addUniqueConstraint tableName="trade" columnNames="metatrader_id" constraintName="unique_metatrader_id"
+                             deferrable="true" initiallyDeferred="true"/>
+    </changeSet>
+</databaseChangeLog>
