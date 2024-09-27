@@ -101,14 +101,14 @@
                                  baseColumnNames="rev"
                                  referencedTableName="revinfo"
                                  referencedColumnNames="rev"/>
+    </changeSet>
 
+    <changeSet id="set-auto-increment-trade" author="will">
         <sql>
             SET
             @current_minute = FLOOR(UNIX_TIMESTAMP() / 60);
             ALTER TABLE trade AUTO_INCREMENT = @current_minute;
         </sql>
-
-
     </changeSet>
 
 
