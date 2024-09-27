@@ -20,7 +20,7 @@
         <kotlin.version>1.9.22</kotlin.version>
         <org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
         <profile.active>shorttest</profile.active>
-        <project.version>1.0.4</project.version>
+        <project.version>1.0.5</project.version>
     </properties>
     <dependencies>
         <dependency>

@@ -1,6 +1,7 @@
 package uk.co.threebugs.darwinexclient.metatrader
 
 import io.micrometer.core.instrument.*
+import org.hibernate.exception.ConstraintViolationException
 import org.springframework.beans.factory.annotation.*
 import org.springframework.stereotype.*
 import uk.co.threebugs.darwinexclient.accountsetupgroups.*
@@ -55,7 +56,9 @@ class Client(
                 try {
                 openOrdersService.checkOpenOrders(accountSetupGroups)
                 } catch (e: IOException) {
-                    logger.warn("Error checking open orders: ${e.message}")
+                    logger.warn("Error checking open orders: ${e.message}", e)
+                } catch (e: ConstraintViolationException) {
+                    logger.error("Error checking open orders: ${e.message}", e);
                 }
             }
 
