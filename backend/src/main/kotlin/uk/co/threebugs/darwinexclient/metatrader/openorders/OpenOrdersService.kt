@@ -114,9 +114,9 @@ the eventHandler.onOrderEvent() function.
             lastOpenOrders.orders[it]?.let { it1 -> onClosedOrder(it, it1) }
         }
 
-        newOrders.forEach {
-            logger.info("Order added: $it")
-            openOrders.orders[it]?.let { it1 -> onNewOrder(it1, it, accountSetupGroups) }
+        newOrders.forEach { metatraderId ->
+            logger.info("Order added: $metatraderId")
+            openOrders.orders[metatraderId]?.let { tradeInfo -> onNewOrder(tradeInfo, metatraderId, accountSetupGroups) }
         }
 
         for ((orderKey, currentOrder) in openOrders.orders) {
