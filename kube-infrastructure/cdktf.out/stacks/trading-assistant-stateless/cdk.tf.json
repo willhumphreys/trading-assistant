@@ -1,0 +1,488 @@
+{
+  "//": {
+    "metadata": {
+      "backend": "local",
+      "stackName": "trading-assistant-stateless",
+      "version": "0.19.2"
+    },
+    "outputs": {
+    }
+  },
+  "provider": {
+    "kubernetes": [
+      {
+        "host": "https://192.168.86.89:6443",
+        "ignore_annotations": [
+          "metallb\\.universe\\.tf/ip-allocated-from-pool"
+        ],
+        "insecure": true,
+        "token": "eyJhbGciOiJSUzI1NiIsImtpZCI6ImpSTTJQbTZiTDJ4LXhLdVRwWkM2d2lEeXJKTTZTNGxfQ0VjYVJ2dmZFajgifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJmbHV4LXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJzbi1zZXJ2aWNlLWFjY291bnQtdG9rZW4iLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC5uYW1lIjoiZmx1eC1zZXJ2aWNlLWFjY291bnQiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiJmMDI0YzVmMy1mMDE1LTRkZDEtOTBkNi05MWIzMzhkZmM3OWIiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6Zmx1eC1zeXN0ZW06Zmx1eC1zZXJ2aWNlLWFjY291bnQifQ.T_fKFaSEgfxLACRFx1NPQw7920_V5gCAQZmMjroO0qsWOI7YjKnKcbp5E35TbL6PpCNNedHxYOGZdreOl1hMMmgbXD5iSX2rpab8U08ZBjohn7pAgimwWnbiaax2LGDVvu1feG2m_iDC1BxdgoYAP1IriQtlp-Fx1ROOo8ujkQqcJvQ1GVlx40jrRwqlccT990kE3yhhOLbzEGAzV2grsbIA94caWWHflBVDKT8-cVwQnUmf9NHJFQcfaTE29kUwtiEAXwbCjQtGIGLCOvn7Fk1S8zfYGw4D8L5YHz4noyTYeXyqEpY3lELAi8t25xChlkSKiHUtyyyabVmHl4BuTw"
+      }
+    ]
+  },
+  "resource": {
+    "kubernetes_deployment": {
+      "mysql": {
+        "//": {
+          "metadata": {
+            "path": "trading-assistant-stateless/mysql",
+            "uniqueId": "mysql"
+          }
+        },
+        "metadata": {
+          "labels": {
+            "app": "mysql"
+          },
+          "name": "mysql-container",
+          "namespace": "trading-assistant"
+        },
+        "spec": {
+          "replicas": "1",
+          "selector": {
+            "match_labels": {
+              "app": "mysql"
+            }
+          },
+          "strategy": {
+            "type": "Recreate"
+          },
+          "template": {
+            "metadata": {
+              "labels": {
+                "app": "mysql"
+              }
+            },
+            "spec": {
+              "container": [
+                {
+                  "env": [
+                    {
+                      "name": "MYSQL_ROOT_PASSWORD",
+                      "value_from": {
+                        "secret_key_ref": {
+                          "key": "dbPassword",
+                          "name": "my-secrets"
+                        }
+                      }
+                    }
+                  ],
+                  "image": "mysql:latest",
+                  "name": "mysql",
+                  "port": [
+                    {
+                      "container_port": 3306
+                    }
+                  ],
+                  "volume_mount": [
+                    {
+                      "mount_path": "/var/lib/mysql",
+                      "name": "mysql-data"
+                    }
+                  ]
+                }
+              ],
+              "volume": [
+                {
+                  "name": "mysql-data",
+                  "persistent_volume_claim": {
+                    "claim_name": "mysql-pv-claim"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "trading-assistant": {
+        "//": {
+          "metadata": {
+            "path": "trading-assistant-stateless/trading-assistant",
+            "uniqueId": "trading-assistant"
+          }
+        },
+        "metadata": {
+          "labels": {
+            "app": "trading-assistant"
+          },
+          "name": "trading-assistant",
+          "namespace": "trading-assistant"
+        },
+        "spec": {
+          "replicas": "1",
+          "selector": {
+            "match_labels": {
+              "app": "trading-assistant"
+            }
+          },
+          "template": {
+            "metadata": {
+              "annotations": {
+                "prometheus.io/path": "/actuator/prometheus",
+                "prometheus.io/port": "8080",
+                "prometheus.io/scrape": "true"
+              },
+              "labels": {
+                "app": "trading-assistant"
+              }
+            },
+            "spec": {
+              "container": [
+                {
+                  "env": [
+                    {
+                      "name": "SPRING_PROFILE",
+                      "value": "currencies"
+                    },
+                    {
+                      "name": "DATABASE_URL",
+                      "value": "jdbc:mysql://mysql-service:3306/metatrader"
+                    },
+                    {
+                      "name": "DATABASE_PASSWORD",
+                      "value_from": {
+                        "secret_key_ref": {
+                          "key": "dbPassword",
+                          "name": "my-secrets"
+                        }
+                      }
+                    },
+                    {
+                      "name": "SLACK_WEBHOOK_URL",
+                      "value_from": {
+                        "secret_key_ref": {
+                          "key": "slackWebHook",
+                          "name": "my-secrets"
+                        }
+                      }
+                    },
+                    {
+                      "name": "SUMO_LOGIC_WEBHOOK_URL",
+                      "value_from": {
+                        "secret_key_ref": {
+                          "key": "sumoLogicWebHook",
+                          "name": "my-secrets"
+                        }
+                      }
+                    }
+                  ],
+                  "image": "ghcr.io/willhumphreys/trading-assistant:backend-latest",
+                  "image_pull_policy": "Always",
+                  "liveness_probe": {
+                    "http_get": {
+                      "path": "/actuator/health",
+                      "port": "8080"
+                    },
+                    "initial_delay_seconds": 30,
+                    "period_seconds": 2
+                  },
+                  "name": "trading-assistant",
+                  "port": [
+                    {
+                      "container_port": 8080
+                    }
+                  ],
+                  "readiness_probe": {
+                    "http_get": {
+                      "path": "/actuator/health",
+                      "port": "8080"
+                    },
+                    "initial_delay_seconds": 10
+                  },
+                  "volume_mount": [
+                    {
+                      "mount_path": "/accounts",
+                      "name": "accounts-volume"
+                    },
+                    {
+                      "mount_path": "/mochi-graphs",
+                      "name": "mochi-graphs-volume"
+                    },
+                    {
+                      "mount_path": "/mt",
+                      "name": "mt-volume"
+                    }
+                  ]
+                }
+              ],
+              "node_selector": {
+                "type": "mt5"
+              },
+              "volume": [
+                {
+                  "host_path": {
+                    "path": "/home/will/accounts"
+                  },
+                  "name": "accounts-volume"
+                },
+                {
+                  "host_path": {
+                    "path": "/home/will/mochi-graphs"
+                  },
+                  "name": "mochi-graphs-volume"
+                },
+                {
+                  "host_path": {
+                    "path": "/home/will/mt-files"
+                  },
+                  "name": "mt-volume"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "trading-assistant-data-streamer": {
+        "//": {
+          "metadata": {
+            "path": "trading-assistant-stateless/trading-assistant-data-streamer",
+            "uniqueId": "trading-assistant-data-streamer"
+          }
+        },
+        "metadata": {
+          "labels": {
+            "app": "trading-assistant-data-streamer"
+          },
+          "name": "trading-assistant-data-streamer",
+          "namespace": "trading-assistant"
+        },
+        "spec": {
+          "replicas": "1",
+          "selector": {
+            "match_labels": {
+              "app": "trading-assistant-data-streamer"
+            }
+          },
+          "template": {
+            "metadata": {
+              "annotations": {
+                "prometheus.io/path": "/actuator/prometheus",
+                "prometheus.io/port": "8080",
+                "prometheus.io/scrape": "true"
+              },
+              "labels": {
+                "app": "trading-assistant-data-streamer"
+              }
+            },
+            "spec": {
+              "container": [
+                {
+                  "env": [
+                    {
+                      "name": "SPRING_PROFILE",
+                      "value": "prod"
+                    }
+                  ],
+                  "image": "ghcr.io/willhumphreys/trading-assistant:data-streamer-latest",
+                  "image_pull_policy": "Always",
+                  "liveness_probe": {
+                    "http_get": {
+                      "path": "/actuator/health",
+                      "port": "8080"
+                    },
+                    "initial_delay_seconds": 30,
+                    "period_seconds": 2
+                  },
+                  "name": "trading-assistant",
+                  "port": [
+                    {
+                      "container_port": 8080
+                    }
+                  ],
+                  "readiness_probe": {
+                    "http_get": {
+                      "path": "/actuator/health",
+                      "port": "8080"
+                    },
+                    "initial_delay_seconds": 10
+                  },
+                  "volume_mount": [
+                    {
+                      "mount_path": "/mt",
+                      "name": "mt-volume"
+                    }
+                  ]
+                }
+              ],
+              "node_selector": {
+                "type": "mt5"
+              },
+              "volume": [
+                {
+                  "host_path": {
+                    "path": "/home/will/mt-files"
+                  },
+                  "name": "mt-volume"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "trading-assistant-frontend": {
+        "//": {
+          "metadata": {
+            "path": "trading-assistant-stateless/trading-assistant-frontend",
+            "uniqueId": "trading-assistant-frontend"
+          }
+        },
+        "metadata": {
+          "labels": {
+            "app": "trading-assistant-frontend"
+          },
+          "name": "trading-assistant-frontend",
+          "namespace": "trading-assistant"
+        },
+        "spec": {
+          "replicas": "1",
+          "selector": {
+            "match_labels": {
+              "app": "trading-assistant-frontend"
+            }
+          },
+          "template": {
+            "metadata": {
+              "labels": {
+                "app": "trading-assistant-frontend"
+              }
+            },
+            "spec": {
+              "container": [
+                {
+                  "image": "ghcr.io/willhumphreys/trading-assistant:frontend-latest",
+                  "image_pull_policy": "Always",
+                  "name": "trading-assistant",
+                  "port": [
+                    {
+                      "container_port": 3000
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "kubernetes_service": {
+      "mysql-service": {
+        "//": {
+          "metadata": {
+            "path": "trading-assistant-stateless/mysql-service",
+            "uniqueId": "mysql-service"
+          }
+        },
+        "lifecycle": {
+          "ignore_changes": [
+            "metadata[0].annotations[\"metallb.universe.tf/ip-allocated-from-pool\"]"
+          ]
+        },
+        "metadata": {
+          "labels": {
+            "app": "mysql"
+          },
+          "name": "mysql-service",
+          "namespace": "trading-assistant"
+        },
+        "spec": {
+          "load_balancer_ip": "192.168.86.242",
+          "port": [
+            {
+              "port": 3306,
+              "target_port": "3306"
+            }
+          ],
+          "selector": {
+            "app": "mysql"
+          },
+          "type": "LoadBalancer"
+        }
+      },
+      "trading-assistant-frontend-service": {
+        "//": {
+          "metadata": {
+            "path": "trading-assistant-stateless/trading-assistant-frontend-service",
+            "uniqueId": "trading-assistant-frontend-service"
+          }
+        },
+        "lifecycle": {
+          "ignore_changes": [
+            "metadata[0].annotations[\"metallb.universe.tf/ip-allocated-from-pool\"]"
+          ]
+        },
+        "metadata": {
+          "annotations": {
+            "service.beta.kubernetes.io/aws-load-balancer-proxy-protocol": "*"
+          },
+          "labels": {
+            "app": "trading-assistant-frontend"
+          },
+          "name": "trading-assistant-frontend-service",
+          "namespace": "trading-assistant"
+        },
+        "spec": {
+          "load_balancer_ip": "192.168.86.241",
+          "port": [
+            {
+              "name": "http",
+              "port": 80,
+              "target_port": "3000"
+            }
+          ],
+          "selector": {
+            "app": "trading-assistant-frontend"
+          },
+          "type": "LoadBalancer"
+        }
+      },
+      "trading-assistant-service": {
+        "//": {
+          "metadata": {
+            "path": "trading-assistant-stateless/trading-assistant-service",
+            "uniqueId": "trading-assistant-service"
+          }
+        },
+        "lifecycle": {
+          "ignore_changes": [
+            "metadata[0].annotations[\"metallb.universe.tf/ip-allocated-from-pool\"]"
+          ]
+        },
+        "metadata": {
+          "annotations": {
+            "service.beta.kubernetes.io/aws-load-balancer-proxy-protocol": "*"
+          },
+          "labels": {
+            "app": "trading-assistant"
+          },
+          "name": "trading-assistant-service",
+          "namespace": "trading-assistant"
+        },
+        "spec": {
+          "load_balancer_ip": "192.168.86.240",
+          "port": [
+            {
+              "port": 8080,
+              "target_port": "8080"
+            }
+          ],
+          "selector": {
+            "app": "trading-assistant"
+          },
+          "type": "LoadBalancer"
+        }
+      }
+    }
+  },
+  "terraform": {
+    "backend": {
+      "local": {
+        "path": "/home/runner/work/trading-assistant/trading-assistant/kube-infrastructure/terraform.trading-assistant-stateless.tfstate"
+      }
+    },
+    "required_providers": {
+      "kubernetes": {
+        "source": "kubernetes",
+        "version": "2.25.2"
+      }
+    }
+  }
+}
