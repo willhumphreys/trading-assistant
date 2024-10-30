@@ -12,7 +12,7 @@ export class TradingAssistantStatefulStack extends TerraformStack {
         super(scope, name);
 
         new KubernetesProvider(this, 'K8s', {
-            host: "https://192.168.86.89:6443",
+            host: "https://192.168.1.89:6443",
             token: process.env.TOKEN,
             insecure: true,
             ignoreAnnotations: ["metallb\\.universe\\.tf/ip-allocated-from-pool"],

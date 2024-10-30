@@ -19,7 +19,7 @@ docker run --env-file .env \
 To connect via JMX
 
 ```
-service:jmx:rmi:///jndi/rmi://192.168.86.202:9010/jmxrmi
+service:jmx:rmi:///jndi/rmi://192.168.1.202:9010/jmxrmi
 ```
 
 VisualVM is installed here
@@ -80,12 +80,12 @@ kubectl.exe apply -f .\kubernetes\manifests\dev\mysql-service.yaml
 Copy account-setup-groups.json to the server
 
 ```bash
-scp /home/will/code/trading-assistant-backend/backend/accounts/account-setup-groups.json will@192.168.86.202:/home/will/accounts
+scp /home/will/code/trading-assistant-backend/backend/accounts/account-setup-groups.json will@192.168.1.202:/home/will/accounts
 ```
 
 Copy the setup-group-both.json to the server
 
 ```bash
-scp /home/will/code/trading-assistant-backend/backend/accounts/setup-groups/setup-group-both.json will@192.168.86.202:/home/will/accounts/setup-groups
+scp /home/will/code/trading-assistant-backend/backend/accounts/setup-groups/setup-group-both.json will@192.168.1.202:/home/will/accounts/setup-groups
 ```
 

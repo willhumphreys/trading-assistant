@@ -8,7 +8,7 @@ COPY target/trading-assistant-backend-0.0.1-SNAPSHOT.jar trading-assistant-backe
 # Define the JMX monitoring parameters
 ENV JMX_PORT=9010 \
     JMX_RMI_PORT=9011 \
-    JAVA_RMI_SERVER_HOSTNAME=192.168.86.237
+    JAVA_RMI_SERVER_HOSTNAME=192.168.1.237
 
 EXPOSE 8080 3306 9010 9011
 

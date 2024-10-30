@@ -39,7 +39,7 @@ java_executable = 'java.exe' if platform.system() == 'Windows' else 'java'
 # JMX monitoring port
 jmx_port = "9010"
 jmx_rmi_port = "9011"
-host = "192.168.86.202"
+host = "192.168.1.202"
 
 # JMX enable arguments
 jmx_arguments = [

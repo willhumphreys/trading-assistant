@@ -17,7 +17,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
         super(scope, name);
 
         new KubernetesProvider(this, 'K8s', {
-            host: "https://192.168.86.89:6443",
+            host: "https://192.168.1.89:6443",
             token: process.env.TOKEN,
             insecure: true,
             ignoreAnnotations: ["metallb\\.universe\\.tf/ip-allocated-from-pool"],
@@ -55,7 +55,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                     app: MYSQL_LABEL,
                 },
                 type: 'LoadBalancer',
-                loadBalancerIp: "192.168.86.242"
+                loadBalancerIp: "192.168.1.242"
             },
             lifecycle: {
                 ignoreChanges: ['metadata[0].annotations["metallb.universe.tf/ip-allocated-from-pool"]'],
@@ -152,7 +152,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                     app: TRADING_ASSISTANT_LABEL,
                 },
                 type: 'LoadBalancer',
-                loadBalancerIp: "192.168.86.240",
+                loadBalancerIp: "192.168.1.240",
             },
             lifecycle: {
                 ignoreChanges: ['metadata[0].annotations["metallb.universe.tf/ip-allocated-from-pool"]'],
@@ -186,7 +186,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                     app: TRADING_ASSISTANT_FRONTEND_LABEL,
                 },
                 type: 'LoadBalancer',
-                loadBalancerIp: "192.168.86.241"
+                loadBalancerIp: "192.168.1.241"
             },
             lifecycle: {
                 ignoreChanges: ['metadata[0].annotations["metallb.universe.tf/ip-allocated-from-pool"]'],
