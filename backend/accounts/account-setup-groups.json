@@ -144,6 +144,10 @@
       {
         "symbol": "XAUUSD",
         "direction": "FLAT"
+      },
+      {
+        "symbol": "SPX",
+        "direction": "FLAT"
       }
     ]
   }
