@@ -99,14 +99,14 @@
       "enabled": true
     },
     {
-      "path": "spx-long.csv",
-      "symbol": "SPX",
+      "path": "SP500-long.csv",
+      "symbol": "SP500",
       "direction": "LONG",
       "enabled": true
     },
     {
-      "path": "spx-short.csv",
-      "symbol": "SPX",
+      "path": "SP500-short.csv",
+      "symbol": "SP500",
       "direction": "SHORT",
       "enabled": true
     }

@@ -158,7 +158,7 @@ class TradeService(
             tickSize = BigDecimal("0.001")
         } else if(trade.setup!!.symbol.equals(Constants.XAUUSD, ignoreCase = true)) {
             tickSize = BigDecimal("0.01")
-        } else if(trade.setup!!.symbol.equals(Constants.SPX, ignoreCase = true)) {
+        } else if(trade.setup!!.symbol.equals(Constants.SP500, ignoreCase = true)) {
             tickSize = BigDecimal("0.1")
         }
         val price = addTicks(fillPrice, trade.setup!!.tickOffset!!, tickSize)

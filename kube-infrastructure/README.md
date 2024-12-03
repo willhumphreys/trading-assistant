@@ -1,5 +1,11 @@
 # Kubernetes Infrastructure Project
 
+```bash
+cdktf synth
+cdktf deploy trading-assistant-stateless
+```
+
+
 ## Project Setup
 
 1. Install the project dependencies:
