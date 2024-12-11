@@ -153,6 +153,7 @@ class TradeService(
             !trade.setup!!.isLong && trade.setup!!.tickOffset!! >= 0 -> "selllimit"
             else -> throw IllegalArgumentException("Cannot determine order type for trade ID: ${trade.id}")
         }
+        var lotSize = 0.01
         var tickSize = BigDecimal("0.00001")
         if (trade.setup!!.symbol.equals(Constants.USDJPY, ignoreCase = true)) {
             tickSize = BigDecimal("0.001")
@@ -160,6 +161,7 @@ class TradeService(
             tickSize = BigDecimal("0.01")
         } else if(trade.setup!!.symbol.equals(Constants.SP500, ignoreCase = true)) {
             tickSize = BigDecimal("0.01")
+            lotSize = 0.1
         }
         val price = addTicks(fillPrice, trade.setup!!.tickOffset!!, tickSize)
         val stopLoss = addTicks(fillPrice, trade.setup!!.stop!!, tickSize)
@@ -170,7 +172,7 @@ class TradeService(
             Order(
                 symbol = trade.setup!!.symbol,
                 orderType = orderType,
-                lots = 0.01,
+                lots = lotSize,
                 price = price,
                 stopLoss = stopLoss,
                 takeProfit = takeProfit,
