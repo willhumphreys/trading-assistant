@@ -1,11 +1,20 @@
 #!/bin/bash
 
+# Define source file
 src="DWX_Server_MT5.mq5"
 
-dest="/home/will/.cxoffice/MetaTrader_5_223/drive_c/Program Files/MetaTrader 5/MQL5/Experts/Advisors"
-dest2="/home/will/.cxoffice/MetaTrader_5-2_604/drive_c/Program Files/MetaTrader 5/MQL5/Experts/Advisors"
-dest3="/home/will/.cxoffice/MetaTrader_5-3_584/drive_c/Program Files/MetaTrader 5/MQL5/Experts/Advisors"
+# Define destination server and path
+dest_user="will"
+dest_host="k8s-worker01"
+dest_path="/home/will/.cxoffice/MetaTrader_5-3/drive_c/Program Files/MetaTrader 5/MQL5/Experts/Advisors"
 
-cp "$src" "$dest"
-cp "$src" "$dest2"
-cp "$src" "$dest3"
+# Use scp to copy the file to the destination
+scp "$src" "$dest_user@$dest_host:$dest_path"
+
+# Confirm the transfer was successful
+if [ $? -eq 0 ]; then
+    echo "File successfully transferred to $dest_user@$dest_host:$dest_path"
+else
+    echo "File transfer failed."
+    exit 1
+fi

@@ -148,9 +148,11 @@ class TradeService(
         val fillPrice = if (trade.setup!!.isLong) ask else bid
         val orderType = when {
             trade.setup!!.isLong && trade.setup!!.tickOffset!! > 0 -> "buystop"
-            trade.setup!!.isLong && trade.setup!!.tickOffset!! <= 0 -> "buylimit"
+            trade.setup!!.isLong && trade.setup!!.tickOffset!! == 0 -> "buy"
+            trade.setup!!.isLong && trade.setup!!.tickOffset!! < 0 -> "buylimit"
             !trade.setup!!.isLong && trade.setup!!.tickOffset!! < 0 -> "sellstop"
-            !trade.setup!!.isLong && trade.setup!!.tickOffset!! >= 0 -> "selllimit"
+            !trade.setup!!.isLong && trade.setup!!.tickOffset!! == 0 -> "sell"
+            !trade.setup!!.isLong && trade.setup!!.tickOffset!! > 0 -> "selllimit"
             else -> throw IllegalArgumentException("Cannot determine order type for trade ID: ${trade.id}")
         }
         var lotSize = 0.01
