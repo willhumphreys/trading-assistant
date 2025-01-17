@@ -8,11 +8,11 @@ import java.math.BigDecimal
 data class Modifier(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Int = 0, // Auto-incremented primary key
+    val id: Int = 0,
 
-    @Column(nullable = false, length = 255)
-    val name: String, // Name of the modifier
+    @Column(name = "modifier_name", nullable = false, length = 255) // Updated column name
+    val modifierName: String, // Updated field name
 
-    @Column(nullable = false, precision = 10, scale = 2) // Precisely defines the scale for the value
-    val value: BigDecimal // Using BigDecimal for exact precision
+    @Column(name = "modifier_value", nullable = false, precision = 10, scale = 2) // Updated column name
+    val modifierValue: BigDecimal // Updated field name
 )

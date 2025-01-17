@@ -181,9 +181,9 @@ class TradeService(
         if (modifiers.isNotEmpty()) {
             // Multiply the price, stopLoss, and takeProfit by all modifier values
             for (modifier in modifiers) {
-                price = price.multiply(modifier.value) // BigDecimal multiplication
-                stopLoss = stopLoss.multiply(modifier.value) // BigDecimal multiplication
-                takeProfit = takeProfit.multiply(modifier.value) // BigDecimal multiplication
+                price = price.multiply(modifier.modifierValue) // BigDecimal multiplication
+                stopLoss = stopLoss.multiply(modifier.modifierValue) // BigDecimal multiplication
+                takeProfit = takeProfit.multiply(modifier.modifierValue) // BigDecimal multiplication
             }
         }
 

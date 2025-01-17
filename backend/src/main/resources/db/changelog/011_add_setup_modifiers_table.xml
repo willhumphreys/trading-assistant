@@ -9,10 +9,12 @@
             <column name="id" type="int" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="name" type="varchar(255)">
+            <!-- Renamed from "name" to "modifier_name" -->
+            <column name="modifier_name" type="varchar(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="value" type="decimal(10,2)">
+            <!-- Renamed from "value" to "modifier_value" -->
+            <column name="modifier_value" type="decimal(10,2)">
                 <constraints nullable="false"/>
             </column>
         </createTable>
