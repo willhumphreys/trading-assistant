@@ -158,16 +158,17 @@ class TradeService(
             else -> throw IllegalArgumentException("Cannot determine order type for trade ID: ${trade.id}")
         }
 
-        var lotSize = 0.01
+        var lotSize = BigDecimal("0.01")
         var tickSize = BigDecimal("0.00001")
 
+        // Handle special symbol conditions
         if (trade.setup!!.symbol.equals(Constants.USDJPY, ignoreCase = true)) {
             tickSize = BigDecimal("0.001")
         } else if (trade.setup!!.symbol.equals(Constants.XAUUSD, ignoreCase = true)) {
             tickSize = BigDecimal("0.01")
         } else if (trade.setup!!.symbol.equals(Constants.SP500, ignoreCase = true)) {
             tickSize = BigDecimal("0.01")
-            lotSize = 0.1
+            lotSize = BigDecimal("0.1")
         }
 
         // Calculate price, stopLoss, and takeProfit
@@ -180,9 +181,9 @@ class TradeService(
         if (modifiers.isNotEmpty()) {
             // Multiply the price, stopLoss, and takeProfit by all modifier values
             for (modifier in modifiers) {
-                price = price.multiply(BigDecimal(modifier.value))
-                stopLoss = stopLoss.multiply(BigDecimal(modifier.value))
-                takeProfit = takeProfit.multiply(BigDecimal(modifier.value))
+                price = price.multiply(modifier.value) // BigDecimal multiplication
+                stopLoss = stopLoss.multiply(modifier.value) // BigDecimal multiplication
+                takeProfit = takeProfit.multiply(modifier.value) // BigDecimal multiplication
             }
         }
 
@@ -191,7 +192,7 @@ class TradeService(
             Order(
                 symbol = trade.setup!!.symbol,
                 orderType = orderType,
-                lots = lotSize,
+                lots = lotSize.toDouble(), // Converting BigDecimal to Double
                 price = price,
                 stopLoss = stopLoss,
                 takeProfit = takeProfit,
