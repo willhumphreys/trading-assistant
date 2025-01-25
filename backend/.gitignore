@@ -39,3 +39,7 @@ logs/
 password.txt
 
 
+
+# Python ignores for stat-check
+stat-check/__pycache__/
+stat-check/*.py[cod]

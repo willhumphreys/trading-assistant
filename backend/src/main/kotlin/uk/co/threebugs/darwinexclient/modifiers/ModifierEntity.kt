@@ -11,8 +11,14 @@ data class Modifier(
     val id: Int = 0,
 
     @Column(name = "modifier_name", nullable = false, length = 255) // Updated column name
-    val modifierName: String, // Updated field name
+    val modifierName: String, // Required field
 
     @Column(name = "modifier_value", nullable = false, precision = 10, scale = 2) // Updated column name
-    val modifierValue: BigDecimal // Updated field name
+    val modifierValue: BigDecimal, // Required field
+
+    @Column(name = "symbol", nullable = false, length = 255) // New column for "symbol" set as required
+    val symbol: String, // Required field
+
+    @Column(name = "type", nullable = false, length = 255) // New column for "type" set as required
+    val type: String // Required field
 )

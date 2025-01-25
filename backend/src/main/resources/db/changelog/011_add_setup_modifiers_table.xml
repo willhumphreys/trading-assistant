@@ -14,7 +14,7 @@
                 <constraints nullable="false"/>
             </column>
             <!-- Renamed from "value" to "modifier_value" -->
-            <column name="modifier_value" type="decimal(10,2)">
+            <column name="modifier_value" type="decimal(10,6)">
                 <constraints nullable="false"/>
             </column>
         </createTable>
@@ -49,6 +49,18 @@
             <column name="setup_id"/>
             <column name="modifier_id"/>
         </createIndex>
+    </changeSet>
+
+    <!-- New changeSet to add the symbol and type columns -->
+    <changeSet id="add_symbol_and_type_columns_to_modifiers" author="your_name">
+        <addColumn tableName="modifiers">
+            <column name="symbol" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="type" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
     </changeSet>
 
 </databaseChangeLog>
