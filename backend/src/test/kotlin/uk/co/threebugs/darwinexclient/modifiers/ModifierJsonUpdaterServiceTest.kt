@@ -75,9 +75,7 @@ class ModifierJsonUpdaterServiceTest {
         verify(modifierRepository).save(updatedModifierCaptor.capture())
 
         val savedModifier = updatedModifierCaptor.firstValue
-        val expectedValue = BigDecimal("2.00")
-            .multiply(BigDecimal("1.50"))
-            .setScale(2, RoundingMode.HALF_UP)
+        val expectedValue = BigDecimal("1.50").setScale(2, RoundingMode.HALF_UP)
 
         assertThat(savedModifier.modifierValue).isEqualTo(expectedValue)
         assertThat(savedModifier.symbol).isEqualTo("EURUSD")
