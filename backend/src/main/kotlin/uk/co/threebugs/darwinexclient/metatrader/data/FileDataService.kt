@@ -22,6 +22,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 const val MANUAL_SETUP_NAME = "MANUAL"
+private const val MODIFIERS_JSON = "modifiers.json"
 
 @Service
 class FileDataService(
@@ -44,7 +45,7 @@ class FileDataService(
         val accountsPath: Path = Paths.get(accounts)
 
         // 2) Update or create Modifiers from "modifiers.json"
-        modifierJsonUpdaterService.updateModifiersFromJsonFile(accountsPath.resolve("modifiers.json"))
+        modifierJsonUpdaterService.updateModifiersFromJsonFile(accountsPath.resolve(MODIFIERS_JSON))
 
         // 3) Load any MetaTrader installs from "metatrader_dirs.json"
         loadMetaTraderInstalls(accountsPath.resolve("metatrader_dirs.json"))

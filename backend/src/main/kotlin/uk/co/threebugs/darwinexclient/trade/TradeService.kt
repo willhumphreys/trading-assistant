@@ -1,25 +1,36 @@
 package uk.co.threebugs.darwinexclient.trade
 
-import org.springframework.data.domain.*
-import org.springframework.data.repository.*
-import org.springframework.stereotype.*
-import org.springframework.transaction.annotation.*
-import uk.co.threebugs.darwinexclient.*
-import uk.co.threebugs.darwinexclient.accountsetupgroups.*
-import uk.co.threebugs.darwinexclient.clock.*
-import uk.co.threebugs.darwinexclient.metatrader.*
-import uk.co.threebugs.darwinexclient.metatrader.commands.*
-import uk.co.threebugs.darwinexclient.metatrader.data.*
-import uk.co.threebugs.darwinexclient.search.*
-import uk.co.threebugs.darwinexclient.setup.*
-import uk.co.threebugs.darwinexclient.setupgroup.*
+import org.springframework.data.domain.Example
+import org.springframework.data.domain.Sort
+import org.springframework.data.repository.findByIdOrNull
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import uk.co.threebugs.darwinexclient.SlackClient
+import uk.co.threebugs.darwinexclient.Status
+import uk.co.threebugs.darwinexclient.accountsetupgroups.AccountSetupGroupsDto
+import uk.co.threebugs.darwinexclient.clock.MutableClock
+import uk.co.threebugs.darwinexclient.metatrader.Order
+import uk.co.threebugs.darwinexclient.metatrader.TradeInfo
+import uk.co.threebugs.darwinexclient.metatrader.commands.CommandService
+import uk.co.threebugs.darwinexclient.metatrader.data.MANUAL_SETUP_NAME
+import uk.co.threebugs.darwinexclient.modifiers.ModifierRepository
+import uk.co.threebugs.darwinexclient.search.TradeSearchDto
+import uk.co.threebugs.darwinexclient.setup.Setup
+import uk.co.threebugs.darwinexclient.setup.SetupFileRepository
+import uk.co.threebugs.darwinexclient.setup.SetupRepository
+import uk.co.threebugs.darwinexclient.setupgroup.Direction
 import uk.co.threebugs.darwinexclient.setupmodifier.SetupModifierRepository
-import uk.co.threebugs.darwinexclient.tradingstance.*
-import uk.co.threebugs.darwinexclient.utils.*
-import java.math.*
-import java.time.*
-import java.time.format.*
-import java.util.function.*
+import uk.co.threebugs.darwinexclient.tradingstance.TradingStanceRepository
+import uk.co.threebugs.darwinexclient.tradingstance.UpdateTradingStanceDto
+import uk.co.threebugs.darwinexclient.utils.Constants
+import uk.co.threebugs.darwinexclient.utils.TimeHelper
+import uk.co.threebugs.darwinexclient.utils.logger
+import java.math.BigDecimal
+import java.math.RoundingMode
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.util.function.Consumer
 
 @Transactional
 @Service
@@ -33,7 +44,8 @@ class TradeService(
     private val setupRepository: SetupRepository,
     private val setupModifierRepository: SetupModifierRepository,
     private val commandService: CommandService,
-    private val tradingStanceRepository: TradingStanceRepository
+    private val tradingStanceRepository: TradingStanceRepository,
+    private val modifierRepository: ModifierRepository
 ) {
 
 
@@ -45,14 +57,11 @@ class TradeService(
     fun save(tradeDto: TradeDto): TradeDto {
         val setup = findSetupById(tradeDto.setup.id!!)
 
-        return tradeMapper.toEntity(tradeDto, setup, clock)
-            .let(tradeRepository::save)
-            .let(tradeMapper::toDto)
+        return tradeMapper.toEntity(tradeDto, setup, clock).let(tradeRepository::save).let(tradeMapper::toDto)
     }
 
     private fun findSetupById(id: Int): Setup {
-        return setupRepository.findByIdOrNull(id)
-            ?: throw IllegalArgumentException("Setup not found for ID: $id")
+        return setupRepository.findByIdOrNull(id) ?: throw IllegalArgumentException("Setup not found for ID: $id")
     }
 
     fun deleteById(id: Int) {
@@ -88,12 +97,9 @@ class TradeService(
                     SetupFileRepository.getNextEventTime(setup.dayOfWeek!!, setup.hourOfDay!!, clock)
                 //logger.info("clockNow: ${ZonedDateTime.now()} targetPlaceTime: ${formatter.format(targetPlaceTime)}" + " setup: ${setup.id}" + " accountSetupGroups: ${accountSetupGroups.id}")
 
-                val existingTrades =
-                    tradeRepository.findBySetupAndTargetPlaceDateTimeAndAccountSetupGroups(
-                        accountSetupGroups.id!!,
-                        setup.id!!,
-                        formatter.format(targetPlaceTime)
-                    )
+                val existingTrades = tradeRepository.findBySetupAndTargetPlaceDateTimeAndAccountSetupGroups(
+                    accountSetupGroups.id!!, setup.id!!, formatter.format(targetPlaceTime)
+                )
                 if (existingTrades.isEmpty() || existingTrades.all { it.status == Status.CANCELLED_BY_STANCE }) {
                     val now = ZonedDateTime.now(clock)
 
@@ -121,10 +127,7 @@ class TradeService(
 
 
     fun placeTrades(
-        symbol: String,
-        bid: BigDecimal,
-        ask: BigDecimal,
-        accountSetupGroups: AccountSetupGroupsDto
+        symbol: String, bid: BigDecimal, ask: BigDecimal, accountSetupGroups: AccountSetupGroupsDto
     ) {
         tradeRepository.findByAccountSetupGroupsSymbolAndStatus(accountSetupGroups.id!!, symbol, Status.PENDING.name)
             .forEach(Consumer { trade: Trade ->
@@ -142,10 +145,7 @@ class TradeService(
     }
 
     fun placeTrade(
-        bid: BigDecimal,
-        ask: BigDecimal,
-        trade: Trade,
-        accountSetupGroupsDto: AccountSetupGroupsDto
+        bid: BigDecimal, ask: BigDecimal, trade: Trade, accountSetupGroupsDto: AccountSetupGroupsDto
     ): Trade {
         val fillPrice = if (trade.setup!!.isLong) ask else bid
         val orderType = when {
@@ -181,9 +181,29 @@ class TradeService(
         if (modifiers.isNotEmpty()) {
             // Multiply the price, stopLoss, and takeProfit by all modifier values
             for (modifier in modifiers) {
-                price = price.multiply(modifier.modifierValue) // BigDecimal multiplication
-                stopLoss = stopLoss.multiply(modifier.modifierValue) // BigDecimal multiplication
-                takeProfit = takeProfit.multiply(modifier.modifierValue) // BigDecimal multiplication
+
+                if(modifier.modifierName != "ATR") {
+                    throw IllegalArgumentException("Unsupported modifier name: ${modifier.modifierName}")
+                }
+
+                val priceAdjustmentModifier = modifierRepository.findBySymbolAndModifierNameAndType(
+                    symbol = trade.setup!!.symbol!!, modifierName = "ATR-WEIGHTING", type = "adjustment"
+                )
+
+                if (priceAdjustmentModifier != null) {
+
+                    val fixedModifierValue =
+                        modifier.modifierValue.divide(priceAdjustmentModifier.modifierValue, 10, RoundingMode.HALF_UP)
+
+                    val scale = price.scale()
+
+                    price = price.multiply(fixedModifierValue).setScale(scale, RoundingMode.HALF_EVEN) // BigDecimal multiplication
+                    stopLoss = stopLoss.multiply(fixedModifierValue).setScale(scale, RoundingMode.HALF_EVEN) // BigDecimal multiplication
+                    takeProfit = takeProfit.multiply(fixedModifierValue).setScale(scale, RoundingMode.HALF_EVEN) // BigDecimal multiplication
+
+                } else {
+                    throw IllegalArgumentException("Price adjustment modifier not found for symbol: ${trade.setup!!.symbol}")
+                }
             }
         }
 
@@ -199,8 +219,7 @@ class TradeService(
                 magic = magic,
                 expiration = timeHelper.addSecondsToCurrentTime(trade.setup!!.outOfTime!!.toLong()),
                 comment = "${trade.targetPlaceDateTime} ${trade.setup!!.concatenateFields()}",
-            ),
-            accountSetupGroupsDto
+            ), accountSetupGroupsDto
         )
 
         trade.status = Status.ORDER_SENT
@@ -210,26 +229,21 @@ class TradeService(
     }
 
     fun closeTrades(
-        symbol: String,
-        accountSetupGroups: AccountSetupGroupsDto
+        symbol: String, accountSetupGroups: AccountSetupGroupsDto
     ) {
         tradeRepository.findByAccountSetupGroupsSymbolAndStatus(accountSetupGroups.id!!, symbol, Status.FILLED.name)
-            .stream()
-            .filter { trade: Trade -> trade.setup!!.name != MANUAL_SETUP_NAME }
-            .filter { trade: Trade ->
+            .stream().filter { trade: Trade -> trade.setup!!.name != MANUAL_SETUP_NAME }.filter { trade: Trade ->
 
                 val closeDateTime = trade.targetPlaceDateTime!!.plusHours(trade.setup!!.tradeDuration!!.toLong())
                 val currentDateTime = ZonedDateTime.now(clock)
                 closeDateTime.isBefore(currentDateTime)
-            }.map { t -> tradeMapper.toDto(t) }
-            .forEach { trade ->
+            }.map { t -> tradeMapper.toDto(t) }.forEach { trade ->
                 closeTrade(trade, accountSetupGroups)
             }
     }
 
     fun closeTrade(
-        tradeDto: TradeDto,
-        accountSetupGroups: AccountSetupGroupsDto
+        tradeDto: TradeDto, accountSetupGroups: AccountSetupGroupsDto
     ) {
 
         val trade = tradeMapper.toEntity(tradeDto, clock)
@@ -249,12 +263,8 @@ class TradeService(
         closingStatus: Status
     ): List<Trade> {
         return tradeRepository.findByAccountSetupGroupsSymbolAndStatus(
-            accountSetupGroups.id!!,
-            tradingStanceDto.symbol,
-            statusToFind.name
-        )
-            .stream()
-            .filter { trade: Trade -> trade.setup!!.direction != tradingStanceDto.direction }
+            accountSetupGroups.id!!, tradingStanceDto.symbol, statusToFind.name
+        ).stream().filter { trade: Trade -> trade.setup!!.direction != tradingStanceDto.direction }
             .map { trade: Trade ->
                 if (trade.status == Status.FILLED || trade.status == Status.PLACED_IN_MT) {
                     commandService.closeOrdersByMagic(trade.id!!, accountSetupGroups)
@@ -292,11 +302,9 @@ class TradeService(
     }
 
     fun onClosedTrade(tradeInfo: TradeInfo, metatraderId: Long) {
-        val trade = tradeRepository.findByIdOrNull(tradeInfo.magic)
-            ?: tradeRepository.findByMetatraderId(metatraderId)
+        val trade = tradeRepository.findByIdOrNull(tradeInfo.magic) ?: tradeRepository.findByMetatraderId(metatraderId)
 
-        trade?.let { onClosedTrade(tradeInfo, it) }
-            ?: logger.warn("Trade not found: $tradeInfo")
+        trade?.let { onClosedTrade(tradeInfo, it) } ?: logger.warn("Trade not found: $tradeInfo")
     }
 
     private fun onClosedTrade(tradeInfo: TradeInfo, trade: Trade) {

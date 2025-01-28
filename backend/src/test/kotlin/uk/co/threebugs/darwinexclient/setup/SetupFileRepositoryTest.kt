@@ -1,19 +1,13 @@
 package uk.co.threebugs.darwinexclient.setup
 
+import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.kotlin.any
-import org.mockito.kotlin.argumentCaptor
-import org.mockito.kotlin.eq
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.verifyNoInteractions
-import org.mockito.kotlin.whenever
-import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.*
 import uk.co.threebugs.darwinexclient.modifier.Modifier
 import uk.co.threebugs.darwinexclient.modifiers.ModifierRepository
 import uk.co.threebugs.darwinexclient.setupgroup.SetupGroup
@@ -54,10 +48,7 @@ class SetupFileRepositoryTest {
 
         // Act
         val result = setupFileRepository.readCsv(
-            path = tempCsv,
-            symbol = symbol,
-            setupGroup = setupGroup,
-            setupLimit = 2
+            path = tempCsv, symbol = symbol, setupGroup = setupGroup, setupLimit = 2
         )
 
         // Assert
@@ -110,18 +101,15 @@ class SetupFileRepositoryTest {
         // Act & Assert
         assertThatThrownBy {
             setupFileRepository.readCsv(
-                path = Path.of("unused.csv"),
-                symbol = symbol,
-                setupGroup = setupGroup,
-                setupLimit = 999 // Over 20
+                path = Path.of("unused.csv"), symbol = symbol, setupGroup = setupGroup, setupLimit = 999 // Over 20
             )
-        }.isInstanceOf(RuntimeException::class.java)
-            .hasMessageContaining("setupLimit cannot be greater than")
+        }.isInstanceOf(RuntimeException::class.java).hasMessageContaining("setupLimit cannot be greater than")
     }
 
+
     @Test
-    @DisplayName("should handle modifier column by looking up existing modifier or creating new")
-    fun shouldHandleModifierColumn() {
+    @DisplayName("should log an error and skip when modifier does not exist")
+    fun shouldLogErrorAndSkipWhenModifierDoesNotExist() {
         // Arrange
         val symbol = "USDJPY"
         val setupGroup = mock<SetupGroup>()
@@ -132,78 +120,51 @@ class SetupFileRepositoryTest {
             symbol = symbol,
             type = "technicalIndicator"
         )
-        // CSV has a 10th column with "ATR" on the first line and "NEW_MOD" on the second.
+
+        // CSV has a 10th column with "ATR" on the first line and "MISSING_MOD" on the second.
         val csvContent = """
-            "rank","traderId","dayOfWeek","hourOfDay","stop","limit","tickOffset","duration","outOfTime","modifierColumn"
-            8,1322294,1,10,7350,-18375,245,336,8,ATR
-            9,852895,1,15,6860,-18375,0,336,8,NEW_MOD
-        """.trimIndent()
+        "rank","traderId","dayOfWeek","hourOfDay","stop","limit","tickOffset","duration","outOfTime","modifierColumn"
+        8,1322294,1,10,7350,-18375,245,336,8,ATR
+        9,852895,1,15,6860,-18375,0,336,8,MISSING_MOD
+    """.trimIndent()
 
         val tempCsv = createTempCsv(csvContent)
 
         // For "ATR" => existingModifier found
         whenever(
             modifierRepository.findBySymbolAndModifierNameAndType(
-                eq(symbol),
-                eq("ATR"),
-                eq("technicalIndicator")
+                eq(symbol), eq("ATR"), eq("technicalIndicator")
             )
         ).thenReturn(existingModifier)
 
-        // For "NEW_MOD" => not found => new must be created
+        // For "MISSING_MOD" => not found
         whenever(
             modifierRepository.findBySymbolAndModifierNameAndType(
-                eq(symbol),
-                eq("NEW_MOD"),
-                eq("technicalIndicator")
+                eq(symbol), eq("MISSING_MOD"), eq("technicalIndicator")
             )
         ).thenReturn(null)
 
-        whenever(modifierRepository.save(any<Modifier>())).thenAnswer { invocation ->
-            val modifierToSave = invocation.arguments[0] as Modifier
-            // You can modify modifierToSave if needed (e.g., set an ID)
-            modifierToSave.copy(id = 999) // Example: set the ID to 999
-        }
-
-
         // Act
         val result = setupFileRepository.readCsv(
-            path = tempCsv,
-            symbol = symbol,
-            setupGroup = setupGroup,
-            setupLimit = 2
+            path = tempCsv, symbol = symbol, setupGroup = setupGroup, setupLimit = 2 // Read both rows
         )
 
-        // Assert: we get 2 ParsedSetupWithModifier entries
-        assertThat(result).hasSize(2)
+        // Assert
+        // Verify that valid rows are processed and invalid rows are skipped
+        assertThat(result).hasSize(1) // Only the first row should be processed successfully
+        val processedSetup = result.first()
+        assertThat(processedSetup.setup.rank).isEqualTo(8) // Verify the rank from the first line
+        assertThat(processedSetup.modifier).isEqualTo(existingModifier) // Correct modifier for the first line
 
-        // First row should return existingModifier
-        val firstRow = result.first()
-        assertThat(firstRow.setup.rank).isEqualTo(8)
-        assertThat(firstRow.modifier).isSameAs(existingModifier)
+        // Verify repository interactions
+        verify(modifierRepository).findBySymbolAndModifierNameAndType(symbol, "ATR", "technicalIndicator")
+        verify(modifierRepository).findBySymbolAndModifierNameAndType(symbol, "MISSING_MOD", "technicalIndicator")
 
-        // Second row => newly created modifier
-        val secondRow = result[1]
-        assertThat(secondRow.setup.rank).isEqualTo(9)
-
-        // We capture the newly-created modifier that is being saved
-        val modifierCaptor = argumentCaptor<Modifier>()
-        verify(modifierRepository).save(modifierCaptor.capture())
-
-        val newlyCreated = modifierCaptor.firstValue
-        assertThat(newlyCreated.modifierName).isEqualTo("NEW_MOD")
-        assertThat(newlyCreated.symbol).isEqualTo(symbol)
-        assertThat(newlyCreated.type).isEqualTo("technicalIndicator")
-        assertThat(newlyCreated.modifierValue).isEqualTo(BigDecimal("-1.00"))
-
-        // The second row's modifier should be the "saved" instance, with ID=999
-        assertThat(secondRow.modifier).isNotNull
-        assertThat(secondRow.modifier?.modifierName).isEqualTo("NEW_MOD")
-        assertThat(secondRow.modifier?.symbol).isEqualTo(symbol)
-        assertThat(secondRow.modifier?.id).isEqualTo(999)
-
-        // This repository no longer saves SetupModifier, so verify no interactions:
+        // Ensure no interactions with `setupModifierRepository`
         verifyNoInteractions(setupModifierRepository)
+
+        // Additional verification can be done here to ensure the logger captures an error message
+        // such as using a custom logging framework with a test Appender, if necessary.
     }
 
     @Test
@@ -218,13 +179,9 @@ class SetupFileRepositoryTest {
         // Act & Assert
         assertThatThrownBy {
             setupFileRepository.readCsv(
-                path = nonexistentPath,
-                symbol = symbol,
-                setupGroup = setupGroup,
-                setupLimit = 1
+                path = nonexistentPath, symbol = symbol, setupGroup = setupGroup, setupLimit = 1
             )
-        }.isInstanceOf(RuntimeException::class.java)
-            .hasCauseInstanceOf(java.nio.file.NoSuchFileException::class.java)
+        }.isInstanceOf(RuntimeException::class.java).hasCauseInstanceOf(java.nio.file.NoSuchFileException::class.java)
 
         // We do not call the repos if we fail to read
         verifyNoInteractions(modifierRepository, setupModifierRepository)

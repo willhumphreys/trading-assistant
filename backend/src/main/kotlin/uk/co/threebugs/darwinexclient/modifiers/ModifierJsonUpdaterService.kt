@@ -4,7 +4,6 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.springframework.stereotype.Service
 import uk.co.threebugs.darwinexclient.modifier.Modifier
-import java.io.File
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.nio.file.Path
@@ -20,7 +19,7 @@ class ModifierJsonUpdaterService(
      * If a matching Modifier doesn't exist, creates a new one.
      */
     fun updateModifiersFromJsonFile(filePath: Path) {
-        val file = filePath.toFile();
+        val file = filePath.toFile()
         if (!file.exists()) {
             println("JSON modifier file not found at: $filePath")
             return
@@ -37,9 +36,7 @@ class ModifierJsonUpdaterService(
         // 2) Process each update in the JSON
         updates.forEach { dto ->
             val existing = modifierRepository.findBySymbolAndModifierNameAndType(
-                symbol = dto.symbol,
-                modifierName = dto.modifierName,
-                type = dto.type
+                symbol = dto.symbol, modifierName = dto.modifierName, type = dto.type
             )
 
             if (existing != null) {
@@ -48,23 +45,21 @@ class ModifierJsonUpdaterService(
                 val updatedModifier = existing.copy(modifierValue = dto.modifierValue)
                 modifierRepository.save(updatedModifier)
 
-                println("Updated ${dto.modifierName} for symbol=${dto.symbol} " +
-                        "type=${dto.type} to $dto.modifierValue (multiplier=${dto.modifierValue}).")
+                println(
+                    "Updated ${dto.modifierName} for symbol=${dto.symbol} " + "type=${dto.type} to $dto.modifierValue (multiplier=${dto.modifierValue})."
+                )
             } else {
                 // Create a new Modifier record using the multiplier as the initial value
-                val newValue = BigDecimal.ONE.multiply(dto.modifierValue)
-                    .setScale(2, RoundingMode.HALF_UP)
+                val newValue = BigDecimal.ONE.multiply(dto.modifierValue).setScale(2, RoundingMode.HALF_UP)
 
                 val newModifier = Modifier(
-                    modifierName = dto.modifierName,
-                    modifierValue = newValue,
-                    symbol = dto.symbol,
-                    type = dto.type
+                    modifierName = dto.modifierName, modifierValue = newValue, symbol = dto.symbol, type = dto.type
                 )
                 modifierRepository.save(newModifier)
 
-                println("Created new Modifier: name=${dto.modifierName}, " +
-                        "symbol=${dto.symbol}, type=${dto.type}, value=$newValue.")
+                println(
+                    "Created new Modifier: name=${dto.modifierName}, " + "symbol=${dto.symbol}, type=${dto.type}, value=$newValue."
+                )
             }
         }
     }
