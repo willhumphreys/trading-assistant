@@ -1,23 +1,24 @@
 //+------------------------------------------------------------------+
 //|                                                   PriceWriter.mq5
-//|                                Example EA to log prices to files
-//+------------------------------------------------------------------+
+//|                           Logs the *just-closed* daily OHLC once
+//+------------------------------------------------------------------
 #property copyright ""
 #property link      ""
-#property version   "1.00"
+#property version   "1.02"
 #property strict
 
 //--- Input parameters
 input string InpSymbolsList = "EURUSD,GBPUSD,USDJPY,SP500,XAUUSD"; // Comma-separated list of symbols to log
-input bool   InpWriteOnEveryTick = true;                           // If true, write to file on every new tick
-input bool   InpLogOHLC         = false;                           // If true, log OHLC of the latest bar instead of Bid/Ask
 
-//--- We'll store the parsed symbols in a global array
+//--- We'll store the parsed symbols in an array
 string symbols[];
+
+//--- We track the time of the *current* daily bar
+static datetime lastDailyBarTime[];
 
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
-//+------------------------------------------------------------------+
+//+------------------------------------------------------------------
 int OnInit()
 {
     ParseSymbolsList(InpSymbolsList, symbols);
@@ -28,13 +29,28 @@ int OnInit()
         return INIT_PARAMETERS_INCORRECT;
     }
 
-    Print("PriceWriter initialized. Symbols to log: ", InpSymbolsList);
+    // Prepare array for tracking daily bar time
+    const int count = ArraySize(symbols);
+    ArrayResize(lastDailyBarTime, count);
+
+    // Initialize lastDailyBarTime to the currently open daily bar
+    for (int i = 0; i < count; i++)
+    {
+        const string sym = symbols[i];
+        // If there's no valid daily bar data yet, we'll store 0
+        if (Bars(sym, PERIOD_D1) > 0)
+            lastDailyBarTime[i] = iTime(sym, PERIOD_D1, 0); // time of the currently open daily bar
+        else
+            lastDailyBarTime[i] = 0; // means no data
+    }
+
+    Print("PriceWriter initialized. Symbols to track: ", InpSymbolsList);
     return INIT_SUCCEEDED;
 }
 
 //+------------------------------------------------------------------+
 //| Expert deinitialization function                                 |
-//+------------------------------------------------------------------+
+//+------------------------------------------------------------------
 void OnDeinit(const int reason)
 {
     Print("PriceWriter deinitialized.");
@@ -42,84 +58,79 @@ void OnDeinit(const int reason)
 
 //+------------------------------------------------------------------+
 //| Expert tick function                                             |
-//+------------------------------------------------------------------+
+//+------------------------------------------------------------------
 void OnTick()
 {
-    if (!InpWriteOnEveryTick)
-        return;
-
     const int count = ArraySize(symbols);
+    if (count < 1) return;
+
+    // For each symbol, check if a new daily bar has formed
     for (int i = 0; i < count; i++)
     {
-        const string symbol = symbols[i];
-        if (!SymbolSelect(symbol, true))
+        const string sym = symbols[i];
+
+        // Make sure we can select the symbol
+        if (!SymbolSelect(sym, true))
         {
-            Print("Failed to select symbol: ", symbol);
+            Print("Failed to select symbol: ", sym);
             continue;
         }
 
-        //--- Get current time (server time)
-        MqlDateTime dateTime;
-        TimeToStruct(TimeCurrent(), dateTime);
-        const string timeString = StringFormat(
-            "%04d-%02d-%02d %02d:%02d:%02d",
-            dateTime.year, dateTime.mon, dateTime.day,
-            dateTime.hour, dateTime.min, dateTime.sec
-        );
-
-        //--- Build file name, e.g. "EURUSD.csv"
-        const string fileName = symbol + ".csv";
-
-        //--- Open the file in append mode (CSV), then seek to end
-        const int fileHandle = FileOpen(fileName, FILE_CSV | FILE_WRITE | FILE_READ | FILE_ANSI);
-        if (fileHandle == INVALID_HANDLE)
-        {
-            Print("Failed to open file for symbol: ", symbol);
+        // If there aren't at least 2 bars in daily timeframe, skip
+        if (Bars(sym, PERIOD_D1) < 2)
             continue;
-        }
 
-        FileSeek(fileHandle, 0, SEEK_END);
+        // Grab the time of the currently forming daily bar (shift=0)
+        datetime currentDailyBarTime = iTime(sym, PERIOD_D1, 0);
 
-        if (!InpLogOHLC)
+        // If the daily bar's time changed vs. what we stored,
+        // that means a new daily bar was created => log the just-closed daily bar.
+        if (currentDailyBarTime != lastDailyBarTime[i] && currentDailyBarTime > 0)
         {
-            //--- Log Bid/Ask
-            const double bid = SymbolInfoDouble(symbol, SYMBOL_BID);
-            const double ask = SymbolInfoDouble(symbol, SYMBOL_ASK);
-            FileWrite(fileHandle, timeString, DoubleToString(bid, 5), DoubleToString(ask, 5));
-        }
-        else
-        {
-            //--- Log OHLC from the DAILY timeframe, always
-            MqlTick tickInfo;
-            if (!SymbolInfoTick(symbol, tickInfo))
+            // Let's log the *closed* bar at shift=1
+            // shift=1 means "the bar that just finished"
+            double open_  = iOpen(sym, PERIOD_D1, 1);
+            double high_  = iHigh(sym, PERIOD_D1, 1);
+            double low_   = iLow(sym, PERIOD_D1, 1);
+            double close_ = iClose(sym, PERIOD_D1, 1);
+
+            // We'll also record the time of that just-closed bar
+            // which is iTime(sym, PERIOD_D1, 1)
+            datetime closedBarTime = iTime(sym, PERIOD_D1, 1);
+
+            // Convert that time to a human-readable string
+            MqlDateTime dt;
+            TimeToStruct(closedBarTime, dt);
+            string timeString = StringFormat("%04d-%02d-%02d", dt.year, dt.mon, dt.day);
+
+            // Write to our CSV
+            string fileName = sym + ".csv";
+            int fileHandle = FileOpen(fileName, FILE_CSV | FILE_WRITE | FILE_READ | FILE_ANSI);
+            if (fileHandle != INVALID_HANDLE)
             {
-                Print("Failed to get tick info for symbol: ", symbol);
+                FileSeek(fileHandle, 0, SEEK_END);
+                FileWrite(fileHandle,
+                          timeString,
+                          DoubleToString(open_,  5),
+                          DoubleToString(high_,  5),
+                          DoubleToString(low_,   5),
+                          DoubleToString(close_, 5));
                 FileClose(fileHandle);
-                continue;
+            }
+            else
+            {
+                Print("Failed to open file for symbol: ", sym);
             }
 
-            // Latest closed daily bar is shift=1
-            const int    shift  = 1;
-            const double open_  = iOpen(symbol, PERIOD_D1, shift);
-            const double high_  = iHigh(symbol, PERIOD_D1, shift);
-            const double low_   = iLow(symbol, PERIOD_D1, shift);
-            const double close_ = iClose(symbol, PERIOD_D1, shift);
-
-            FileWrite(fileHandle,
-                      timeString,
-                      DoubleToString(open_,  5),
-                      DoubleToString(high_,  5),
-                      DoubleToString(low_,   5),
-                      DoubleToString(close_, 5));
+            // Now update our stored bar time to the *newly forming* daily bar
+            lastDailyBarTime[i] = currentDailyBarTime;
         }
-
-        FileClose(fileHandle);
     }
 }
 
 //+------------------------------------------------------------------+
 //| Helper function: Parse a comma-separated list of symbols         |
-//+------------------------------------------------------------------+
+//+------------------------------------------------------------------
 void ParseSymbolsList(const string symbolList, string &resultArray[])
 {
     ArrayResize(resultArray, 0);
