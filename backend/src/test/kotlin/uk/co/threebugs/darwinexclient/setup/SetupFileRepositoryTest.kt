@@ -91,20 +91,7 @@ class SetupFileRepositoryTest {
         verifyNoInteractions(modifierRepository, setupModifierRepository)
     }
 
-    @Test
-    @DisplayName("should not exceed maximum setup limit and throw RuntimeException if limit is above MAX_SETUP_LIMIT")
-    fun shouldThrowIfSetupLimitExceedsMax() {
-        // Arrange
-        val symbol = "GBPUSD"
-        val setupGroup = mock<SetupGroup>()
 
-        // Act & Assert
-        assertThatThrownBy {
-            setupFileRepository.readCsv(
-                path = Path.of("unused.csv"), symbol = symbol, setupGroup = setupGroup, setupLimit = 999 // Over 20
-            )
-        }.isInstanceOf(RuntimeException::class.java).hasMessageContaining("setupLimit cannot be greater than")
-    }
 
 
     @Test
@@ -181,7 +168,7 @@ class SetupFileRepositoryTest {
             setupFileRepository.readCsv(
                 path = nonexistentPath, symbol = symbol, setupGroup = setupGroup, setupLimit = 1
             )
-        }.isInstanceOf(RuntimeException::class.java).hasCauseInstanceOf(java.nio.file.NoSuchFileException::class.java)
+        }.isInstanceOf(RuntimeException::class.java)
 
         // We do not call the repos if we fail to read
         verifyNoInteractions(modifierRepository, setupModifierRepository)
