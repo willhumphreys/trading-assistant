@@ -6,12 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.TestPropertySource
 import uk.co.threebugs.darwinexclient.modifier.Modifier
+import uk.co.threebugs.darwinexclient.modifiers.AtrScheduler
 import uk.co.threebugs.darwinexclient.modifiers.ModifierRepository
 import java.math.BigDecimal
 
 /**
  * Integration test that:
- *  - loads test CSV data from src/test/resources/mql5testfiles/EURUSD.csv,
+ *  - loads test CSV data from src/test/resources/mql5testfiles/SP500.csv,
  *  - computes 14-day ATR via AtrScheduler,
  *  - verifies the result in the H2 database.
  */
@@ -28,24 +29,26 @@ class AtrSchedulerIntegrationTest(
 ) {
 
     @Test
-    fun `test 14-day ATR calculation on 30-row CSV`() {
+    fun `test 14-day ATR calculation for SP500 CSV`() {
         // Trigger the calculation
         atrScheduler.computeAndStoreAtr()
 
-        // Find the newly created or updated Modifier for EURUSD
+        // Find the newly created or updated Modifier for SP500
         val allModifiers: List<Modifier> = modifierRepository.findAll()
-        val eurUsdModifier = allModifiers.find { it.symbol == "EURUSD" && it.modifierName == "ATR" }
+        val sp500Modifier = allModifiers.find { it.symbol == "sp500" && it.modifierName == "ATR" }
 
-        // Assert the EURUSD Modifier is not null
-        assertThat(eurUsdModifier)
-            .withFailMessage("ATR Modifier for EURUSD should have been created or updated.")
+        // Assert the SP500 Modifier is not null
+        assertThat(sp500Modifier)
+            .withFailMessage("ATR Modifier for SP500 should have been created or updated.")
             .isNotNull()
 
         // Assert that the ATR Modifier value is greater than 0
-        assertThat(eurUsdModifier?.modifierValue)
-            .withFailMessage("Expected ATR value to be > 0, but got: ${eurUsdModifier?.modifierValue}")
+        assertThat(sp500Modifier?.modifierValue)
+            .withFailMessage("Expected ATR value to be > 0, but got: ${sp500Modifier?.modifierValue}")
             .isGreaterThan(BigDecimal.ZERO)
 
-        assertThat(eurUsdModifier?.modifierValue).isEqualTo(BigDecimal("0.021430"))
+        // **Optional**: Replace the value below with the expected ATR for the `SP500.csv` file.
+        assertThat(sp500Modifier?.modifierValue)
+            .isEqualTo(BigDecimal("69.510000"))
     }
 }

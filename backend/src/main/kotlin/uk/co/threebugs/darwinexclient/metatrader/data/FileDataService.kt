@@ -9,6 +9,7 @@ import uk.co.threebugs.darwinexclient.account.AccountService
 import uk.co.threebugs.darwinexclient.account.MetaTraderDir
 import uk.co.threebugs.darwinexclient.accountsetupgroups.AccountSetupGroupsDto
 import uk.co.threebugs.darwinexclient.accountsetupgroups.AccountSetupGroupsService
+import uk.co.threebugs.darwinexclient.modifiers.AtrScheduler
 import uk.co.threebugs.darwinexclient.modifiers.ModifierJsonUpdaterService
 import uk.co.threebugs.darwinexclient.setup.*
 import uk.co.threebugs.darwinexclient.setupgroup.SetupGroup
@@ -34,6 +35,7 @@ class FileDataService(
     private val setupModifierRepository: SetupModifierRepository, // <-- needed to save SetupModifier
     private val objectMapper: ObjectMapper,
     private val modifierJsonUpdaterService: ModifierJsonUpdaterService,
+    private val atrScheduler: AtrScheduler,
     @Value("\${accounts-dir}") private val accounts: String,
 ) {
 
@@ -43,6 +45,9 @@ class FileDataService(
     internal fun loadData(setupLimit: Int): List<AccountSetupGroupsDto> {
         // 1) Get the base path for "accounts"
         val accountsPath: Path = Paths.get(accounts)
+
+
+        atrScheduler.computeAndStoreAtr()
 
         // 2) Update or create Modifiers from "modifiers.json"
         modifierJsonUpdaterService.updateModifiersFromJsonFile(accountsPath.resolve(MODIFIERS_JSON))
