@@ -14,6 +14,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlin.streams.asSequence
 import uk.co.threebugs.darwinexclient.modifier.Modifier
+import uk.co.threebugs.darwinexclient.utils.logger
 
 @Service
 class AtrScheduler(
@@ -47,7 +48,7 @@ class AtrScheduler(
     fun computeAndStoreAtr() {
         val directory = Paths.get(filesDirectory).toFile()
         if (!directory.exists() || !directory.isDirectory) {
-            println("MQL5 Files directory not found: $filesDirectory")
+            logger.error("MQL5 Files directory not found: $filesDirectory")
             return
         }
 
@@ -56,23 +57,23 @@ class AtrScheduler(
             ?: emptyArray()
 
         if (csvFiles.isEmpty()) {
-            println("No CSV files found in directory: $filesDirectory")
+            logger.error("No CSV files found in directory: $filesDirectory")
             return
         }
 
         for (file in csvFiles) {
             val symbol = file.nameWithoutExtension
-            println("Processing file for symbol: $symbol")
+            logger.info("Processing file for symbol: $symbol")
 
             val dailyBars = parseDailyBars(file)
             if (dailyBars.size < atrWindow) {
-                println("Not enough data to compute ATR for symbol $symbol (need at least $atrWindow bars).")
+                logger.warn("Not enough data to compute ATR for symbol $symbol (need at least $atrWindow bars).")
                 continue
             }
 
             val atrValue = calculateRollingAtr(dailyBars, atrWindow)
             if (atrValue == null) {
-                println("Could not compute ATR for symbol $symbol.")
+                logger.error("Could not compute ATR for symbol $symbol.")
                 continue
             }
 
@@ -108,7 +109,7 @@ class AtrScheduler(
 
                         bars += DailyBar(date, open, high, low, close)
                     } catch (ex: Exception) {
-                        println("Skipping malformed line in ${file.name}: $line")
+                        logger.error("Skipping malformed line in ${file.name}: $line")
                     }
                 }
             }
@@ -175,7 +176,7 @@ class AtrScheduler(
         if (existing != null) {
             val updated = existing.copy(modifierValue = bdValue)
             modifierRepository.save(updated)
-            println("Updated ATR Modifier for symbol=$symbol to $bdValue.")
+            logger.info("Updated ATR Modifier for symbol=$symbol to $bdValue.")
         } else {
             val newModifier = Modifier(
                 modifierName = atrModifierName,
@@ -184,7 +185,7 @@ class AtrScheduler(
                 type = atrType
             )
             modifierRepository.save(newModifier)
-            println("Created new ATR Modifier for symbol=$symbol with $bdValue.")
+            logger.info("Created new ATR Modifier for symbol=$symbol with $bdValue.")
         }
     }
 

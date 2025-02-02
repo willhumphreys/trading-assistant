@@ -21,6 +21,7 @@ import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import kotlin.math.log
 
 const val MANUAL_SETUP_NAME = "MANUAL"
 private const val MODIFIERS_JSON = "modifiers.json"
@@ -46,8 +47,11 @@ class FileDataService(
         // 1) Get the base path for "accounts"
         val accountsPath: Path = Paths.get(accounts)
 
+        logger.info("Compute and store atr")
 
         atrScheduler.computeAndStoreAtr()
+
+        logger.info("Update and create modifiers from json")
 
         // 2) Update or create Modifiers from "modifiers.json"
         modifierJsonUpdaterService.updateModifiersFromJsonFile(accountsPath.resolve(MODIFIERS_JSON))
