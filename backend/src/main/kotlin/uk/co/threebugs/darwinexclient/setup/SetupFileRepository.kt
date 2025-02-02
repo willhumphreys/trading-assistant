@@ -80,7 +80,7 @@ class SetupFileRepository(
                             // Construct and return ParsedSetupWithModifier
                             ParsedSetupWithModifier(setup, modifier)
                         } catch (e: IllegalArgumentException) {
-                            logger.error("Unable to fin the modifier for setup: $line", e)
+                            logger.error("Unable to find the modifier for setup: $line", e)
                             null
                         }
                     }.filter { parsedSetupWithModifier -> parsedSetupWithModifier != null } // Filter out null values

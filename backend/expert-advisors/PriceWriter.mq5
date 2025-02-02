@@ -4,7 +4,7 @@
 //+------------------------------------------------------------------
 #property copyright ""
 #property link      ""
-#property version   "1.02"
+#property version   "1.03"
 #property strict
 
 //--- Input parameters
@@ -103,25 +103,32 @@ void OnTick()
             TimeToStruct(closedBarTime, dt);
             string timeString = StringFormat("%04d-%02d-%02d", dt.year, dt.mon, dt.day);
 
-            // Write to our CSV
+            /// Write to our CSV
             string fileName = sym + ".csv";
             int fileHandle = FileOpen(fileName, FILE_CSV | FILE_WRITE | FILE_READ | FILE_ANSI);
             if (fileHandle != INVALID_HANDLE)
             {
+                // If the file size is 0, write the header first
+                if (FileSize(fileHandle) == 0)
+                {
+                    FileWrite(fileHandle, "Date,Open,High,Low,Close");
+                }
+
+                // Append the bar data as comma-separated values
                 FileSeek(fileHandle, 0, SEEK_END);
                 FileWrite(fileHandle,
-                          timeString,
-                          DoubleToString(open_,  5),
-                          DoubleToString(high_,  5),
-                          DoubleToString(low_,   5),
-                          DoubleToString(close_, 5));
+                          StringFormat("%s,%s,%s,%s,%s",
+                                       timeString,
+                                       DoubleToString(open_,  5),
+                                       DoubleToString(high_,  5),
+                                       DoubleToString(low_,   5),
+                                       DoubleToString(close_, 5)));
                 FileClose(fileHandle);
             }
             else
             {
                 Print("Failed to open file for symbol: ", sym);
             }
-
             // Now update our stored bar time to the *newly forming* daily bar
             lastDailyBarTime[i] = currentDailyBarTime;
         }
