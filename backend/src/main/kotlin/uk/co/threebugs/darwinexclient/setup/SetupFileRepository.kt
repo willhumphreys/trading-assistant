@@ -36,6 +36,8 @@ class SetupFileRepository(
         path: Path, symbol: String, setupGroup: SetupGroup, setupLimit: Int
     ): List<ParsedSetupWithModifier> {
 
+        logger.info("Loading setups from file: $path absolutePath=${path.toAbsolutePath()}")
+
         if (setupLimit > MAX_SETUP_LIMIT) {
             throw RuntimeException("setupLimit cannot be greater than $MAX_SETUP_LIMIT")
         }
