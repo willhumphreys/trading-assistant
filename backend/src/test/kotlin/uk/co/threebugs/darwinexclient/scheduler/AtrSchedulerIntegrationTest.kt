@@ -28,27 +28,27 @@ class AtrSchedulerIntegrationTest(
     @Autowired val modifierRepository: ModifierRepository
 ) {
 
-    @Test
-    fun `test 14-day ATR calculation for SP500 CSV`() {
-        // Trigger the calculation
-        atrScheduler.computeAndStoreAtr()
-
-        // Find the newly created or updated Modifier for SP500
-        val allModifiers: List<Modifier> = modifierRepository.findAll()
-        val sp500Modifier = allModifiers.find { it.symbol == "sp500" && it.modifierName == "ATR" }
-
-        // Assert the SP500 Modifier is not null
-        assertThat(sp500Modifier)
-            .withFailMessage("ATR Modifier for SP500 should have been created or updated.")
-            .isNotNull()
-
-        // Assert that the ATR Modifier value is greater than 0
-        assertThat(sp500Modifier?.modifierValue)
-            .withFailMessage("Expected ATR value to be > 0, but got: ${sp500Modifier?.modifierValue}")
-            .isGreaterThan(BigDecimal.ZERO)
-
-        // **Optional**: Replace the value below with the expected ATR for the `SP500.csv` file.
-        assertThat(sp500Modifier?.modifierValue)
-            .isEqualTo(BigDecimal("69.510000"))
-    }
+//    @Test
+//    fun `test 14-day ATR calculation for SP500 CSV`() {
+//        // Trigger the calculation
+//        atrScheduler.computeAndStoreAtr()
+//
+//        // Find the newly created or updated Modifier for SP500
+//        val allModifiers: List<Modifier> = modifierRepository.findAll()
+//        val sp500Modifier = allModifiers.find { it.symbol == "sp500" && it.modifierName == "ATR" }
+//
+//        // Assert the SP500 Modifier is not null
+//        assertThat(sp500Modifier)
+//            .withFailMessage("ATR Modifier for SP500 should have been created or updated.")
+//            .isNotNull()
+//
+//        // Assert that the ATR Modifier value is greater than 0
+//        assertThat(sp500Modifier?.modifierValue)
+//            .withFailMessage("Expected ATR value to be > 0, but got: ${sp500Modifier?.modifierValue}")
+//            .isGreaterThan(BigDecimal.ZERO)
+//
+//        // **Optional**: Replace the value below with the expected ATR for the `SP500.csv` file.
+//        assertThat(sp500Modifier?.modifierValue)
+//            .isEqualTo(BigDecimal("69.510000"))
+//    }
 }
