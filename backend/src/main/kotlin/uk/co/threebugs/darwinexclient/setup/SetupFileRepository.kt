@@ -38,6 +38,10 @@ class SetupFileRepository(
 
         logger.info("Loading setups from file: $path absolutePath=${path.toAbsolutePath()}")
 
+        if(!path.toFile().exists()) {
+            throw RuntimeException("Setup directory does not exist: $path")
+        }
+
         if (setupLimit > MAX_SETUP_LIMIT) {
             throw RuntimeException("setupLimit cannot be greater than $MAX_SETUP_LIMIT")
         }

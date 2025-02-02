@@ -72,7 +72,8 @@ class FileDataService(
                         loadDataFromCsv(
                             symbol = setupGroup.symbol ?: throw RuntimeException("Symbol missing in SetupGroup."),
                             setupGroups = setupGroups,
-                            setupLimit = setupLimit
+                            setupLimit = setupLimit,
+                            accountsPath = accountsPath,
                         )
                     }
                 }
@@ -91,17 +92,16 @@ class FileDataService(
      * Reads CSV setups for each [SetupGroup], creates them if not in DB, and
      * creates the corresponding SetupModifier once the Setup is persisted.
      */
-    private fun loadDataFromCsv(symbol: String, setupGroups: List<SetupGroup>, setupLimit: Int): List<Setup> {
+    private fun loadDataFromCsv(symbol: String, setupGroups: List<SetupGroup>, setupLimit: Int, accountsPath: Path): List<Setup> {
         return setupGroups
             .filter { it.symbol?.equals(symbol, ignoreCase = true) == true }
             .flatMap { setupGroup ->
                 // 1) readCsv -> returns List<ParsedSetupWithModifier>
                 val parsedSetups = setupFileRepository.readCsv(
-                    Path.of(setupGroup.path ?: throw RuntimeException("Path not found in SetupGroup.")),
+                    accountsPath.resolve(setupGroup.path ?: throw RuntimeException("Path missing in SetupGroup.")),
                     setupGroup.symbol ?: throw RuntimeException("Symbol not found in SetupGroup."),
                     setupGroup,
-                    setupLimit
-                )
+                    setupLimit)
 
                 // 2) For each row, if the Setup does not already exist, save it.
                 //    If there's a Modifier, create the SetupModifier AFTER the Setup is persisted.
