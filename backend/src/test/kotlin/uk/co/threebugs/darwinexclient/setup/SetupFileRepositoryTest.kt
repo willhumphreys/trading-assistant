@@ -6,11 +6,13 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.Mockito
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.*
 import uk.co.threebugs.darwinexclient.modifier.Modifier
 import uk.co.threebugs.darwinexclient.modifiers.ModifierRepository
 import uk.co.threebugs.darwinexclient.setupgroup.SetupGroup
+import uk.co.threebugs.darwinexclient.setupgroups.SetupGroups
 import uk.co.threebugs.darwinexclient.setupmodifier.SetupModifierRepository
 import java.io.File
 import java.math.BigDecimal
@@ -37,6 +39,7 @@ class SetupFileRepositoryTest {
         // Arrange
         val symbol = "EURUSD"
         val setupGroup = mock<SetupGroup>()
+        whenever(setupGroup.setupGroups).thenReturn(SetupGroups())
         // CSV with header + 2 lines of data (no meaningful modifier name)
         val csvContent = """
             "rank","traderId","dayOfWeek","hourOfDay","stop","limit","tickOffset","duration","outOfTime"
@@ -100,6 +103,7 @@ class SetupFileRepositoryTest {
         // Arrange
         val symbol = "USDJPY"
         val setupGroup = mock<SetupGroup>()
+        whenever(setupGroup.setupGroups).thenReturn(SetupGroups())
         val existingModifier = Modifier(
             id = 100,
             modifierName = "ATR",
