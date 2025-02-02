@@ -36,7 +36,8 @@ class SetupFileRepository(
         path: Path, symbol: String, setupGroup: SetupGroup, setupLimit: Int
     ): List<ParsedSetupWithModifier> {
 
-        logger.info("Loading setups from file: $path absolutePath=${path.toAbsolutePath()}")
+        logger.info("Loading setups for setupGroup: ${setupGroup.id} ${setupGroup.symbol} ${setupGroup.direction}  " +
+                "file: $path absolutePath=${path.toAbsolutePath()}")
 
         if(!path.toFile().exists()) {
             throw RuntimeException("Setup directory does not exist: $path")
