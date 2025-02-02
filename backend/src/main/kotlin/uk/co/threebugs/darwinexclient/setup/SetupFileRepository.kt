@@ -37,6 +37,7 @@ class SetupFileRepository(
     ): List<ParsedSetupWithModifier> {
 
         logger.info("Loading setups for setupGroup: ${setupGroup.id} ${setupGroup.symbol} ${setupGroup.direction}  " +
+                "setupGroups ${setupGroup.setupGroups!!.id} ${setupGroup.setupGroups!!.name} " +
                 "file: $path absolutePath=${path.toAbsolutePath()}")
 
         if(!path.toFile().exists()) {
