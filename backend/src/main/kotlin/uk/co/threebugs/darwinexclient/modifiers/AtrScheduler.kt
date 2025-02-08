@@ -15,6 +15,9 @@ import java.time.format.DateTimeFormatter
 import kotlin.streams.asSequence
 import uk.co.threebugs.darwinexclient.modifier.Modifier
 import uk.co.threebugs.darwinexclient.utils.logger
+import java.nio.file.Path
+import kotlin.io.path.absolute
+import kotlin.io.path.isDirectory
 
 @Service
 class AtrScheduler(
@@ -38,19 +41,20 @@ class AtrScheduler(
      */
     @Scheduled(cron = "0 0 0 * * ?")
     fun computeAndStoreAtr() {
-        val directory = Paths.get(filesDirectory).toFile()
 
-        if (!directory.exists()) {
-            logger.error("MQL5 Files directory not found: $filesDirectory absolute path: ${directory.absoluteFile}")
+        val filesPath: Path = Paths.get(filesDirectory)
+
+        if (!filesPath.toFile().exists()) {
+            logger.error("MQL5 Files directory not found: $filesDirectory absolute path: ${filesPath.absolute()}")
             return
         }
 
-        if (!directory.isDirectory) {
-            logger.error("MQL5 Files directory is not a directory: $filesDirectory absolute path: ${directory.absoluteFile}")
+        if (!filesPath.isDirectory()) {
+            logger.error("MQL5 Files directory is not a directory: $filesDirectory absolute path: ${filesPath.absolute()}")
         }
 
         val csvFiles =
-            directory.listFiles { file -> file.isFile && file.name.endsWith(".csv", ignoreCase = true) } ?: emptyArray()
+            filesPath.toFile().listFiles { file -> file.isFile && file.name.endsWith(".csv", ignoreCase = true) } ?: emptyArray()
 
         if (csvFiles.isEmpty()) {
             logger.error("No CSV files found in directory: $filesDirectory")
