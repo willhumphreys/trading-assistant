@@ -42,15 +42,7 @@ class AtrScheduler(
     @Scheduled(cron = "0 0 0 * * ?")
     fun computeAndStoreAtr() {
 
-        val filesPath: Path = Paths.get(".").resolve(filesDirectory)
-
-        // Log all files in the directory
-        val allFiles = Paths.get(".").toFile().listFiles() ?: emptyArray()
-        logger.info("Files in the directory: ${filesPath.absolute()}")
-        allFiles.forEach { logger.info("Found file: ${it.absolutePath}") }
-
-
-        logger.info("userDir ${System.getProperty("user.dir")}")
+        val filesPath: Path = Paths.get(filesDirectory)
 
         if (!filesPath.toFile().exists()) {
             logger.error("MQL5 Files directory not found: $filesDirectory absolute path: ${filesPath.absolute()}")
