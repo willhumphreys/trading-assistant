@@ -20,25 +20,17 @@ import uk.co.threebugs.darwinexclient.utils.logger
 class AtrScheduler(
     private val modifierRepository: ModifierRepository,
 
-    @Value("\${app.mql5.files-directory}")
-    private val filesDirectory: String,
+    @Value("\${app.mql5.files-directory}") private val filesDirectory: String,
 
-    @Value("\${app.atr.window:14}")
-    private val atrWindow: Int,
+    @Value("\${app.atr.window:14}") private val atrWindow: Int,
 
-    @Value("\${app.atr.type:technicalIndicator}")
-    private val atrType: String,
+    @Value("\${app.atr.type:technicalIndicator}") private val atrType: String,
 
-    @Value("\${app.atr.modifierName:ATR}")
-    private val atrModifierName: String
+    @Value("\${app.atr.modifierName:ATR}") private val atrModifierName: String
 ) {
 
     data class DailyBar(
-        val date: LocalDate,
-        val open: BigDecimal,
-        val high: BigDecimal,
-        val low: BigDecimal,
-        val close: BigDecimal
+        val date: LocalDate, val open: BigDecimal, val high: BigDecimal, val low: BigDecimal, val close: BigDecimal
     )
 
     /**
@@ -47,14 +39,18 @@ class AtrScheduler(
     @Scheduled(cron = "0 0 0 * * ?")
     fun computeAndStoreAtr() {
         val directory = Paths.get(filesDirectory).toFile()
-        if (!directory.exists() || !directory.isDirectory) {
-            logger.error("MQL5 Files directory not found: $filesDirectory")
+
+        if (!directory.exists()) {
+            logger.error("MQL5 Files directory not found: $filesDirectory absolute path: $filesDirectory.toAbsolutePath()")
             return
         }
 
-        // Look for all CSV files in the configured directory
-        val csvFiles = directory.listFiles { file -> file.isFile && file.name.endsWith(".csv", ignoreCase = true) }
-            ?: emptyArray()
+        if (!directory.isDirectory) {
+            logger.error("MQL5 Files directory is not a directory: $filesDirectory absolute path: $filesDirectory.toAbsolutePath()")
+        }
+
+        val csvFiles =
+            directory.listFiles { file -> file.isFile && file.name.endsWith(".csv", ignoreCase = true) } ?: emptyArray()
 
         if (csvFiles.isEmpty()) {
             logger.error("No CSV files found in directory: $filesDirectory")
@@ -179,10 +175,7 @@ class AtrScheduler(
             logger.info("Updated ATR Modifier for symbol=$symbol to $bdValue.")
         } else {
             val newModifier = Modifier(
-                modifierName = atrModifierName,
-                modifierValue = bdValue,
-                symbol = symbol,
-                type = atrType
+                modifierName = atrModifierName, modifierValue = bdValue, symbol = symbol, type = atrType
             )
             modifierRepository.save(newModifier)
             logger.info("Created new ATR Modifier for symbol=$symbol with $bdValue.")
@@ -194,6 +187,5 @@ class AtrScheduler(
      * present in any of the (open, high, low, close) fields.
      */
     private fun calculateScale(bars: List<DailyBar>): Int =
-        bars.flatMap { listOf(it.open, it.high, it.low, it.close) }
-            .maxOf { it.scale() }
+        bars.flatMap { listOf(it.open, it.high, it.low, it.close) }.maxOf { it.scale() }
 }
