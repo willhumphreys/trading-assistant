@@ -41,12 +41,12 @@ class AtrScheduler(
         val directory = Paths.get(filesDirectory).toFile()
 
         if (!directory.exists()) {
-            logger.error("MQL5 Files directory not found: $filesDirectory absolute path: $filesDirectory.toAbsolutePath()")
+            logger.error("MQL5 Files directory not found: $filesDirectory absolute path: ${directory.absoluteFile}")
             return
         }
 
         if (!directory.isDirectory) {
-            logger.error("MQL5 Files directory is not a directory: $filesDirectory absolute path: $filesDirectory.toAbsolutePath()")
+            logger.error("MQL5 Files directory is not a directory: $filesDirectory absolute path: ${directory.absoluteFile}")
         }
 
         val csvFiles =
