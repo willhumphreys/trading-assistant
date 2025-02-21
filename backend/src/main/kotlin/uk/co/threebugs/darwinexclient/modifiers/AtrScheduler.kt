@@ -3,21 +3,21 @@ package uk.co.threebugs.darwinexclient.modifiers
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import uk.co.threebugs.darwinexclient.modifier.Modifier
+import uk.co.threebugs.darwinexclient.utils.logger
 import java.io.File
 import java.io.IOException
 import java.io.UncheckedIOException
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import kotlin.streams.asSequence
-import uk.co.threebugs.darwinexclient.modifier.Modifier
-import uk.co.threebugs.darwinexclient.utils.logger
-import java.nio.file.Path
 import kotlin.io.path.absolute
 import kotlin.io.path.isDirectory
+import kotlin.streams.asSequence
 
 @Service
 class AtrScheduler(
@@ -54,7 +54,8 @@ class AtrScheduler(
         }
 
         val csvFiles =
-            filesPath.toFile().listFiles { file -> file.isFile && file.name.endsWith(".csv", ignoreCase = true) } ?: emptyArray()
+            filesPath.toFile().listFiles { file -> file.isFile && file.name.endsWith(".csv", ignoreCase = true) }
+                ?: emptyArray()
 
         if (csvFiles.isEmpty()) {
             logger.error("No CSV files found in directory: $filesDirectory")
@@ -64,6 +65,16 @@ class AtrScheduler(
         for (file in csvFiles) {
             val symbol = file.nameWithoutExtension
             logger.info("Processing file for symbol: $symbol")
+
+            val symbolDecimalShiftMap = mapOf(
+                "SP500" to 2, "XAUUSD" to 2
+            )
+
+            // Look up decimal point shift for the current symbol
+            val decimalPointShift = symbolDecimalShiftMap[symbol] ?: run {
+                logger.error("Decimal point shift not defined for symbol $symbol. Defaulting to 2.")
+                2
+            }
 
             val dailyBars = parseDailyBars(file)
             if (dailyBars.size < atrWindow) {
@@ -77,7 +88,7 @@ class AtrScheduler(
                 continue
             }
 
-            saveAtrModifier(symbol, atrValue)
+            saveAtrModifier(symbol, atrValue, decimalPointShift)
         }
     }
 
@@ -166,9 +177,10 @@ class AtrScheduler(
         return maxOf(range1, range2, range3)
     }
 
-    private fun saveAtrModifier(symbol: String, atrValue: BigDecimal) {
-        val scale = atrValue.scale()
-        val bdValue = atrValue.setScale(scale, RoundingMode.HALF_UP)
+    private fun saveAtrModifier(symbol: String, atrValue: BigDecimal, decimalPointShift: Int) {
+
+        val shifted = atrValue.movePointRight(decimalPointShift)
+        val bdValue = shifted.setScale(0, RoundingMode.HALF_UP)
 
         val existing = modifierRepository.findBySymbolAndModifierNameAndType(
             symbol, atrModifierName, atrType
