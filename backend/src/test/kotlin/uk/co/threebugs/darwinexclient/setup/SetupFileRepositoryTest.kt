@@ -45,6 +45,7 @@ class SetupFileRepositoryTest {
             "rank","traderId","dayOfWeek","hourOfDay","stop","limit","tickOffset","duration","outOfTime"
             10,1322294,3,16,100,200,50,360,0
             11,789456,5,12,150,300,75,180,1
+            
         """.trimIndent()
 
         val tempCsv = createTempCsv(csvContent)

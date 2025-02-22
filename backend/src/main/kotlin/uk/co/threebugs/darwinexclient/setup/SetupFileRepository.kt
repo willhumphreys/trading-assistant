@@ -36,11 +36,11 @@ class SetupFileRepository(
         path: Path, symbol: String, setupGroup: SetupGroup, setupLimit: Int
     ): List<ParsedSetupWithModifier> {
 
-        logger.info("Loading setups for setupGroup: ${setupGroup.id} ${setupGroup.symbol} ${setupGroup.direction}  " +
-                "setupGroups ${setupGroup.setupGroups!!.id} ${setupGroup.setupGroups!!.name} " +
-                "file: $path absolutePath=${path.toAbsolutePath()}")
+        logger.info(
+            "Loading setups for setupGroup: ${setupGroup.id} ${setupGroup.symbol} ${setupGroup.direction}  " + "setupGroups ${setupGroup.setupGroups!!.id} ${setupGroup.setupGroups!!.name} " + "file: $path absolutePath=${path.toAbsolutePath()}"
+        )
 
-        if(!path.toFile().exists()) {
+        if (!path.toFile().exists()) {
             throw RuntimeException("Setup directory does not exist: $path")
         }
 
@@ -53,6 +53,9 @@ class SetupFileRepository(
                 return lines.skip(1) // Skip CSV header
                     .limit(setupLimit.toLong()) // Limit lines if desired
                     .map { line -> // Process each line
+
+                        if (line.isBlank()) return@map null
+
                         try {
                             val values = line.split(",").dropLastWhile { it.isEmpty() }
                             val rank = values[0].removeSurrounding("\"").trim().toInt()
