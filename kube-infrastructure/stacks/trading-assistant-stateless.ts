@@ -412,7 +412,12 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                                     {
                                         name: 'mt-volume',
                                         mountPath: '/mt',
-                                    }]
+                                    },
+                                    {
+                                        name: 'mt-volume2',
+                                        mountPath: '/mt2',
+                                    }
+                                    ]
                             },
                         ],
                         volume: [
@@ -432,6 +437,12 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                                 name: 'mt-volume',
                                 hostPath: {
                                     path: '/home/will/mt-files',
+                                },
+                            },
+                            {
+                                name: 'mt-volume2',
+                                hostPath: {
+                                    path: '/home/will/mt-files2',
                                 },
                             },
                         ],

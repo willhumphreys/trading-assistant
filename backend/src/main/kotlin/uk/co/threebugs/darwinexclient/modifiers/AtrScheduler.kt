@@ -11,7 +11,6 @@ import java.io.UncheckedIOException
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.nio.file.Files
-import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -23,12 +22,14 @@ import kotlin.streams.asSequence
 class AtrScheduler(
     private val modifierRepository: ModifierRepository,
 
-    @Value("\${app.mql5.files-directory}") private val filesDirectory: String,
+    // Remove the old single directory injection
+    // @Value("\${app.mql5.files-directory}") private val filesDirectory: String,
+
+    // New property with a list of directories
+    @Value("\${app.mql5.files-directories}") private val filesDirectoriesString: String,
 
     @Value("\${app.atr.window:14}") private val atrWindow: Int,
-
     @Value("\${app.atr.type:technicalIndicator}") private val atrType: String,
-
     @Value("\${app.atr.modifierName:ATR}") private val atrModifierName: String
 ) {
 
@@ -36,21 +37,35 @@ class AtrScheduler(
         val date: LocalDate, val open: BigDecimal, val high: BigDecimal, val low: BigDecimal, val close: BigDecimal
     )
 
-    /**
-     * Runs once a day at 00:00 (midnight) server time.
-     */
     @Scheduled(cron = "0 0 0 * * ?")
     fun computeAndStoreAtr() {
+        // Parse out the directories from the property (comma-separated)
+        val directories = filesDirectoriesString.split(",").map { it.trim() }.filter { it.isNotEmpty() }
 
-        val filesPath: Path = Paths.get(filesDirectory)
+        // Process each directory in turn
+        directories.forEach { dir ->
+            processDirectory(dir)
+        }
+    }
+
+    /**
+     * Processes a single directory:
+     *   - lists all CSV files
+     *   - parses them
+     *   - calculates ATR
+     *   - saves to DB
+     */
+    private fun processDirectory(directory: String) {
+        val filesPath = Paths.get(directory)
 
         if (!filesPath.toFile().exists()) {
-            logger.error("MQL5 Files directory not found: $filesDirectory absolute path: ${filesPath.absolute()}")
+            logger.error("MQL5 Files directory not found: $directory absolute path: ${filesPath.absolute()}")
             return
         }
 
         if (!filesPath.isDirectory()) {
-            logger.error("MQL5 Files directory is not a directory: $filesDirectory absolute path: ${filesPath.absolute()}")
+            logger.error("MQL5 Files directory is not a directory: $directory absolute path: ${filesPath.absolute()}")
+            return
         }
 
         val csvFiles =
@@ -58,19 +73,18 @@ class AtrScheduler(
                 ?: emptyArray()
 
         if (csvFiles.isEmpty()) {
-            logger.error("No CSV files found in directory: $filesDirectory")
+            logger.error("No CSV files found in directory: $directory")
             return
         }
 
         for (file in csvFiles) {
             val symbol = file.nameWithoutExtension
-            logger.info("Processing file for symbol: $symbol")
+            logger.info("Processing file for symbol: $symbol (in $directory)")
 
             val symbolDecimalShiftMap = mapOf(
                 "SP500" to 2, "XAUUSD" to 2
             )
 
-            // Look up decimal point shift for the current symbol
             val decimalPointShift = symbolDecimalShiftMap[symbol] ?: run {
                 logger.error("Decimal point shift not defined for symbol $symbol. Defaulting to 2.")
                 2
@@ -98,17 +112,16 @@ class AtrScheduler(
 
         try {
             Files.lines(file.toPath()).use { lines ->
-                // Convert each line, ignoring the header and blanks
                 lines.asSequence().forEach { line ->
                     if (line.isBlank() || line.startsWith("Date", ignoreCase = true)) {
                         return@forEach
                     }
-
                     val parts = line.split(",")
                     if (parts.size != 5) {
-                        throw IllegalArgumentException(
+                        logger.error(
                             "Invalid line format in ${file.name}: Expected 5 parts but got ${parts.size}. Line: $line"
                         )
+                        return@forEach
                     }
 
                     try {
@@ -128,20 +141,12 @@ class AtrScheduler(
             throw UncheckedIOException("Failed to read file: ${file.name}", e)
         }
 
-        // Sort by ascending date so we can correctly get the 'previous close'
         bars.sortBy { it.date }
         return bars
     }
 
-    /**
-     * 1) For each bar from index=1 onward, compute True Range using bar[i] and bar[i-1].
-     * 2) Then compute a rolling mean of size `windowSize` over those TR values.
-     * 3) Return the final rolling average as the ATR.
-     */
-    private fun calculateRollingAtr(bars: List<DailyBar>, windowSize: Int): BigDecimal? {
+    fun calculateRollingAtr(bars: List<DailyBar>, windowSize: Int): BigDecimal? {
         if (bars.size < 2) return null
-
-        // 1) Compute TR values for each bar from the second bar onward
         val trValues = mutableListOf<BigDecimal>()
         var prevClose = bars.first().close
 
@@ -154,10 +159,7 @@ class AtrScheduler(
 
         if (trValues.size < windowSize) return null
 
-        // We'll use the largest decimal scale found in the data
         val scale = calculateScale(bars)
-
-        // 2) Rolling mean: sum the first window, then slide across
         var windowSum = trValues.take(windowSize).reduce { acc, bd -> acc + bd }
         var rollingMean = windowSum.divide(windowSize.toBigDecimal(), scale, RoundingMode.HALF_UP)
 
@@ -166,7 +168,6 @@ class AtrScheduler(
             rollingMean = windowSum.divide(windowSize.toBigDecimal(), scale, RoundingMode.HALF_UP)
         }
 
-        // 3) The final rolling mean is our ATR
         return rollingMean
     }
 
@@ -178,7 +179,6 @@ class AtrScheduler(
     }
 
     private fun saveAtrModifier(symbol: String, atrValue: BigDecimal, decimalPointShift: Int) {
-
         val shifted = atrValue.movePointRight(decimalPointShift)
         val bdValue = shifted.setScale(0, RoundingMode.HALF_UP)
 
@@ -198,10 +198,6 @@ class AtrScheduler(
         }
     }
 
-    /**
-     * Determines an appropriate decimal scale based on the largest scale
-     * present in any of the (open, high, low, close) fields.
-     */
     private fun calculateScale(bars: List<DailyBar>): Int =
         bars.flatMap { listOf(it.open, it.high, it.low, it.close) }.maxOf { it.scale() }
 }
