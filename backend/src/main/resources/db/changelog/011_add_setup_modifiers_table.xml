@@ -14,7 +14,7 @@
                 <constraints nullable="false"/>
             </column>
             <!-- Renamed from "value" to "modifier_value" -->
-            <column name="modifier_value" type="decimal(10,6)">
+            <column name="modifier_value" type="decimal(10,2)">
                 <constraints nullable="false"/>
             </column>
         </createTable>

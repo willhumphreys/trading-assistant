@@ -6,7 +6,9 @@ src_dir="expert-advisors"
 # Define destination server and path
 dest_user="will"
 dest_host="k8s-worker01"
-dest_path="/home/will/.cxoffice/MetaTrader_5-3/drive_c/Program Files/MetaTrader 5/MQL5/Experts/Advisors"
+#dest_path="/home/will/.cxoffice/MetaTrader_5-3/drive_c/Program Files/MetaTrader 5/MQL5/Experts/Advisors"
+dest_path="/home/will/.cxoffice/MetaTrader_5-2/drive_c/Program Files/MetaTrader 5/MQL5/Experts/Advisors"
+
 
 # Check if the source directory exists
 if [ ! -d "$src_dir" ]; then
