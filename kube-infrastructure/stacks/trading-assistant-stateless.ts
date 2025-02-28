@@ -419,6 +419,79 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                                     }
                                     ]
                             },
+                            {
+                                image: 'ghcr.io/willhumphreys/trading-assistant:backend-latest',
+                                imagePullPolicy: 'Always',
+                                name: TRADING_ASSISTANT_LABEL,
+                                port: [{
+                                    containerPort: 8081,
+                                }],
+                                livenessProbe: {
+                                    httpGet: {
+                                        path: "/actuator/health",
+                                        port: "8081"
+                                    },
+                                    initialDelaySeconds: 30,
+                                    periodSeconds: 2
+                                },
+                                readinessProbe: {
+                                    httpGet: {
+                                        path: "/actuator/health",
+                                        port: "8081"
+                                    },
+                                    initialDelaySeconds: 10
+                                },
+                                env: [{
+                                    name: 'SPRING_PROFILE',
+                                    value: 'currencies',
+                                }, {
+                                    name: 'DATABASE_URL',
+                                    value: 'jdbc:mysql://mysql-service:3306/metatrader',
+                                }, {
+                                    name: 'DATABASE_PASSWORD',
+                                    valueFrom: {
+                                        secretKeyRef: {
+                                            name: "my-secrets",
+                                            key: "dbPassword",
+                                        }
+                                    }
+                                }, {
+                                    name: 'SLACK_WEBHOOK_URL',
+                                    valueFrom: {
+                                        secretKeyRef: {
+                                            name: "my-secrets",
+                                            key: "slackWebHook",
+                                        }
+                                    }
+                                }, {
+                                    name: 'SUMO_LOGIC_WEBHOOK_URL',
+                                    valueFrom: {
+                                        secretKeyRef: {
+                                            name: "my-secrets",
+                                            key: "sumoLogicWebHook",
+                                        }
+                                    }
+                                }
+                                ],
+                                volumeMount: [
+                                    {
+                                        name: 'accounts-volume',
+                                        mountPath: '/accounts',
+                                    },
+                                    {
+                                        name: 'mochi-graphs-volume',
+                                        mountPath: '/mochi-graphs',
+                                    },
+                                    {
+                                        name: 'mt-volume',
+                                        mountPath: '/mt',
+                                    },
+                                    {
+                                        name: 'mt-volume2',
+                                        mountPath: '/mt2',
+                                    }
+                                ]
+                            }
                         ],
                         volume: [
                             {
