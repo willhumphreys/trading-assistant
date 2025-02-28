@@ -28,7 +28,8 @@ export class TradingAssistantStatelessStack extends TerraformStack {
         //  this.createTradingAssistantFrontendIngress();
 
         //let adminPassword = this.createDBTerraformSecret();
-        this.createTradingAssistantDeployment();
+        this.createTradingAssistantDeployment('trading-assistant',  'currencies');
+        this.createTradingAssistantDeployment('crypto-assistant', 'crypto');
         this.createDataStreamerDeployment();
         this.createTradingAssistantFrontendDeployment();
         this.createTradingAssistantService();
@@ -314,26 +315,31 @@ export class TradingAssistantStatelessStack extends TerraformStack {
     }
 
 
-    private createTradingAssistantDeployment() {
-        new kubernetes.deployment.Deployment(this, TRADING_ASSISTANT_LABEL, {
+    private createTradingAssistantDeployment(id: string, profile: string) {
+
+        if (!id) {
+            throw new Error("No ID passed!");
+        }
+
+        new kubernetes.deployment.Deployment(this, id, {
             metadata: {
                 labels: {
-                    app: TRADING_ASSISTANT_LABEL,
+                    app: id,
                 },
-                name: TRADING_ASSISTANT_LABEL,
+                name: id,
                 namespace: TRADING_ASSISTANT_NAMESPACE,
             },
             spec: {
                 replicas: '1',
                 selector: {
                     matchLabels: {
-                        app: TRADING_ASSISTANT_LABEL,
+                        app: id,
                     },
                 },
                 template: {
                     metadata: {
                         labels: {
-                            app: TRADING_ASSISTANT_LABEL,
+                            app: id,
                         },
                         annotations: {
                             "prometheus.io/scrape": "true",
@@ -349,7 +355,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                             {
                                 image: 'ghcr.io/willhumphreys/trading-assistant:backend-latest',
                                 imagePullPolicy: 'Always',
-                                name: TRADING_ASSISTANT_LABEL,
+                                name: id,
                                 port: [{
                                     containerPort: 8080,
                                 }],
@@ -370,7 +376,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                                 },
                                 env: [{
                                     name: 'SPRING_PROFILE',
-                                    value: 'currencies',
+                                    value: profile,
                                 }, {
                                     name: 'DATABASE_URL',
                                     value: 'jdbc:mysql://mysql-service:3306/metatrader',
@@ -418,79 +424,6 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                                         mountPath: '/mt2',
                                     }
                                     ]
-                            },
-                            {
-                                image: 'ghcr.io/willhumphreys/trading-assistant:backend-latest',
-                                imagePullPolicy: 'Always',
-                                name: TRADING_ASSISTANT_LABEL,
-                                port: [{
-                                    containerPort: 8081,
-                                }],
-                                livenessProbe: {
-                                    httpGet: {
-                                        path: "/actuator/health",
-                                        port: "8081"
-                                    },
-                                    initialDelaySeconds: 30,
-                                    periodSeconds: 2
-                                },
-                                readinessProbe: {
-                                    httpGet: {
-                                        path: "/actuator/health",
-                                        port: "8081"
-                                    },
-                                    initialDelaySeconds: 10
-                                },
-                                env: [{
-                                    name: 'SPRING_PROFILE',
-                                    value: 'currencies',
-                                }, {
-                                    name: 'DATABASE_URL',
-                                    value: 'jdbc:mysql://mysql-service:3306/metatrader',
-                                }, {
-                                    name: 'DATABASE_PASSWORD',
-                                    valueFrom: {
-                                        secretKeyRef: {
-                                            name: "my-secrets",
-                                            key: "dbPassword",
-                                        }
-                                    }
-                                }, {
-                                    name: 'SLACK_WEBHOOK_URL',
-                                    valueFrom: {
-                                        secretKeyRef: {
-                                            name: "my-secrets",
-                                            key: "slackWebHook",
-                                        }
-                                    }
-                                }, {
-                                    name: 'SUMO_LOGIC_WEBHOOK_URL',
-                                    valueFrom: {
-                                        secretKeyRef: {
-                                            name: "my-secrets",
-                                            key: "sumoLogicWebHook",
-                                        }
-                                    }
-                                }
-                                ],
-                                volumeMount: [
-                                    {
-                                        name: 'accounts-volume',
-                                        mountPath: '/accounts',
-                                    },
-                                    {
-                                        name: 'mochi-graphs-volume',
-                                        mountPath: '/mochi-graphs',
-                                    },
-                                    {
-                                        name: 'mt-volume',
-                                        mountPath: '/mt',
-                                    },
-                                    {
-                                        name: 'mt-volume2',
-                                        mountPath: '/mt2',
-                                    }
-                                ]
                             }
                         ],
                         volume: [
