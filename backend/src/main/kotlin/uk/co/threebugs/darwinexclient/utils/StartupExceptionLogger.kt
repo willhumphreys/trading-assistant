@@ -10,6 +10,20 @@ class StartupExceptionLogger : ApplicationListener<ApplicationFailedEvent> {
     private val logger = LoggerFactory.getLogger(StartupExceptionLogger::class.java)
 
     override fun onApplicationEvent(event: ApplicationFailedEvent) {
-        logger.error("Application startup failed:", event.exception)
+        val exception = event.exception
+
+        // Log the top-level exception with its full stack trace.
+        logger.error("Application startup failed: ${exception.message}", exception)
+
+        // Log the full cause chain.
+        logCauseChain(exception)
+    }
+
+    private fun logCauseChain(throwable: Throwable?) {
+        var cause = throwable?.cause
+        while (cause != null) {
+            logger.error("Caused by: ${cause.javaClass.simpleName}: ${cause.message}", cause)
+            cause = cause.cause
+        }
     }
 }
