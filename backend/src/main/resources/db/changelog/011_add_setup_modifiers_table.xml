@@ -17,6 +17,10 @@
             <column name="modifier_value" type="decimal(10,2)">
                 <constraints nullable="false"/>
             </column>
+            <!-- Added the last_modified column -->
+            <column name="last_modified" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
         </createTable>
     </changeSet>
 
@@ -29,6 +33,10 @@
                 <constraints nullable="false"/>
             </column>
             <column name="modifier_id" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <!-- Added the last_modified column -->
+            <column name="last_modified" type="timestamp">
                 <constraints nullable="false"/>
             </column>
         </createTable>
@@ -51,7 +59,7 @@
         </createIndex>
     </changeSet>
 
-    <!-- New changeSet to add the symbol and type columns -->
+    <!-- Existing changeSet to add the symbol and type columns to modifiers -->
     <changeSet id="add_symbol_and_type_columns_to_modifiers" author="your_name">
         <addColumn tableName="modifiers">
             <column name="symbol" type="varchar(255)">
