@@ -40,12 +40,19 @@ class AtrScheduler(
 
     @Scheduled(cron = "0 0 0 * * ?")
     fun computeAndStoreAtr() {
-        // Parse out the directories from the property (comma-separated)
-        val directories = filesDirectoriesString.split(",").map { it.trim() }.filter { it.isNotEmpty() }
 
-        // Process each directory in turn
-        directories.forEach { dir ->
-            processDirectory(dir)
+        try {
+
+            // Parse out the directories from the property (comma-separated)
+            val directories = filesDirectoriesString.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+
+            // Process each directory in turn
+            directories.forEach { dir ->
+                processDirectory(dir)
+            }
+
+        } catch (e: Exception) {
+            logger.error("Failed to compute and store ATR: ${e.message}", e)
         }
     }
 
