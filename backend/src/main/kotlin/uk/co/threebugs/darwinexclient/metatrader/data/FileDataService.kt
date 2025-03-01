@@ -11,7 +11,9 @@ import uk.co.threebugs.darwinexclient.accountsetupgroups.AccountSetupGroupsDto
 import uk.co.threebugs.darwinexclient.accountsetupgroups.AccountSetupGroupsService
 import uk.co.threebugs.darwinexclient.modifiers.AtrScheduler
 import uk.co.threebugs.darwinexclient.modifiers.ModifierJsonUpdaterService
-import uk.co.threebugs.darwinexclient.setup.*
+import uk.co.threebugs.darwinexclient.setup.Setup
+import uk.co.threebugs.darwinexclient.setup.SetupFileRepository
+import uk.co.threebugs.darwinexclient.setup.SetupRepository
 import uk.co.threebugs.darwinexclient.setupgroup.SetupGroup
 import uk.co.threebugs.darwinexclient.setupgroup.SetupGroupService
 import uk.co.threebugs.darwinexclient.setupmodifier.SetupModifier
@@ -21,7 +23,7 @@ import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import kotlin.math.log
+import java.time.LocalDateTime
 
 const val MANUAL_SETUP_NAME = "MANUAL"
 private const val MODIFIERS_JSON = "modifiers.json"
@@ -33,7 +35,7 @@ class FileDataService(
     private val accountService: AccountService,
     private val setupRepository: SetupRepository,
     private val setupFileRepository: SetupFileRepository,
-    private val setupModifierRepository: SetupModifierRepository, // <-- needed to save SetupModifier
+    private val setupModifierRepository: SetupModifierRepository,
     private val objectMapper: ObjectMapper,
     private val modifierJsonUpdaterService: ModifierJsonUpdaterService,
     private val atrScheduler: AtrScheduler,
@@ -118,7 +120,8 @@ class FileDataService(
                         setupModifierRepository.save(
                             SetupModifier(
                                 setupId = finalSetup.id ?: throw RuntimeException("Setup has no ID after save"),
-                                modifierId = modifier.id
+                                modifierId = modifier.id,
+                                lastModified = LocalDateTime.now()
                             )
                         )
                     }
