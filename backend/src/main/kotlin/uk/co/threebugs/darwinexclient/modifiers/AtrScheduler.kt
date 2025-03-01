@@ -13,6 +13,7 @@ import java.math.RoundingMode
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.io.path.absolute
 import kotlin.io.path.isDirectory
@@ -191,7 +192,11 @@ class AtrScheduler(
             logger.info("Updated ATR Modifier for symbol=$symbol to $bdValue.")
         } else {
             val newModifier = Modifier(
-                modifierName = atrModifierName, modifierValue = bdValue, symbol = symbol, type = atrType
+                modifierName = atrModifierName,
+                modifierValue = bdValue,
+                symbol = symbol,
+                type = atrType,
+                lastModified = LocalDateTime.now()
             )
             modifierRepository.save(newModifier)
             logger.info("Created new ATR Modifier for symbol=$symbol with $bdValue.")

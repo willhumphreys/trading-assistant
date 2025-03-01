@@ -1,10 +1,9 @@
 package uk.co.threebugs.darwinexclient.modifier
 
 import jakarta.persistence.*
+import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import java.math.BigDecimal
 import java.time.LocalDateTime
-import org.springframework.data.annotation.LastModifiedDate
-import org.springframework.data.jpa.domain.support.AuditingEntityListener
 
 @Entity
 @Table(name = "modifiers")
@@ -26,7 +25,6 @@ data class Modifier(
     @Column(name = "type", nullable = false, length = 255)
     val type: String,
 
-    @LastModifiedDate
     @Column(name = "last_modified", nullable = false)
     val lastModified: LocalDateTime? = null
 )
