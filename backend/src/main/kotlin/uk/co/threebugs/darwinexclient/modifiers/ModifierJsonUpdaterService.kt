@@ -4,6 +4,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.springframework.stereotype.Service
 import uk.co.threebugs.darwinexclient.modifier.Modifier
+import uk.co.threebugs.darwinexclient.modifier.ModifierJson
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.nio.file.Path
@@ -27,7 +28,7 @@ class ModifierJsonUpdaterService(
         }
 
         // 1) Parse the JSON into a list of ModifierUpdateDto
-        val updates: List<Modifier> = try {
+        val updates: List<ModifierJson> = try {
             objectMapper.readValue(file)
         } catch (ex: Exception) {
             println("Failed to parse JSON file: ${ex.message}")
