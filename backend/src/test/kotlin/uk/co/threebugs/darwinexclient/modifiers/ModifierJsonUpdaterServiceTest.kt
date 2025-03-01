@@ -1,6 +1,5 @@
 package uk.co.threebugs.darwinexclient.modifiers
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -8,16 +7,17 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
+import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
-import org.mockito.junit.jupiter.MockitoExtension
 import uk.co.threebugs.darwinexclient.modifier.Modifier
 import java.io.File
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.nio.file.Path
+import java.time.LocalDateTime
 
 @ExtendWith(MockitoExtension::class)
 @DisplayName("ModifierJsonUpdaterServiceTest")
@@ -25,7 +25,6 @@ class ModifierJsonUpdaterServiceTest {
 
     private lateinit var modifierRepository: ModifierRepository
     private lateinit var modifierJsonUpdaterService: ModifierJsonUpdaterService
-    private val objectMapper = jacksonObjectMapper() // Jackson object mapper for testing JSON
 
     @BeforeEach
     fun setup() {
@@ -56,7 +55,9 @@ class ModifierJsonUpdaterServiceTest {
             modifierName = "ATR",
             modifierValue = BigDecimal("2.00"),
             symbol = "EURUSD",
-            type = "technicalIndicator"
+            type = "technicalIndicator",
+            lastModified = LocalDateTime.now()
+
         )
 
         whenever(

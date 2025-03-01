@@ -26,5 +26,5 @@ data class Modifier(
     val type: String,
 
     @Column(name = "last_modified", nullable = false)
-    val lastModified: LocalDateTime? = null
+    val lastModified: LocalDateTime
 )

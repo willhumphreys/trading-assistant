@@ -7,6 +7,7 @@ import uk.co.threebugs.darwinexclient.modifier.Modifier
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.nio.file.Path
+import java.time.LocalDateTime
 
 @Service
 class ModifierJsonUpdaterService(
@@ -53,7 +54,11 @@ class ModifierJsonUpdaterService(
                 val newValue = BigDecimal.ONE.multiply(dto.modifierValue).setScale(2, RoundingMode.HALF_UP)
 
                 val newModifier = Modifier(
-                    modifierName = dto.modifierName, modifierValue = newValue, symbol = dto.symbol, type = dto.type
+                    modifierName = dto.modifierName,
+                    modifierValue = newValue,
+                    symbol = dto.symbol,
+                    type = dto.type,
+                    lastModified = LocalDateTime.now()
                 )
                 modifierRepository.save(newModifier)
 

@@ -6,7 +6,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.Mockito
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.*
 import uk.co.threebugs.darwinexclient.modifier.Modifier
@@ -17,6 +16,7 @@ import uk.co.threebugs.darwinexclient.setupmodifier.SetupModifierRepository
 import java.io.File
 import java.math.BigDecimal
 import java.nio.file.Path
+import java.time.LocalDateTime
 
 @ExtendWith(MockitoExtension::class)
 @DisplayName("SetupFileRepositoryTest")
@@ -110,7 +110,8 @@ class SetupFileRepositoryTest {
             modifierName = "ATR",
             modifierValue = BigDecimal("2.00"),
             symbol = symbol,
-            type = "technicalIndicator"
+            type = "technicalIndicator",
+            lastModified = LocalDateTime.now()
         )
 
         // CSV has a 10th column with "ATR" on the first line and "MISSING_MOD" on the second.
