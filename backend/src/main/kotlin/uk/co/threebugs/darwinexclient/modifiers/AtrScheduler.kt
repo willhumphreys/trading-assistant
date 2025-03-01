@@ -90,7 +90,7 @@ class AtrScheduler(
             logger.info("Processing file for symbol: $symbol (in $directory)")
 
             val symbolDecimalShiftMap = mapOf(
-                "SP500" to 2, "XAUUSD" to 2
+                "SP500" to 2, "XAUUSD" to 2, "BTCUSD" to 2
             )
 
             val decimalPointShift = symbolDecimalShiftMap[symbol] ?: run {
