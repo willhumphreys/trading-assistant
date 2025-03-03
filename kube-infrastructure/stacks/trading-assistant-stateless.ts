@@ -273,6 +273,16 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                                 port: [{
                                     containerPort: 8080,
                                 }],
+                                startupProbe: {
+                                    httpGet: {
+                                        path: "/actuator/health",
+                                        port: "8080"
+                                    },
+                                    initialDelaySeconds: 45,
+                                    periodSeconds: 5,
+                                    timeoutSeconds: 2,
+                                    failureThreshold: 10
+                                },
                                 livenessProbe: {
                                     httpGet: {
                                         path: "/actuator/health",
@@ -359,6 +369,16 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                                 port: [{
                                     containerPort: 8080,
                                 }],
+                                startupProbe: {
+                                    httpGet: {
+                                        path: "/actuator/health",
+                                        port: "8080"
+                                    },
+                                    initialDelaySeconds: 45,
+                                    periodSeconds: 5,
+                                    timeoutSeconds: 2,
+                                    failureThreshold: 10
+                                },
                                 livenessProbe: {
                                     httpGet: {
                                         path: "/actuator/health",
