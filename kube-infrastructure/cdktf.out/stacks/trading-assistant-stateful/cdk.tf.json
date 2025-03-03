@@ -1,0 +1,79 @@
+{
+  "//": {
+    "metadata": {
+      "backend": "local",
+      "stackName": "trading-assistant-stateful",
+      "version": "0.19.2"
+    },
+    "outputs": {
+    }
+  },
+  "provider": {
+    "kubernetes": [
+      {
+        "host": "https://192.168.1.89:6443",
+        "ignore_annotations": [
+          "metallb\\.universe\\.tf/ip-allocated-from-pool"
+        ],
+        "insecure": true,
+        "token": "eyJhbGciOiJSUzI1NiIsImtpZCI6ImpSTTJQbTZiTDJ4LXhLdVRwWkM2d2lEeXJKTTZTNGxfQ0VjYVJ2dmZFajgifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJmbHV4LXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJzbi1zZXJ2aWNlLWFjY291bnQtdG9rZW4iLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC5uYW1lIjoiZmx1eC1zZXJ2aWNlLWFjY291bnQiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiJmMDI0YzVmMy1mMDE1LTRkZDEtOTBkNi05MWIzMzhkZmM3OWIiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6Zmx1eC1zeXN0ZW06Zmx1eC1zZXJ2aWNlLWFjY291bnQifQ.T_fKFaSEgfxLACRFx1NPQw7920_V5gCAQZmMjroO0qsWOI7YjKnKcbp5E35TbL6PpCNNedHxYOGZdreOl1hMMmgbXD5iSX2rpab8U08ZBjohn7pAgimwWnbiaax2LGDVvu1feG2m_iDC1BxdgoYAP1IriQtlp-Fx1ROOo8ujkQqcJvQ1GVlx40jrRwqlccT990kE3yhhOLbzEGAzV2grsbIA94caWWHflBVDKT8-cVwQnUmf9NHJFQcfaTE29kUwtiEAXwbCjQtGIGLCOvn7Fk1S8zfYGw4D8L5YHz4noyTYeXyqEpY3lELAi8t25xChlkSKiHUtyyyabVmHl4BuTw"
+      }
+    ]
+  },
+  "resource": {
+    "kubernetes_namespace": {
+      "trading-assistant-namespace": {
+        "//": {
+          "metadata": {
+            "path": "trading-assistant-stateful/trading-assistant-namespace",
+            "uniqueId": "trading-assistant-namespace"
+          }
+        },
+        "metadata": {
+          "name": "trading-assistant"
+        }
+      }
+    },
+    "kubernetes_persistent_volume_claim": {
+      "mysql-pvc": {
+        "//": {
+          "metadata": {
+            "path": "trading-assistant-stateful/mysql-pvc",
+            "uniqueId": "mysql-pvc"
+          }
+        },
+        "metadata": {
+          "labels": {
+            "app": "mysql"
+          },
+          "name": "mysql-pv-claim",
+          "namespace": "trading-assistant"
+        },
+        "spec": {
+          "access_modes": [
+            "ReadWriteOnce"
+          ],
+          "resources": {
+            "requests": {
+              "storage": "10Gi"
+            }
+          },
+          "storage_class_name": "local-path"
+        }
+      }
+    }
+  },
+  "terraform": {
+    "backend": {
+      "local": {
+        "path": "/home/runner/work/trading-assistant/trading-assistant/kube-infrastructure/terraform.trading-assistant-stateful.tfstate"
+      }
+    },
+    "required_providers": {
+      "kubernetes": {
+        "source": "kubernetes",
+        "version": "2.25.2"
+      }
+    }
+  }
+}
