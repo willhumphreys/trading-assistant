@@ -89,3 +89,34 @@ Copy the setup-group-both.json to the server
 scp /home/will/code/trading-assistant-backend/backend/accounts/setup-groups/setup-group-both.json will@192.168.1.202:/home/will/accounts/setup-groups
 ```
 
+Db backup and restore
+
+```bash
+DB_PASSWORD=$(kubectl get secret my-secrets -n trading-assistant -o jsonpath='{.data.dbPassword}' | base64 --decode)
+echo "Password retrieved: ${#DB_PASSWORD} characters long"
+
+# Copy mysql pod into next command
+kubectl exec -n trading-assistant mysql-container-6c679bdfb7-bmqxk -- mysqldump -u root -p"$DB_PASSWORD" --all-databases > mysql_backup.sql
+
+ls -lh mysql_backup.sql
+kubectl get deployment -n trading-assistant | grep mysql
+kubectl scale deployment mysql-container -n trading-assistant --replicas=0
+cdktf deploy trading-assistant-stateful
+kubectl get pods -n trading-assistant -w
+
+# Copy mysql pod into next command
+NEW_POD=mysql-container-6c679bdfb7-8t7qn
+
+kubectl cp mysql_backup.sql trading-assistant/$NEW_POD:/tmp/
+cat mysql_backup.sql | kubectl exec -i -n trading-assistant $NEW_POD -- mysql -u root -p"$DB_PASSWORD"
+kubectl exec -n trading-assistant $NEW_POD -- mysql -u root -p"$DB_PASSWORD" -e "SHOW DATABASES;"
+kubectl exec -n trading-assistant $NEW_POD -- rm /tmp/mysql_backup.sql
+```
+
+Manually recreate the metatrader user
+
+```bash
+CREATE DATABASE IF NOT EXISTS metatrader;
+CREATE USER IF NOT EXISTS 'metatrader'@'%' IDENTIFIED  BY 'ReplaceWithPassword;
+CREATE USER IF NOT EXISTS 'metatrader'@'localhost' IDENTIFIED BY 'ReplaceWithPassword';
+```
