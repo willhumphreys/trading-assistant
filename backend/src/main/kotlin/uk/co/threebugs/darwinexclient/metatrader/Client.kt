@@ -1,19 +1,21 @@
 package uk.co.threebugs.darwinexclient.metatrader
 
-import io.micrometer.core.instrument.*
-import org.springframework.beans.factory.annotation.*
-import org.springframework.stereotype.*
-import uk.co.threebugs.darwinexclient.accountsetupgroups.*
-import uk.co.threebugs.darwinexclient.actions.*
-import uk.co.threebugs.darwinexclient.metatrader.commands.*
-import uk.co.threebugs.darwinexclient.metatrader.data.*
-import uk.co.threebugs.darwinexclient.metatrader.marketdata.*
-import uk.co.threebugs.darwinexclient.metatrader.messages.*
-import uk.co.threebugs.darwinexclient.metatrader.openorders.*
-import uk.co.threebugs.darwinexclient.setupgroup.*
-import uk.co.threebugs.darwinexclient.utils.*
-import java.io.*
-import kotlin.concurrent.*
+import io.micrometer.core.instrument.Counter
+import io.micrometer.core.instrument.MeterRegistry
+import org.hibernate.exception.ConstraintViolationException
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
+import uk.co.threebugs.darwinexclient.accountsetupgroups.AccountSetupGroupsDto
+import uk.co.threebugs.darwinexclient.actions.ActionsService
+import uk.co.threebugs.darwinexclient.metatrader.commands.CommandService
+import uk.co.threebugs.darwinexclient.metatrader.data.FileDataService
+import uk.co.threebugs.darwinexclient.metatrader.marketdata.MarketDataService
+import uk.co.threebugs.darwinexclient.metatrader.messages.MessageService
+import uk.co.threebugs.darwinexclient.metatrader.openorders.OpenOrdersService
+import uk.co.threebugs.darwinexclient.setupgroup.SetupGroupService
+import uk.co.threebugs.darwinexclient.utils.logger
+import java.io.IOException
+import kotlin.concurrent.thread
 
 
 @Component
@@ -33,45 +35,53 @@ class Client(
 ) {
 
     init {
-        val accountSetupGroups = getAccountSetupGroups(fileDataService)
 
-        messageService.loadMessages(accountSetupGroups)
+        try {
 
-        val openOrdersThreadCounter = Counter.builder("api_order_loop_counter")
-            .tag("title", "Order Loop Counter")
-            .description("Loops of the open orders thread")
-            .register(meterRegistry)
+            val accountSetupGroups = getAccountSetupGroups(fileDataService)
 
-        openOrdersService.loadOrders(accountSetupGroups)
+            messageService.loadMessages(accountSetupGroups)
 
-        thread(name = "openOrdersThread") {
+            val openOrdersThreadCounter = Counter.builder("api_order_loop_counter")
+                .tag("title", "Order Loop Counter")
+                .description("Loops of the open orders thread")
+                .register(meterRegistry)
 
-            while (true) {
-                Helpers.sleep(sleepDelay)
-                if (!actionsService.isRunning())
-                    continue
+            openOrdersService.loadOrders(accountSetupGroups)
 
-                openOrdersThreadCounter.increment()
-                try {
-                openOrdersService.checkOpenOrders(accountSetupGroups)
-                } catch (e: IOException) {
-                    logger.warn("Error checking open orders: ${e.message}")
+            thread(name = "openOrdersThread") {
+
+                while (true) {
+                    Helpers.sleep(sleepDelay)
+                    if (!actionsService.isRunning())
+                        continue
+
+                    openOrdersThreadCounter.increment()
+                    try {
+                        openOrdersService.checkOpenOrders(accountSetupGroups)
+                    } catch (e: IOException) {
+                        logger.warn("Error checking open orders: ${e.message}", e)
+                    } catch (e: ConstraintViolationException) {
+                        logger.error("Error checking open orders: ${e.message}", e)
+                    }
                 }
+
             }
+            thread(name = "checkMessage") { messageService.checkMessages(accountSetupGroups) }
+            thread(name = "checkMarketData") { checkMarketData(accountSetupGroups) }
 
+            commandService.resetCommandIDs(accountSetupGroups)
+
+            val uniqueSymbols =
+                setupGroupService.findUniqueSymbolsBySetupGroups(accountSetupGroups.setupGroups)
+
+            // subscribe to tick data:
+            commandService.subscribeSymbols(uniqueSymbols, accountSetupGroups)
+
+            actionsService.startUpComplete()
+        } catch (e: Exception) {
+            logger.error("Error starting up client", e)
         }
-        thread(name = "checkMessage") { messageService.checkMessages(accountSetupGroups) }
-        thread(name = "checkMarketData") { checkMarketData(accountSetupGroups) }
-
-        commandService.resetCommandIDs(accountSetupGroups)
-
-        val uniqueSymbols =
-            setupGroupService.findUniqueSymbolsBySetupGroups(accountSetupGroups.setupGroups)
-
-        // subscribe to tick data:
-        commandService.subscribeSymbols(uniqueSymbols, accountSetupGroups)
-
-        actionsService.startUpComplete()
     }
 
     private fun getAccountSetupGroups(

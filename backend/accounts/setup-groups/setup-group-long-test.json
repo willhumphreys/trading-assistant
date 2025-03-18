@@ -1,6 +1,6 @@
 {
   "name": "long-test",
-  "scriptsDirectory": "accounts/setups/",
+  "scriptsDirectory": "setups/",
   "setupGroups": [
     {
       "path": "eurusd_bestTrades_long.csv",

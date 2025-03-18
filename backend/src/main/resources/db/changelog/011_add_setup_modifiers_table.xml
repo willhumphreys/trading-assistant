@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                    https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="create_modifiers_table" author="your_name">
+        <createTable tableName="modifiers">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <!-- Renamed from "name" to "modifier_name" -->
+            <column name="modifier_name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <!-- Renamed from "value" to "modifier_value" -->
+            <column name="modifier_value" type="decimal(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <!-- Added the last_modified column -->
+            <column name="last_modified" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="create_setup_modifiers_table" author="your_name">
+        <createTable tableName="setup_modifiers">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="setup_id" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modifier_id" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <!-- Added the last_modified column -->
+            <column name="last_modified" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint constraintName="fk_setup_modifiers_setup_id"
+                                 baseTableName="setup_modifiers"
+                                 baseColumnNames="setup_id"
+                                 referencedTableName="setup"
+                                 referencedColumnNames="id"/>
+
+        <addForeignKeyConstraint constraintName="fk_setup_modifiers_modifier_id"
+                                 baseTableName="setup_modifiers"
+                                 baseColumnNames="modifier_id"
+                                 referencedTableName="modifiers"
+                                 referencedColumnNames="id"/>
+
+        <createIndex indexName="idx_setup_id_modifier_id" tableName="setup_modifiers">
+            <column name="setup_id"/>
+            <column name="modifier_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Existing changeSet to add the symbol and type columns to modifiers -->
+    <changeSet id="add_symbol_and_type_columns_to_modifiers" author="your_name">
+        <addColumn tableName="modifiers">
+            <column name="symbol" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="type" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

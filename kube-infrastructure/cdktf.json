@@ -3,9 +3,15 @@
   "app": "npx ts-node main.ts",
   "projectId": "8733c60b-95ba-4659-9189-a3e464fc3f19",
   "sendCrashReports": "true",
-  "terraformProviders": [],
+  "terraformProviders": [
+    "kubernetes@~> 2.23.0",
+    "kreuzwerker/docker@~> 3.0.2"
+  ],
+
   "terraformModules": [],
   "context": {
-
+    "excludeStackIdFromLogicalIds": "true",
+    "allowSepCharsInLogicalIds": "true"
   }
+
 }

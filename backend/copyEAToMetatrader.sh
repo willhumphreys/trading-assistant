@@ -1,11 +1,32 @@
 #!/bin/bash
 
-src="DWX_Server_MT5.mq5"
+# Define source directory
+src_dir="expert-advisors"
 
-dest="/home/will/.cxoffice/MetaTrader_5_223/drive_c/Program Files/MetaTrader 5/MQL5/Experts/Advisors"
-dest2="/home/will/.cxoffice/MetaTrader_5-2_604/drive_c/Program Files/MetaTrader 5/MQL5/Experts/Advisors"
-dest3="/home/will/.cxoffice/MetaTrader_5-3_584/drive_c/Program Files/MetaTrader 5/MQL5/Experts/Advisors"
+# Define destination server and path
+dest_user="will"
+dest_host="k8s-worker01"
+#dest_path="/home/will/.cxoffice/MetaTrader_5-3/drive_c/Program Files/MetaTrader 5/MQL5/Experts/Advisors"
+dest_path="/home/will/.cxoffice/MetaTrader_5-2/drive_c/Program Files/MetaTrader 5/MQL5/Experts/Advisors"
 
-cp "$src" "$dest"
-cp "$src" "$dest2"
-cp "$src" "$dest3"
+
+# Check if the source directory exists
+if [ ! -d "$src_dir" ]; then
+    echo "Source directory '$src_dir' does not exist. Exiting."
+    exit 1
+fi
+
+# Iterate over all files in the source directory
+for file in "$src_dir"/*; do
+    if [ -f "$file" ]; then
+        echo "Copying $file to $dest_user@$dest_host:$dest_path"
+        scp "$file" "$dest_user@$dest_host:$dest_path"
+
+        # Check if the transfer was successful
+        if [ $? -eq 0 ]; then
+            echo "File $file successfully transferred."
+        else
+            echo "Failed to transfer $file."
+        fi
+    fi
+done

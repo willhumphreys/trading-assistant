@@ -28,7 +28,8 @@ export class TradingAssistantStatelessStack extends TerraformStack {
         //  this.createTradingAssistantFrontendIngress();
 
         //let adminPassword = this.createDBTerraformSecret();
-        this.createTradingAssistantDeployment();
+        this.createTradingAssistantDeployment('trading-assistant',  'currencies');
+        this.createTradingAssistantDeployment('crypto-assistant', 'crypto');
         this.createDataStreamerDeployment();
         this.createTradingAssistantFrontendDeployment();
         this.createTradingAssistantService();
@@ -272,6 +273,16 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                                 port: [{
                                     containerPort: 8080,
                                 }],
+                                startupProbe: {
+                                    httpGet: {
+                                        path: "/actuator/health",
+                                        port: "8080"
+                                    },
+                                    initialDelaySeconds: 45,
+                                    periodSeconds: 5,
+                                    timeoutSeconds: 2,
+                                    failureThreshold: 10
+                                },
                                 livenessProbe: {
                                     httpGet: {
                                         path: "/actuator/health",
@@ -314,26 +325,31 @@ export class TradingAssistantStatelessStack extends TerraformStack {
     }
 
 
-    private createTradingAssistantDeployment() {
-        new kubernetes.deployment.Deployment(this, TRADING_ASSISTANT_LABEL, {
+    private createTradingAssistantDeployment(id: string, profile: string) {
+
+        if (!id) {
+            throw new Error("No ID passed!");
+        }
+
+        new kubernetes.deployment.Deployment(this, id, {
             metadata: {
                 labels: {
-                    app: TRADING_ASSISTANT_LABEL,
+                    app: id,
                 },
-                name: TRADING_ASSISTANT_LABEL,
+                name: id,
                 namespace: TRADING_ASSISTANT_NAMESPACE,
             },
             spec: {
                 replicas: '1',
                 selector: {
                     matchLabels: {
-                        app: TRADING_ASSISTANT_LABEL,
+                        app: id,
                     },
                 },
                 template: {
                     metadata: {
                         labels: {
-                            app: TRADING_ASSISTANT_LABEL,
+                            app: id,
                         },
                         annotations: {
                             "prometheus.io/scrape": "true",
@@ -349,10 +365,20 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                             {
                                 image: 'ghcr.io/willhumphreys/trading-assistant:backend-latest',
                                 imagePullPolicy: 'Always',
-                                name: TRADING_ASSISTANT_LABEL,
+                                name: id,
                                 port: [{
                                     containerPort: 8080,
                                 }],
+                                startupProbe: {
+                                    httpGet: {
+                                        path: "/actuator/health",
+                                        port: "8080"
+                                    },
+                                    initialDelaySeconds: 45,
+                                    periodSeconds: 5,
+                                    timeoutSeconds: 2,
+                                    failureThreshold: 10
+                                },
                                 livenessProbe: {
                                     httpGet: {
                                         path: "/actuator/health",
@@ -370,7 +396,7 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                                 },
                                 env: [{
                                     name: 'SPRING_PROFILE',
-                                    value: 'currencies',
+                                    value: profile,
                                 }, {
                                     name: 'DATABASE_URL',
                                     value: 'jdbc:mysql://mysql-service:3306/metatrader',
@@ -412,8 +438,13 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                                     {
                                         name: 'mt-volume',
                                         mountPath: '/mt',
-                                    }]
-                            },
+                                    },
+                                    {
+                                        name: 'mt-volume2',
+                                        mountPath: '/mt2',
+                                    }
+                                    ]
+                            }
                         ],
                         volume: [
                             {
@@ -432,6 +463,12 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                                 name: 'mt-volume',
                                 hostPath: {
                                     path: '/home/will/mt-files',
+                                },
+                            },
+                            {
+                                name: 'mt-volume2',
+                                hostPath: {
+                                    path: '/home/will/mt-files2',
                                 },
                             },
                         ],

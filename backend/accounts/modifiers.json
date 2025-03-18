@@ -1,0 +1,14 @@
+[
+  {
+    "modifierName": "ATR-WEIGHTING",
+    "modifierValue": 400,
+    "symbol": "XAUUSD",
+    "type": "adjustment"
+  },
+  {
+    "modifierName": "ATR-WEIGHTING",
+    "modifierValue": 492,
+    "symbol": "SP500",
+    "type": "adjustment"
+  }
+]
