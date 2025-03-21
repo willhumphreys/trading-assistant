@@ -169,6 +169,8 @@ class TradeService(
         } else if (trade.setup!!.symbol.equals(Constants.SP500, ignoreCase = true)) {
             tickSize = BigDecimal("0.01")
             lotSize = BigDecimal("0.1")
+        } else {
+            tickSize = BigDecimal("0.01")
         }
 
         // Calculate price, stopLoss, and takeProfit
