@@ -97,6 +97,7 @@ class ModifierJsonUpdaterServiceTest {
                     "symbol": "GBPUSD",
                     "type": "technicalIndicator"
                 }
+                
             ]
             """.trimIndent()
         )
