@@ -31,7 +31,6 @@ export class TradingAssistantStatefulStack extends TerraformStack {
             }
         });
 
-
         new kubernetes.persistentVolumeClaim.PersistentVolumeClaim(this, "mysql-pvc", {
             metadata: {
                 labels: {
