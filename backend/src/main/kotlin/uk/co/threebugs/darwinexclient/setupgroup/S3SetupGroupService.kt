@@ -8,7 +8,6 @@ import software.amazon.awssdk.services.s3.model.ListObjectsV2Request
 import uk.co.threebugs.darwinexclient.config.AwsConfig
 import uk.co.threebugs.darwinexclient.setupgroups.SetupGroups
 import uk.co.threebugs.darwinexclient.setupgroups.SetupGroupsRepository
-import java.util.Optional
 
 @Service
 class S3SetupGroupService(
@@ -101,18 +100,35 @@ class S3SetupGroupService(
     private fun getSymbolsFromS3(): Set<SymbolWithDirection> {
         val request = ListObjectsV2Request.builder()
             .bucket(bucketName)
-            .prefix("$brokerName/")
+            .prefix("brokers/$brokerName/symbols/")
             .build()
 
-        return s3Client.listObjectsV2(request).contents()
-            .map { it.key() }
-            // Extract symbol from path (assuming format: broker/symbol/setup.json)
-            .map { it.split("/")[1] }
-            // Parse direction and filter out invalid symbols
-            .mapNotNull { parseSymbolWithDirection(it) }
-            .toSet()
-    }
+        val contents = s3Client.listObjectsV2(request).contents()
 
+        logger.info("Found ${contents.size} total objects in S3")
+
+        return contents
+            .map { it.key() }
+            .also { keys -> logger.debug("Raw S3 keys: ${keys.joinToString()}") }
+            .map { key ->
+                key.split("/")[3].also { symbol ->
+                    logger.debug("Extracted symbol part: '$symbol' from key: '$key'")
+                }
+            }
+            .mapNotNull { symbolPart ->
+                parseSymbolWithDirection(symbolPart)?.also { symbol ->
+                    logger.info("Successfully parsed symbol: $symbol from: '$symbolPart'")
+                } ?: run {
+                    logger.warn("Failed to parse symbol from: '$symbolPart'")
+                    null
+                }
+            }
+            .toSet()
+            .also { symbols ->
+                logger.info("Final parsed symbols count: ${symbols.size}")
+                logger.info("Final symbols: ${symbols.joinToString()}")
+            }
+    }
 
     private fun parseSymbolWithDirection(rawSymbol: String): SymbolWithDirection? {
         return when {
