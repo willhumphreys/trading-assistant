@@ -74,7 +74,6 @@ class S3SetupGroupService(
         return newSymbols.size
     }
 
-
     /**
      * Finds or creates the SetupGroups entity for the broker
      * @return The SetupGroups entity
