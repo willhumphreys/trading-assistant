@@ -1,0 +1,7 @@
+{
+  "cdktf": "0.20.11",
+  "providers": {
+    "docker": "~> 3.0.2",
+    "kubernetes": "~> 2.23.0"
+  }
+}

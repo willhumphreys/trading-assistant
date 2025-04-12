@@ -1,0 +1,3 @@
+.gen/*
+!.gen/constraints.json
+!.gen/versions.json

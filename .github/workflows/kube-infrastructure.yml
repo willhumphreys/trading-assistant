@@ -41,6 +41,10 @@ jobs:
         env:
           TOKEN: ${{ secrets.TOKEN }}
         run: npm run compile
+      - name: CDK get providers
+        env:
+          TOKEN: ${{ secrets.TOKEN }}
+        run: npx cdktf get
       - name: CDK synth TradingAssistant
         env:
           TOKEN: ${{ secrets.TOKEN }}

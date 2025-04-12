@@ -1,0 +1,4 @@
+{
+  "registry.terraform.io/hashicorp/kubernetes": "2.23.0",
+  "registry.terraform.io/kreuzwerker/docker": "3.0.2"
+}
