@@ -115,6 +115,8 @@ kubectl exec -n trading-assistant $NEW_POD -- rm /tmp/mysql_backup.sql
 
 Manually recreate the metatrader user
 
+
+
 ```bash
 CREATE DATABASE IF NOT EXISTS metatrader;
 CREATE USER IF NOT EXISTS 'metatrader'@'%' IDENTIFIED  BY 'ReplaceWithPassword;
