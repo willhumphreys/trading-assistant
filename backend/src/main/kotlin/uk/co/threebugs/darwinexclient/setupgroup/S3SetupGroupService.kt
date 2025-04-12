@@ -19,6 +19,11 @@ class S3SetupGroupService(
 ) {
     private val logger = LoggerFactory.getLogger(S3SetupGroupService::class.java)
 
+    data class SymbolWithDirection(
+        val symbol: String,
+        val direction: Direction
+    )
+
     // Get the bucket name from config
     private val bucketName: String
         get() = awsConfig.s3BucketName()
@@ -38,40 +43,37 @@ class S3SetupGroupService(
     fun updateSetupGroupsFromS3(): Int {
         logger.info("Updating SetupGroups for broker: $brokerName")
 
-        // Find the SetupGroups entity by broker name
         val setupGroups = getOrCreateSetupGroups()
 
         // Get symbols from S3
         val s3Symbols = getSymbolsFromS3()
-        logger.info("Found ${s3Symbols.size} symbols in S3: $s3Symbols")
+        logger.info("Found ${s3Symbols.size} valid directional symbols in S3: $s3Symbols")
 
         // Get existing SetupGroups
-        val existingSetupGroups = setupGroupRepository.findBySetupGroups(setupGroups)
-        val existingSymbols = existingSetupGroups.mapNotNull { it.symbol }.toSet()
+        val existingSymbols = setupGroupRepository.findBySetupGroups(setupGroups)
+            .map { it.symbol }
+            .toSet()
         logger.info("Found ${existingSymbols.size} existing symbols in database: $existingSymbols")
 
-        // Find symbols that exist in S3 but not in the database
-        val newSymbols = s3Symbols.filter { it !in existingSymbols }
+        // Filter out existing symbols
+        val newSymbols = s3Symbols.filter { !existingSymbols.contains(it.symbol) }
         logger.info("Found ${newSymbols.size} new symbols to add: $newSymbols")
 
-        // Create SetupGroups for new symbols
-        var createdCount = 0
-        for (symbol in newSymbols) {
+        // Create new SetupGroup entities
+        newSymbols.forEach { symbolWithDirection ->
             val setupGroup = SetupGroup(
+                symbol = symbolWithDirection.symbol,
+                direction = symbolWithDirection.direction,
                 setupGroups = setupGroups,
-                path = "brokers/${brokerName}/symbols/${symbol}",
-                symbol = symbol,
-                enabled = true,
-                direction = Direction.BOTH // Default direction
+                path = "$brokerName/${symbolWithDirection.symbol}/setup.json",
+                enabled = true
             )
-
             setupGroupRepository.save(setupGroup)
-            createdCount++
-            logger.info("Created new SetupGroup for symbol: $symbol")
         }
 
-        return createdCount
+        return newSymbols.size
     }
+
 
     /**
      * Finds or creates the SetupGroups entity for the broker
@@ -97,27 +99,35 @@ class S3SetupGroupService(
      * Retrieves all symbols available in S3 for the configured broker
      * @return Set of symbol names
      */
-    private fun getSymbolsFromS3(): Set<String> {
-        val prefix = "brokers/${brokerName}/symbols/"
+    private fun getSymbolsFromS3(): Set<SymbolWithDirection> {
         val request = ListObjectsV2Request.builder()
             .bucket(bucketName)
-            .prefix(prefix)
-            .delimiter("/")
+            .prefix("$brokerName/")
             .build()
 
-        try {
-            val response = s3Client.listObjectsV2(request)
+        return s3Client.listObjectsV2(request).contents()
+            .map { it.key() }
+            // Extract symbol from path (assuming format: broker/symbol/setup.json)
+            .map { it.split("/")[1] }
+            // Parse direction and filter out invalid symbols
+            .mapNotNull { parseSymbolWithDirection(it) }
+            .toSet()
+    }
 
-            // Extract symbol names from common prefixes
-            return response.commonPrefixes().mapNotNull { prefix ->
-                val path = prefix.prefix()
-                // Format is "brokers/brokerName/symbols/SYMBOLNAME/"
-                path.substringAfter("symbols/").trimEnd('/')
-            }.toSet()
-        } catch (e: Exception) {
-            logger.error("Failed to retrieve symbols from S3", e)
-            return emptySet()
+
+    private fun parseSymbolWithDirection(rawSymbol: String): SymbolWithDirection? {
+        return when {
+            rawSymbol.endsWith("-long") -> SymbolWithDirection(
+                symbol = rawSymbol.removeSuffix("-long"),
+                direction = Direction.LONG
+            )
+            rawSymbol.endsWith("-short") -> SymbolWithDirection(
+                symbol = rawSymbol.removeSuffix("-short"),
+                direction = Direction.SHORT
+            )
+            else -> null
         }
     }
+
 
 }

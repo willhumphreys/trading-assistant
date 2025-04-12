@@ -424,7 +424,36 @@ export class TradingAssistantStatelessStack extends TerraformStack {
                                             key: "sumoLogicWebHook",
                                         }
                                     }
+                                },
+                                    // AWS S3 credentials from aws-s3-credentials secret
+                                {
+                                    name: 'AWS_ACCESS_KEY_ID',
+                                    valueFrom: {
+                                        secretKeyRef: {
+                                            name: "aws-s3-credentials",
+                                            key: "AWS_ACCESS_KEY_ID",
+                                        }
+                                    }
+                                },
+                                {
+                                    name: 'AWS_SECRET_ACCESS_KEY',
+                                    valueFrom: {
+                                        secretKeyRef: {
+                                            name: "aws-s3-credentials",
+                                            key: "AWS_SECRET_ACCESS_KEY",
+                                        }
+                                    }
+                                },
+                                {
+                                    name: 'AWS_REGION',
+                                    valueFrom: {
+                                        secretKeyRef: {
+                                            name: "aws-s3-credentials",
+                                            key: "AWS_REGION",
+                                        }
+                                    }
                                 }
+
                                 ],
                                 volumeMount: [
                                     {
