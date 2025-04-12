@@ -41,6 +41,10 @@ jobs:
         env:
           TOKEN: ${{ secrets.TOKEN }}
         run: npm run compile
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.10.0"
       - name: CDK get providers
         env:
           TOKEN: ${{ secrets.TOKEN }}
