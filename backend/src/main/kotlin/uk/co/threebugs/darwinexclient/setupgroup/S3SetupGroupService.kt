@@ -6,15 +6,19 @@ import org.springframework.transaction.annotation.Transactional
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request
 import uk.co.threebugs.darwinexclient.config.AwsConfig
+import uk.co.threebugs.darwinexclient.setup.SetupRepository
 import uk.co.threebugs.darwinexclient.setupgroups.SetupGroups
 import uk.co.threebugs.darwinexclient.setupgroups.SetupGroupsRepository
+import uk.co.threebugs.darwinexclient.setupmodifier.SetupModifierRepository
 
 @Service
 class S3SetupGroupService(
     private val s3Client: S3Client,
     private val awsConfig: AwsConfig,
     private val setupGroupRepository: SetupGroupRepository,
-    private val setupGroupsRepository: SetupGroupsRepository
+    private val setupGroupsRepository: SetupGroupsRepository,
+    private val setupModifierRepository: SetupModifierRepository,
+    private val setupRepository: SetupRepository
 ) {
     private val logger = LoggerFactory.getLogger(S3SetupGroupService::class.java)
 
@@ -69,6 +73,32 @@ class S3SetupGroupService(
             )
             setupGroupRepository.save(setupGroup)
         }
+
+        // Delete SetupGroups that are not in S3 anymore
+        val existingSetupGroups = setupGroupRepository.findBySetupGroups(setupGroups)
+        val s3Paths = s3Symbols.map { "${brokerName}/${it.symbol}" }.toSet()
+
+        existingSetupGroups.forEach { setupGroup ->
+            if (setupGroup.path !in s3Paths) {
+                // Find all Setups for this SetupGroup
+                setupRepository.findAll()
+                    .filter { it.setupGroup?.id == setupGroup.id }
+                    .forEach { setup ->
+                        // Delete associated SetupModifiers first
+                        setupModifierRepository.findAll()
+                            .filter { it.setupId == setup.id }
+                            .forEach { setupModifierRepository.delete(it) }
+
+                        // Delete the Setup
+                        setupRepository.delete(setup)
+                    }
+
+                // Finally delete the SetupGroup
+                setupGroupRepository.delete(setupGroup)
+                logger.info("Deleted SetupGroup with path: ${setupGroup.path}")
+            }
+        }
+
 
         return newSymbols.size
     }
