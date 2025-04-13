@@ -52,6 +52,19 @@ class S3SetupGroupService(
         val s3Symbols = getSymbolsFromS3()
         logger.info("Found ${s3Symbols.size} valid directional symbols in S3: $s3Symbols")
 
+        val newSymbols = saveSetupsOnS3AndNotStoredLocally(setupGroups, s3Symbols)
+
+
+        deleteSetupGroupsNotOnS3(setupGroups, s3Symbols)
+
+
+        return newSymbols.size
+    }
+
+    private fun saveSetupsOnS3AndNotStoredLocally(
+        setupGroups: SetupGroups,
+        s3Symbols: Set<SymbolWithDirection>
+    ): List<SymbolWithDirection> {
         // Get existing SetupGroups
         val existingSymbols = setupGroupRepository.findBySetupGroups(setupGroups)
             .map { it.symbol }
@@ -68,15 +81,25 @@ class S3SetupGroupService(
                 symbol = symbolWithDirection.symbol,
                 direction = symbolWithDirection.direction,
                 setupGroups = setupGroups,
-                path = "$brokerName/${symbolWithDirection.symbol}/setup.json",
+                path = mapToPath(symbolWithDirection),
                 enabled = true
             )
             setupGroupRepository.save(setupGroup)
         }
+        return newSymbols
+    }
 
+    private fun mapToPath(symbolWithDirection: SymbolWithDirection) =
+        "brokers/$brokerName/symbols/${symbolWithDirection.symbol}-${symbolWithDirection.direction}/trades.csv"
+
+    private fun deleteSetupGroupsNotOnS3(
+        setupGroups: SetupGroups,
+        s3Symbols: Set<SymbolWithDirection>
+    ) {
         // Delete SetupGroups that are not in S3 anymore
         val existingSetupGroups = setupGroupRepository.findBySetupGroups(setupGroups)
-        val s3Paths = s3Symbols.map { "${brokerName}/${it.symbol}" }.toSet()
+
+        val s3Paths = s3Symbols.map { mapToPath(it) }.toSet()
 
         existingSetupGroups.forEach { setupGroup ->
             if (setupGroup.path !in s3Paths) {
@@ -98,9 +121,6 @@ class S3SetupGroupService(
                 logger.info("Deleted SetupGroup with path: ${setupGroup.path}")
             }
         }
-
-
-        return newSymbols.size
     }
 
     /**
