@@ -18,7 +18,7 @@ class ScheduledTasksService(
      * Scheduled task to update SetupGroups from S3 every 10 minutes
      * Runs at minutes 0, 10, 20, 30, 40, 50 of every hour
      */
-    @Scheduled(cron = "0 */2 * * * *")
+    @Scheduled(cron = "0 */10 * * * *")
     fun updateSetupGroupsFromS3() {
         logger.info("Running scheduled update of SetupGroups from S3")
         try {
