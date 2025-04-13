@@ -18,11 +18,11 @@ class ScheduledTasksService(
      * Scheduled task to update SetupGroups from S3 every 10 minutes
      * Runs at minutes 0, 10, 20, 30, 40, 50 of every hour
      */
-    @Scheduled(cron = "0 */10 * * * *")
+    @Scheduled(cron = "0 */2 * * * *")
     fun updateSetupGroupsFromS3() {
         logger.info("Running scheduled update of SetupGroups from S3")
         try {
-            val createdCount = s3SetupGroupService.updateSetupGroupsFromS3()
+            val createdCount = s3SetupGroupService.updateSetupsFromS3()
             logger.info("Scheduled update completed. Created $createdCount new SetupGroups")
         } catch (e: Exception) {
             logger.error("Error during scheduled update of SetupGroups from S3", e)
