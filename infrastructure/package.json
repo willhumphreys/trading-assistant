@@ -22,7 +22,7 @@
   "dependencies": {
     "@aws-cdk/aws-amplify-alpha": "^2.64.0-alpha.0",
     "@aws-cdk/aws-codebuild": "^1.192.0",
-    "aws-cdk-lib": "^2.143.1",
+    "aws-cdk-lib": "^2.191.0",
     "constructs": "^10.0.0",
     "source-map-support": "^0.5.21"
   }
