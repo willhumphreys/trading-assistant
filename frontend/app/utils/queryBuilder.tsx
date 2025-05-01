@@ -38,7 +38,10 @@ export default function QueryBuilder({query, setQuery}: Props) {
                         'NZD/USD',
                         'EUR/JPY',
                         'EUR/AUD',
-                        'EUR/GBP'].map((symbol, index) => (
+                        'EUR/GBP',
+                        'XAUUSD',
+                        'SP500'
+                    ].map((symbol, index) => (
                         <option key={index} value={symbol.replace('/', '')}>{symbol}</option>))}
                 </select>
             </label>
