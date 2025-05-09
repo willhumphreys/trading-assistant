@@ -1,0 +1,27 @@
+{
+  "stacks": {
+    "trading-assistant-stateful": {
+      "annotations": [
+      ],
+      "constructPath": "trading-assistant-stateful",
+      "dependencies": [
+      ],
+      "name": "trading-assistant-stateful",
+      "stackMetadataPath": "stacks/trading-assistant-stateful/metadata.json",
+      "synthesizedStackPath": "stacks/trading-assistant-stateful/cdk.tf.json",
+      "workingDirectory": "stacks/trading-assistant-stateful"
+    },
+    "trading-assistant-stateless": {
+      "annotations": [
+      ],
+      "constructPath": "trading-assistant-stateless",
+      "dependencies": [
+      ],
+      "name": "trading-assistant-stateless",
+      "stackMetadataPath": "stacks/trading-assistant-stateless/metadata.json",
+      "synthesizedStackPath": "stacks/trading-assistant-stateless/cdk.tf.json",
+      "workingDirectory": "stacks/trading-assistant-stateless"
+    }
+  },
+  "version": "0.20.11"
+}
