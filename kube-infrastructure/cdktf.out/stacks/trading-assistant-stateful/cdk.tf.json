@@ -1,0 +1,79 @@
+{
+  "//": {
+    "metadata": {
+      "backend": "local",
+      "stackName": "trading-assistant-stateful",
+      "version": "0.20.11"
+    },
+    "outputs": {
+    }
+  },
+  "provider": {
+    "kubernetes": [
+      {
+        "host": "https://192.168.1.89:6443",
+        "ignore_annotations": [
+          "metallb\\.universe\\.tf/ip-allocated-from-pool"
+        ],
+        "insecure": true,
+        "token": ""
+      }
+    ]
+  },
+  "resource": {
+    "kubernetes_namespace": {
+      "trading-assistant-namespace": {
+        "//": {
+          "metadata": {
+            "path": "trading-assistant-stateful/trading-assistant-namespace",
+            "uniqueId": "trading-assistant-namespace"
+          }
+        },
+        "metadata": {
+          "name": "trading-assistant"
+        }
+      }
+    },
+    "kubernetes_persistent_volume_claim": {
+      "mysql-pvc": {
+        "//": {
+          "metadata": {
+            "path": "trading-assistant-stateful/mysql-pvc",
+            "uniqueId": "mysql-pvc"
+          }
+        },
+        "metadata": {
+          "labels": {
+            "app": "mysql"
+          },
+          "name": "mysql-pv-claim",
+          "namespace": "trading-assistant"
+        },
+        "spec": {
+          "access_modes": [
+            "ReadWriteOnce"
+          ],
+          "resources": {
+            "requests": {
+              "storage": "10Gi"
+            }
+          },
+          "storage_class_name": "local-path"
+        }
+      }
+    }
+  },
+  "terraform": {
+    "backend": {
+      "local": {
+        "path": "/home/runner/work/trading-assistant/trading-assistant/kube-infrastructure/terraform.trading-assistant-stateful.tfstate"
+      }
+    },
+    "required_providers": {
+      "kubernetes": {
+        "source": "kubernetes",
+        "version": "2.36.0"
+      }
+    }
+  }
+}
