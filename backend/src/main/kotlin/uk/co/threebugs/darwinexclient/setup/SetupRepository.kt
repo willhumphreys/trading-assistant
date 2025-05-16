@@ -34,4 +34,6 @@ interface SetupRepository : JpaRepository<Setup, Int>, QueryByExampleExecutor<Se
 
     fun findBySymbolAndName(symbol: String, name: String): List<Setup>
 
+    fun findBySetupGroupAndActive(localSetupGroup: SetupGroup, bool: Boolean): List<Setup>
+
 }

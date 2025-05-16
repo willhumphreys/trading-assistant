@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="add_active_column_to_setup_table" author="will">
+        <addColumn tableName="setup">
+            <column name="active" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <rollback>
+            <dropColumn tableName="setup" columnName="active"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="add_index_to_active_column_in_setup_table" author="will">
+        <createIndex indexName="idx_setup_active" tableName="setup">
+            <column name="active"/>
+        </createIndex>
+        <rollback>
+            <dropIndex indexName="idx_setup_active" tableName="setup"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="add_active_column_to_setup_aud_table" author="will">
+        <addColumn tableName="setup_aud">
+            <column name="active" type="boolean"/>
+        </addColumn>
+        <rollback>
+            <dropColumn tableName="setup_aud" columnName="active"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

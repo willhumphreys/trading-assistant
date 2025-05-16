@@ -40,8 +40,9 @@ class S3SetupGroupService(
      * Updates the SetupGroups based on symbols found in S3.
      * Uses the broker name from configuration to find the SetupGroups.
      * If a symbol exists in S3 but not in the local database, a new SetupGroup is created.
+     * If a symbol exists in S3 and locally but is disabled, it will be re-enabled.
      *
-     * @return Number of new SetupGroups created
+     * @return Number of SetupGroups created or re-enabled.
      */
     @Transactional
     fun updateSetupsFromS3(): Int {
@@ -53,72 +54,127 @@ class S3SetupGroupService(
         val s3Symbols = getSymbolsFromS3()
         logger.info("Found ${s3Symbols.size} valid directional symbols in S3: $s3Symbols")
 
-        val newSymbols = saveSetupsOnS3AndNotStoredLocally(setupGroups, s3Symbols)
-        deleteSetupGroupsNotOnS3(setupGroups, s3Symbols)
+        // This function now handles creation of new SetupGroups and re-enabling existing ones.
+        val processedSymbols = saveSetupsOnS3AndHandleExisting(setupGroups, s3Symbols)
+        // This function disables local SetupGroups that are no longer found in S3.
+        // Consider renaming disableSetupGroupsNotOnS3 to reflect it "disables" not "deletes"
+        disableSetupGroupsNotOnS3(setupGroups, s3Symbols)
 
         synchronizeSetups(setupGroups)
 
-        return newSymbols.size
+        return processedSymbols.size
     }
 
-    private fun saveSetupsOnS3AndNotStoredLocally(
+    /**
+     * Processes symbols from S3:
+     * - If a symbol from S3 does not exist locally for the given SetupGroups, a new SetupGroup is created and enabled.
+     * - If a symbol from S3 exists locally but is disabled (enabled == false), it's re-enabled and its path/direction are updated.
+     * - If a symbol from S3 exists locally and is already enabled, its path/direction are updated to ensure consistency with S3.
+     * Returns a list of SymbolWithDirection for which SetupGroups were newly created or updated (e.g., re-enabled, path/direction changed).
+     */
+    private fun saveSetupsOnS3AndHandleExisting( // Renamed for clarity
         setupGroups: SetupGroups,
         s3Symbols: Set<SymbolWithDirection>
     ): List<SymbolWithDirection> {
-        // Get existing SetupGroups
-        val existingSymbols = setupGroupRepository.findBySetupGroups(setupGroups)
-            .map { it.symbol }
-            .toSet()
-        logger.info("Found ${existingSymbols.size} existing symbols in database: $existingSymbols")
+        val actedUponSymbols = mutableListOf<SymbolWithDirection>()
 
-        // Filter out existing symbols
-        val newSymbols = s3Symbols.filter { !existingSymbols.contains(it.symbol) }
-        logger.info("Found ${newSymbols.size} new symbols to add: $newSymbols")
+        // Fetch all existing SetupGroup entities for the current SetupGroups
+        val localSetupGroups = setupGroupRepository.findBySetupGroups(setupGroups)
+        // Create a map for efficient lookup by symbol string
+        val localSetupGroupsBySymbol = localSetupGroups.associateBy { it.symbol }
 
-        // Create new SetupGroup entities
-        newSymbols.forEach { symbolWithDirection ->
-            val setupGroup = SetupGroup(
-                symbol = symbolWithDirection.symbol,
-                direction = symbolWithDirection.direction,
-                setupGroups = setupGroups,
-                path = mapToPath(symbolWithDirection),
-                enabled = true
-            )
-            setupGroupRepository.save(setupGroup)
+        logger.info("Found ${localSetupGroups.size} existing SetupGroup records locally for SetupGroups: ${setupGroups.name}")
+
+        s3Symbols.forEach { s3SymbolData ->
+            val s3DerivedPath = mapToPath(s3SymbolData)
+            val existingLocalGroup = localSetupGroupsBySymbol[s3SymbolData.symbol]
+            var setupGroupModifiedOrCreated = false
+
+            if (existingLocalGroup != null) {
+                // Symbol exists locally
+                var modified = false
+                if (existingLocalGroup.enabled == false) { // Check if explicitly disabled
+                    existingLocalGroup.enabled = true
+                    logger.info("Re-enabled existing SetupGroup for symbol: ${s3SymbolData.symbol} (ID: ${existingLocalGroup.id})")
+                    modified = true
+                }
+                // Always ensure path and direction are consistent with S3, as S3 is the source of truth
+                if (existingLocalGroup.path != s3DerivedPath) {
+                    existingLocalGroup.path = s3DerivedPath
+                    logger.info("Updating path for SetupGroup symbol: ${s3SymbolData.symbol} to '$s3DerivedPath'")
+                    modified = true
+                }
+                if (existingLocalGroup.direction != s3SymbolData.direction) {
+                    existingLocalGroup.direction = s3SymbolData.direction
+                    logger.info("Updating direction for SetupGroup symbol: ${s3SymbolData.symbol} to '${s3SymbolData.direction}'")
+                    modified = true
+                }
+
+                if (modified) {
+                    setupGroupRepository.save(existingLocalGroup)
+                    actedUponSymbols.add(s3SymbolData)
+                    setupGroupModifiedOrCreated = true
+                }
+            } else {
+                // Symbol from S3 does not exist locally, create a new SetupGroup
+                logger.info("Creating new SetupGroup for S3 symbol: ${s3SymbolData.symbol}, direction: ${s3SymbolData.direction}")
+                val newSetupGroup = SetupGroup(
+                    symbol = s3SymbolData.symbol,
+                    direction = s3SymbolData.direction,
+                    setupGroups = setupGroups,
+                    path = s3DerivedPath,
+                    enabled = true // New setups are always enabled
+                )
+                setupGroupRepository.save(newSetupGroup)
+                actedUponSymbols.add(s3SymbolData)
+                setupGroupModifiedOrCreated = true
+            }
+            if (!setupGroupModifiedOrCreated && existingLocalGroup != null) {
+                // If it existed, was already enabled, and no path/direction change was needed,
+                // it means it's correctly synced regarding these primary attributes.
+                // Depending on requirements, you might still want to add s3SymbolData to actedUponSymbols
+                // if merely "found and confirmed" is a state to track.
+                // For now, actedUponSymbols only includes created or modified ones.
+                logger.debug("SetupGroup for symbol ${s3SymbolData.symbol} already exists, is enabled, and matches S3 path/direction.")
+            }
         }
-        return newSymbols
+
+        logger.info("${actedUponSymbols.size} SetupGroups were created or updated/re-enabled based on S3 data.")
+        return actedUponSymbols
     }
 
     private fun mapToPath(symbolWithDirection: SymbolWithDirection) =
-        "brokers/$brokerName/symbols/${symbolWithDirection.symbol}-${symbolWithDirection.direction}/trades.csv"
+        // Ensure lowercase direction in path for consistency if it matters for S3
+        "brokers/$brokerName/symbols/${symbolWithDirection.symbol}-${symbolWithDirection.direction.toString().lowercase()}/trades.csv"
 
-    private fun deleteSetupGroupsNotOnS3(
+
+    private fun disableSetupGroupsNotOnS3(
         setupGroups: SetupGroups,
         s3Symbols: Set<SymbolWithDirection>
     ) {
-        // Delete SetupGroups that are not in S3 anymore
-        val existingSetupGroups = setupGroupRepository.findBySetupGroups(setupGroups)
+        // Disables SetupGroups that are present locally but no longer found on S3
+        val localSetupGroups = setupGroupRepository.findBySetupGroups(setupGroups)
+        // Create a set of symbols (String) from s3Symbols for quick lookup
+        val s3SymbolStrings = s3Symbols.map { it.symbol }.toSet()
 
-        val s3Paths = s3Symbols.map { mapToPath(it) }.toSet()
+        localSetupGroups.forEach { localSetupGroup ->
+            // Check if the local setup group's symbol is in the set of symbols from S3
+            // and ensure it's currently enabled before trying to disable it.
+            if (localSetupGroup.symbol !in s3SymbolStrings && localSetupGroup.enabled == true) {
+                logger.info("Disabling SetupGroup for symbol: ${localSetupGroup.symbol} (Path: ${localSetupGroup.path}, ID: ${localSetupGroup.id}) as it's no longer found in S3.")
+                localSetupGroup.enabled = false
+                setupGroupRepository.save(localSetupGroup)
 
-        existingSetupGroups.forEach { setupGroup ->
-            if (setupGroup.path !in s3Paths) {
-                // Find all Setups for this SetupGroup
-                setupRepository.findAll()
-                    .filter { it.setupGroup?.id == setupGroup.id }
-                    .forEach { setup ->
-                        // Delete associated SetupModifiers first
-                        setupModifierRepository.findAll()
-                            .filter { it.setupId == setup.id }
-                            .forEach { setupModifierRepository.delete(it) }
+                // Optionally, also disable all associated Setup entities
+                val setupsToDisable = setupRepository.findBySetupGroupAndActive(localSetupGroup, true)
 
-                        // Delete the Setup
-                        setupRepository.delete(setup)
+                if (setupsToDisable.isNotEmpty()) {
+                    logger.info("Disabling ${setupsToDisable.size} active Setups for disabled SetupGroup ID: ${localSetupGroup.id}")
+                    setupsToDisable.forEach { setup ->
+                        setup.active = false // Assuming Setup has an 'active' field
+                        setupRepository.save(setup)
                     }
-
-                // Finally delete the SetupGroup
-                setupGroupRepository.delete(setupGroup)
-                logger.info("Deleted SetupGroup with path: ${setupGroup.path}")
+                }
             }
         }
     }
@@ -131,13 +187,14 @@ class S3SetupGroupService(
         val setupGroupsOpt = setupGroupsRepository.findByName(brokerName)
 
         return if (setupGroupsOpt.isPresent) {
-            logger.info("Found existing SetupGroups for broker: $brokerName")
+            logger.info("Found existing SetupGroups for broker: $brokerName (ID: ${setupGroupsOpt.get().id})")
             setupGroupsOpt.get()
         } else {
             logger.info("Creating new SetupGroups for broker: $brokerName")
             val newSetupGroups = SetupGroups(
                 name = brokerName,
                 scriptsDirectory = "scripts/$brokerName"
+                // enabled = true // If SetupGroups has an enabled field
             )
             setupGroupsRepository.save(newSetupGroups)
         }
@@ -153,104 +210,136 @@ class S3SetupGroupService(
             .prefix("brokers/$brokerName/symbols/")
             .build()
 
-        val contents = s3Client.listObjectsV2(request).contents()
+        logger.debug("Listing S3 objects with prefix: brokers/$brokerName/symbols/")
+        val contents = try {
+            s3Client.listObjectsV2(request).contents() ?: emptyList()
+        } catch (e: Exception) {
+            logger.error("Failed to list objects from S3 bucket '$bucketName' with prefix 'brokers/$brokerName/symbols/': ${e.message}", e)
+            return emptySet()
+        }
 
-        logger.info("Found ${contents.size} total objects in S3")
+        logger.info("Found ${contents.size} total objects/folders under 'symbols/' in S3 for broker '$brokerName'")
 
         return contents
-            .map { it.key() }
-            .also { keys -> logger.debug("Raw S3 keys: ${keys.joinToString()}") }
-            .map { key ->
-                key.split("/")[3].also { symbol ->
-                    logger.debug("Extracted symbol part: '$symbol' from key: '$key'")
+            .mapNotNull { s3Object -> s3Object.key() }
+            .also { keys -> logger.debug("Raw S3 keys under 'symbols/': ${keys.joinToString()}") }
+            .mapNotNull { key ->
+                // Expected key format: brokers/BROKER/symbols/SYMBOL-DIRECTION/trades.csv or other files
+                // We need to extract the SYMBOL-DIRECTION part from the directory structure.
+                val prefixToRemove = "brokers/$brokerName/symbols/"
+                if (key.startsWith(prefixToRemove)) {
+                    val pathAfterSymbols = key.substring(prefixToRemove.length)
+                    // The first part of pathAfterSymbols should be SYMBOL-DIRECTION
+                    pathAfterSymbols.split('/').firstOrNull()?.takeIf { it.isNotEmpty() }?.also { symbolPart ->
+                        logger.debug("Extracted potential symbol-direction part: '$symbolPart' from key: '$key'")
+                    }
+                } else {
+                    logger.warn("S3 key '$key' does not match expected prefix '$prefixToRemove'")
+                    null
                 }
-            }
+            } // Remove nulls from unsuccessful extractions
+            .distinct() // Each SYMBOL-DIRECTION directory should be processed once
             .mapNotNull { symbolPart ->
                 parseSymbolWithDirection(symbolPart)?.also { symbol ->
-                    logger.info("Successfully parsed symbol: $symbol from: '$symbolPart'")
+                    logger.debug("Successfully parsed S3 symbol: $symbol from part: '$symbolPart'")
                 } ?: run {
-                    logger.warn("Failed to parse symbol from: '$symbolPart'")
+                    // Log is handled in parseSymbolWithDirection if it returns null
                     null
                 }
             }
             .toSet()
             .also { symbols ->
-                logger.info("Final parsed symbols count: ${symbols.size}")
-                logger.info("Final symbols: ${symbols.joinToString()}")
+                logger.info("Final parsed S3 SymbolWithDirection count: ${symbols.size}")
+                if (symbols.isNotEmpty()) logger.info("Final S3 symbols: ${symbols.joinToString()}") else logger.info("No valid symbols found in S3.")
             }
     }
 
-    private fun parseSymbolWithDirection(rawSymbol: String): SymbolWithDirection? {
+    private fun parseSymbolWithDirection(rawSymbolDirName: String): SymbolWithDirection? {
+        // rawSymbolDirName is expected to be like "EURUSD-long" or "GBPUSD-short"
+        val lcRawSymbolDirName = rawSymbolDirName.lowercase() // Standardize to lowercase for suffix check
         return when {
-            rawSymbol.endsWith("-long") -> SymbolWithDirection(
-                symbol = rawSymbol.removeSuffix("-long"),
+            lcRawSymbolDirName.endsWith("-long") -> SymbolWithDirection(
+                // Use original case for symbol part, but remove standardized suffix length
+                symbol = rawSymbolDirName.substring(0, rawSymbolDirName.length - "-long".length),
                 direction = Direction.LONG
             )
-            rawSymbol.endsWith("-short") -> SymbolWithDirection(
-                symbol = rawSymbol.removeSuffix("-short"),
+            lcRawSymbolDirName.endsWith("-short") -> SymbolWithDirection(
+                symbol = rawSymbolDirName.substring(0, rawSymbolDirName.length - "-short".length),
                 direction = Direction.SHORT
             )
-            else -> null
+            else -> {
+                logger.warn("Raw symbol directory name '$rawSymbolDirName' does not conform to SYMBOL-direction format (e.g., EURUSD-long).")
+                null
+            }
         }
     }
 
     @Transactional
     fun synchronizeSetups(setupGroups: SetupGroups) {
-        val s3SetupsBySymbol = getSetupsFromS3()
+        val s3SetupsBySymbolMap = getSetupsFromS3CsvData()
 
-        // Process each SetupGroup
-        setupGroupRepository.findBySetupGroups(setupGroups).forEach { setupGroup ->
+        // Process each *enabled* SetupGroup
+        setupGroupRepository.findBySetupGroups(setupGroups).filter { it.enabled == true }.forEach { setupGroup ->
             val symbol = setupGroup.symbol ?: return@forEach
             val direction = setupGroup.direction ?: return@forEach
 
-            val s3Setups = s3SetupsBySymbol[SymbolWithDirection(symbol, direction)] ?: emptyList()
-            val localSetups = setupRepository.findAll().filter { it.setupGroup?.id == setupGroup.id }
+            val currentSymbolWithDirection = SymbolWithDirection(symbol, direction)
+            val s3SetupsForThisGroup = s3SetupsBySymbolMap[currentSymbolWithDirection] ?: emptyList()
+            // Fetch local Setups that are currently active for this SetupGroup
+            val localActiveSetups = setupRepository.findBySetupGroupAndActive(setupGroup, true)
 
-            // Create new setups that exist in S3 but not locally
-            s3Setups.forEach { s3Setup ->
-                val matchingLocalSetup = localSetups.find { localSetup ->
-                    compareSetups(localSetup, s3Setup)
-                }
+            logger.info("Synchronizing Setups for SetupGroup: ${setupGroup.path} (ID: ${setupGroup.id}). Found ${s3SetupsForThisGroup.size} setups in S3 CSV and ${localActiveSetups.size} active setups locally.")
+
+            // Create or re-activate setups that exist in S3 but not locally (or are inactive locally)
+            s3SetupsForThisGroup.forEach { s3SetupData ->
+                // Find a local setup by comparing all key fields from the CSV
+                val matchingLocalSetup = setupRepository.findAll() // Consider a more targeted query
+                    .filter { it.setupGroup?.id == setupGroup.id }
+                    .find { compareSetups(it, s3SetupData) }
 
                 if (matchingLocalSetup == null) {
                     val newSetup = Setup(
                         setupGroup = setupGroup,
                         symbol = symbol,
-                        rank = s3Setup.rank,
-                        dayOfWeek = s3Setup.dayOfWeek,
-                        hourOfDay = s3Setup.hourOfDay,
-                        stop = s3Setup.stop,
-                        limit = s3Setup.limit,
-                        tickOffset = s3Setup.tickOffset,
-                        tradeDuration = s3Setup.tradeDuration,
-                        outOfTime = s3Setup.outOfTime
+                        rank = s3SetupData.rank,
+                        dayOfWeek = s3SetupData.dayOfWeek,
+                        hourOfDay = s3SetupData.hourOfDay,
+                        stop = s3SetupData.stop,
+                        limit = s3SetupData.limit,
+                        tickOffset = s3SetupData.tickOffset,
+                        tradeDuration = s3SetupData.tradeDuration,
+                        outOfTime = s3SetupData.outOfTime,
+                        active = true
                     )
                     setupRepository.save(newSetup)
-                    logger.info("Created new Setup for symbol: $symbol, rank: ${s3Setup.rank}")
+                    logger.info("Created new active Setup for ${setupGroup.path}, rank: ${s3SetupData.rank}")
+                } else if (matchingLocalSetup.active == false) { // Check for explicitly inactive
+                    matchingLocalSetup.active = true
+                    // Potentially update other fields of matchingLocalSetup from s3SetupData if they can change
+                    setupRepository.save(matchingLocalSetup)
+                    logger.info("Re-activated existing Setup for ${setupGroup.path}, rank: ${matchingLocalSetup.rank} (ID: ${matchingLocalSetup.id})")
                 }
             }
 
-            // Delete local setups that don't exist in S3
-            localSetups.forEach { localSetup ->
-                val matchingS3Setup = s3Setups.find { s3Setup ->
-                    compareSetups(localSetup, s3Setup)
+            // Deactivate local active setups that don't exist in S3 based on comparison
+            localActiveSetups.forEach { localSetup ->
+                val matchingS3Setup = s3SetupsForThisGroup.find { s3SetupData ->
+                    compareSetups(localSetup, s3SetupData)
                 }
 
                 if (matchingS3Setup == null) {
-                    // Delete associated SetupModifiers first
-                    setupModifierRepository.findAll()
-                        .filter { it.setupId == localSetup.id }
-                        .forEach { setupModifierRepository.delete(it) }
-
-                    // Then delete the Setup
-                    setupRepository.delete(localSetup)
-                    logger.info("Deleted Setup for symbol: $symbol, rank: ${localSetup.rank}")
+                    logger.info("Deactivating Setup for ${setupGroup.path}, rank: ${localSetup.rank} (ID: ${localSetup.id}) as it's no longer in S3 CSV.")
+                    localSetup.active = false
+                    setupRepository.save(localSetup)
                 }
             }
         }
     }
 
-    private data class S3Setup(
+    // Assuming SetupRepository has:
+    // fun findBySetupGroupAndActive(setupGroup: SetupGroup, active: Boolean): List<Setup>
+
+    private data class S3SetupCsvData(
         val rank: Int,
         val traderId: Int,
         val dayOfWeek: Int,
@@ -262,76 +351,88 @@ class S3SetupGroupService(
         val outOfTime: Int
     )
 
-    private fun compareSetups(localSetup: Setup, s3Setup: S3Setup): Boolean {
-        return localSetup.dayOfWeek == s3Setup.dayOfWeek &&
-                localSetup.hourOfDay == s3Setup.hourOfDay &&
-                localSetup.stop == s3Setup.stop &&
-                localSetup.limit == s3Setup.limit &&
-                localSetup.tickOffset == s3Setup.tickOffset &&
-                localSetup.tradeDuration == s3Setup.tradeDuration &&
-                localSetup.outOfTime == s3Setup.outOfTime
+    private fun compareSetups(localSetup: Setup, s3SetupData: S3SetupCsvData): Boolean {
+        return localSetup.rank == s3SetupData.rank &&
+                localSetup.dayOfWeek == s3SetupData.dayOfWeek &&
+                localSetup.hourOfDay == s3SetupData.hourOfDay &&
+                localSetup.stop == s3SetupData.stop &&
+                localSetup.limit == s3SetupData.limit &&
+                localSetup.tickOffset == s3SetupData.tickOffset &&
+                localSetup.tradeDuration == s3SetupData.tradeDuration &&
+                localSetup.outOfTime == s3SetupData.outOfTime
     }
 
-    private fun getSetupsFromS3(): Map<SymbolWithDirection, List<S3Setup>> {
-        val setups = mutableMapOf<SymbolWithDirection, List<S3Setup>>()
-        val s3Symbols = getSymbolsFromS3()
+    private fun getSetupsFromS3CsvData(): Map<SymbolWithDirection, List<S3SetupCsvData>> {
+        val setupsMap = mutableMapOf<SymbolWithDirection, MutableList<S3SetupCsvData>>()
 
-        s3Symbols.forEach { symbolWithDirection ->
-            val tradesFilePath = "brokers/$brokerName/symbols/${symbolWithDirection.symbol}-${symbolWithDirection.direction.toString().lowercase()}/trades.csv"
-
-            try {
-                val request = ListObjectsV2Request.builder()
-                    .bucket(bucketName)
-                    .prefix(tradesFilePath)
-                    .build()
-
-                val response = s3Client.listObjectsV2(request)
-                if (response.hasContents()) {
-                    val csvContent = s3Client.getObject { req ->
-                        req.bucket(bucketName)
-                        req.key(tradesFilePath)
-                    }.bufferedReader().use { it.readText() }
-
-                    val setupsList = parseCsvContent(csvContent)
-                    setups[symbolWithDirection] = setupsList
-                }
-            } catch (e: Exception) {
-                logger.error("Error reading trades.csv for symbol ${symbolWithDirection.symbol}: ${e.message}")
-            }
+        val enabledSetupGroups = setupGroupRepository.findAll().filter {
+            it.enabled == true && it.symbol != null && it.direction != null && it.path != null
         }
 
-        return setups
+        logger.info("Fetching S3 CSV data for ${enabledSetupGroups.size} enabled SetupGroups with valid paths.")
+
+        enabledSetupGroups.forEach { setupGroup ->
+            // Non-null assertion operator (!!) is safe here due to the filter above
+            val symbolWithDirection = SymbolWithDirection(setupGroup.symbol!!, setupGroup.direction!!)
+            val tradesFilePath = setupGroup.path!!
+
+            try {
+                logger.debug("Attempting to read S3 object: s3://$bucketName/$tradesFilePath")
+                val csvContent = s3Client.getObject { req ->
+                    req.bucket(bucketName)
+                    req.key(tradesFilePath)
+                }.bufferedReader().use { it.readText() }
+
+                val setupsList = parseCsvContent(csvContent)
+                if (setupsList.isNotEmpty()) {
+                    setupsMap.computeIfAbsent(symbolWithDirection) { mutableListOf() }.addAll(setupsList)
+                    logger.info("Successfully parsed ${setupsList.size} setups from $tradesFilePath for ${symbolWithDirection.symbol}-${symbolWithDirection.direction}")
+                } else {
+                    logger.info("No setups parsed from $tradesFilePath (file might be empty, header-only, or content not matching).")
+                }
+            } catch (e: software.amazon.awssdk.services.s3.model.NoSuchKeyException) {
+                logger.warn("S3 object not found for $tradesFilePath. This might be expected for new/empty SetupGroups.")
+            }
+            catch (e: Exception) {
+                logger.error("Error reading or parsing $tradesFilePath for ${symbolWithDirection.symbol}-${symbolWithDirection.direction}: ${e.message}", e)
+            }
+        }
+        return setupsMap
     }
 
-    //id,traderid,broker,dayofweek,hourofday,stop,limit,tickoffset,tradeduration,outoftime
-    //0,0,darwinex,1,9,0,0,0,0,0
-    private fun parseCsvContent(csvContent: String): List<S3Setup> {
+    private fun parseCsvContent(csvContent: String): List<S3SetupCsvData> {
         return csvContent.lineSequence()
             .drop(1) // Skip header
             .filter { it.isNotBlank() }
             .mapIndexedNotNull { index, line ->
                 try {
-                    val parts = line.split(",")
-                    if (parts.size >= 9) {
-                        S3Setup(
-                            rank = parts[0].toIntOrNull() ?: throw IllegalStateException("Unable to parse rank from: ${parts[0]}"),
-                            traderId = parts[1].toIntOrNull() ?: throw IllegalStateException("Unable to parse traderId from: ${parts[1]}"),
-                            dayOfWeek = parts[3].toIntOrNull() ?: throw IllegalStateException("Unable to parse dayOfWeek from: ${parts[3]}"),
-                            hourOfDay = parts[4].toIntOrNull() ?: throw IllegalStateException("Unable to parse hourOfDay from: ${parts[4]}"),
-                            stop = parts[5].toIntOrNull() ?: throw IllegalStateException("Unable to parse stop from: ${parts[5]}"),
-                            limit = parts[6].toIntOrNull() ?: throw IllegalStateException("Unable to parse limit from: ${parts[6]}"),
-                            tickOffset = parts[7].toIntOrNull() ?: throw IllegalStateException("Unable to parse tickOffset from: ${parts[7]}"),
-                            tradeDuration = parts[8].toIntOrNull() ?: throw IllegalStateException("Unable to parse tradeDuration from: ${parts[8]}"),
-                            outOfTime = parts[9].toIntOrNull() ?: throw IllegalStateException("Unable to parse outOfTime from: ${parts[9]}")
+                    val parts = line.split(",").map { it.trim() }
+                    if (parts.size >= 10) {
+                        S3SetupCsvData(
+                            rank = parts[0].toIntOrNull() ?: throwNumberFormatException("rank", parts[0], index, line),
+                            traderId = parts[1].toIntOrNull() ?: throwNumberFormatException("traderId", parts[1], index, line),
+                            dayOfWeek = parts[3].toIntOrNull() ?: throwNumberFormatException("dayOfWeek", parts[3], index, line),
+                            hourOfDay = parts[4].toIntOrNull() ?: throwNumberFormatException("hourOfDay", parts[4], index, line),
+                            stop = parts[5].toIntOrNull() ?: throwNumberFormatException("stop", parts[5], index, line),
+                            limit = parts[6].toIntOrNull() ?: throwNumberFormatException("limit", parts[6], index, line),
+                            tickOffset = parts[7].toIntOrNull() ?: throwNumberFormatException("tickOffset", parts[7], index, line),
+                            tradeDuration = parts[8].toIntOrNull() ?: throwNumberFormatException("tradeDuration", parts[8], index, line),
+                            outOfTime = parts[9].toIntOrNull() ?: throwNumberFormatException("outOfTime", parts[9], index, line)
                         )
-                    } else null
-                } catch (e: Exception) {
-                    logger.error("Error parsing line: $line", e)
+                    } else {
+                        logger.warn("Skipping CSV line ${index + 2} due to insufficient parts (${parts.size}): '$line'")
+                        null
+                    }
+                } catch (e: Exception) { // Catch NumberFormatException explicitly or other specific exceptions
+                    logger.error("Error parsing CSV line ${index + 2}: '$line'. Error: ${e.message}", e)
                     null
                 }
             }
             .toList()
     }
 
+    private fun throwNumberFormatException(fieldName: String, value: String, index: Int, line: String): Nothing {
+        throw NumberFormatException("Unable to parse $fieldName from value: '$value' on CSV line ${index + 2}: '$line'")
+    }
 
 }

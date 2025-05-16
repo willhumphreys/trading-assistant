@@ -32,22 +32,29 @@ class Setup(
     var tickOffset: Int? = null,
     var tradeDuration: Int? = null,
     var outOfTime: Int? = null,
-    var name: String? = null
+    var name: String? = null,
+
+    @Column(name = "active", nullable = false)
+    var active: Boolean = true // Added active field with default true
 ) {
 
     @PrePersist
     fun prePersist() {
         createdDateTime = ZonedDateTime.now()
+        // 'active' will take its default value 'true' if not explicitly set
     }
 
     val isLong: Boolean
-        get() = stop!! < limit!!
+        get() = stop!! < limit!! // Consider handling nullable stop/limit more safely if they can be null
 
     fun concatenateFields(): String {
-        return "setupId: $id- setupGroup: ${setupGroup?.id}- symbol: $symbol- rank: $rank- isLong: $direction setupGroups: ${setupGroup!!.setupGroups!!.id}"
+        // It's good practice to handle potential nulls in setupGroup and setupGroup.setupGroups
+        val setupGroupId = setupGroup?.id ?: "null"
+        val setupGroupsId = setupGroup?.setupGroups?.id ?: "null"
+        return "setupId: $id- setupGroup: $setupGroupId- symbol: $symbol- rank: $rank- isLong: $direction setupGroups: $setupGroupsId"
             .replace(",", "-")
     }
 
     val direction: Direction
-        get() = if (stop!! < limit!!) Direction.LONG else Direction.SHORT
+        get() = if (stop!! < limit!!) Direction.LONG else Direction.SHORT // Same as isLong, consider null safety
 }
