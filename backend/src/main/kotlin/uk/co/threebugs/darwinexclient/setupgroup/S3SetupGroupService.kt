@@ -107,13 +107,10 @@ class S3SetupGroupService(
                 setupRepository.findAll()
                     .filter { it.setupGroup?.id == setupGroup.id }
                     .forEach { setup ->
-                        // Delete associated SetupModifiers first
-                        setupModifierRepository.findAll()
-                            .filter { it.setupId == setup.id }
-                            .forEach { setupModifierRepository.delete(it) }
-
-                        // Delete the Setup
-                        setupRepository.delete(setup)
+                        // Set enabled to false instead of deleting
+                        setup.enabled = false
+                        setupRepository.save(setup)
+                        logger.info("Disabled Setup for symbol: ${setup.symbol}, rank: ${setup.rank}")
                     }
 
                 // Finally delete the SetupGroup
@@ -227,6 +224,11 @@ class S3SetupGroupService(
                     )
                     setupRepository.save(newSetup)
                     logger.info("Created new Setup for symbol: $symbol, rank: ${s3Setup.rank}")
+                } else if (!matchingLocalSetup.enabled) {
+                    // Re-enable the setup if it was previously disabled
+                    matchingLocalSetup.enabled = true
+                    setupRepository.save(matchingLocalSetup)
+                    logger.info("Re-enabled Setup for symbol: $symbol, rank: ${matchingLocalSetup.rank}")
                 }
             }
 
@@ -237,14 +239,10 @@ class S3SetupGroupService(
                 }
 
                 if (matchingS3Setup == null) {
-                    // Delete associated SetupModifiers first
-                    setupModifierRepository.findAll()
-                        .filter { it.setupId == localSetup.id }
-                        .forEach { setupModifierRepository.delete(it) }
-
-                    // Then delete the Setup
-                    setupRepository.delete(localSetup)
-                    logger.info("Deleted Setup for symbol: $symbol, rank: ${localSetup.rank}")
+                    // Set enabled to false instead of deleting
+                    localSetup.enabled = false
+                    setupRepository.save(localSetup)
+                    logger.info("Disabled Setup for symbol: $symbol, rank: ${localSetup.rank}")
                 }
             }
         }

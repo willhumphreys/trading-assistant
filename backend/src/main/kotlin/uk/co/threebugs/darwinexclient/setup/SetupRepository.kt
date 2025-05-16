@@ -10,7 +10,7 @@ import uk.co.threebugs.darwinexclient.setupgroup.*
 interface SetupRepository : JpaRepository<Setup, Int>, QueryByExampleExecutor<Setup> {
     fun findBySymbolAndRankAndSetupGroup(symbol: String, rank: Int, setupGroup: SetupGroup): Setup?
 
-    @Query("SELECT s FROM Setup s WHERE s.setupGroup.setupGroups.name = :setupGroupsName and s.setupGroup.enabled = true and s.symbol = :symbol")
+    @Query("SELECT s FROM Setup s WHERE s.setupGroup.setupGroups.name = :setupGroupsName and s.setupGroup.enabled = true and s.enabled = true and s.symbol = :symbol")
     fun findEnabledSetups(symbol: String, setupGroupsName: String): List<Setup>
 
     @Transactional

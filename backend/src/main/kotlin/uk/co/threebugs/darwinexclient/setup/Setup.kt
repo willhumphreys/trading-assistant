@@ -32,7 +32,8 @@ class Setup(
     var tickOffset: Int? = null,
     var tradeDuration: Int? = null,
     var outOfTime: Int? = null,
-    var name: String? = null
+    var name: String? = null,
+    var enabled: Boolean = true
 ) {
 
     @PrePersist

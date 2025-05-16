@@ -17,7 +17,8 @@ data class SetupDto(
     val tickOffset: Int,
     val tradeDuration: Int,
     val outOfTime: Int,
-    val name: String? = null
+    val name: String? = null,
+    val enabled: Boolean = true
 ) {
     @JsonIgnore
     fun isLong(): Boolean = stop < limit

@@ -16,4 +16,5 @@
     <include file="classpath:db/changelog/009_add_name_column_to_setup.xml"/>
     <include file="classpath:db/changelog/010_add_unique_metatrader_id_constraint.xml"/>
     <include file="classpath:db/changelog/011_add_setup_modifiers_table.xml"/>
+    <include file="classpath:db/changelog/012_add_enabled_column_to_setup.xml"/>
 </databaseChangeLog>
