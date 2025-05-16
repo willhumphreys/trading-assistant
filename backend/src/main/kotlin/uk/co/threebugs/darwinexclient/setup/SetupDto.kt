@@ -1,13 +1,13 @@
 package uk.co.threebugs.darwinexclient.setup
 
 import com.fasterxml.jackson.annotation.*
-import uk.co.threebugs.darwinexclient.setupgroup.* // Assuming SetupGroupDto is in this package
+import uk.co.threebugs.darwinexclient.setupgroup.*
 import java.time.*
 
 data class SetupDto(
     var id: Int? = null,
     var createdDateTime: ZonedDateTime? = null,
-    val setupGroup: SetupGroupDto, // Assuming SetupGroupDto is defined
+    val setupGroup: SetupGroupDto,
     val symbol: String,
     val rank: Int,
     val dayOfWeek: Int,
@@ -17,8 +17,7 @@ data class SetupDto(
     val tickOffset: Int,
     val tradeDuration: Int,
     val outOfTime: Int,
-    val name: String? = null,
-    val active: Boolean = true // Added active field with default true
+    val name: String? = null
 ) {
     @JsonIgnore
     fun isLong(): Boolean = stop < limit
