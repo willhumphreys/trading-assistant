@@ -12,6 +12,7 @@ abstract class SetupMapper {
     abstract fun toDto(setup: Setup): SetupDto
 
     @Mapping(target = "id", source = "setupDto.id")
+    @Mapping(target = "enabled", source = "setupDto.enabled")
     @Mapping(target = "symbol", source = "setupDto.symbol")
     abstract fun toEntity(setupDto: SetupDto, setupGroup: SetupGroup): Setup
 
