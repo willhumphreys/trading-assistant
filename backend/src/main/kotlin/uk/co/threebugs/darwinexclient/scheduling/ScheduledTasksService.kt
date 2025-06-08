@@ -1,6 +1,7 @@
 package uk.co.threebugs.darwinexclient.scheduling
 
 import org.slf4j.LoggerFactory
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import uk.co.threebugs.darwinexclient.setupgroup.S3SetupGroupService
@@ -9,11 +10,12 @@ import uk.co.threebugs.darwinexclient.setupgroup.S3SetupGroupService
  * Service for handling scheduled tasks in the application
  */
 @Service
+@ConditionalOnProperty(name = ["scheduling.enabled"], havingValue = "true", matchIfMissing = true)
 class ScheduledTasksService(
     private val s3SetupGroupService: S3SetupGroupService
 ) {
     private val logger = LoggerFactory.getLogger(ScheduledTasksService::class.java)
-    
+
     /**
      * Scheduled task to update SetupGroups from S3 every 10 minutes
      * Runs at minutes 0, 10, 20, 30, 40, 50 of every hour
