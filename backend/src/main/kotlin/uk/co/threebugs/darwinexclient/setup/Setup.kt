@@ -4,7 +4,6 @@ import jakarta.persistence.*
 import org.hibernate.envers.*
 import uk.co.threebugs.darwinexclient.setupgroup.*
 import java.time.*
-import jakarta.persistence.CascadeType;
 
 @Entity
 @Table(name = "setup")
@@ -15,7 +14,7 @@ class Setup(
     var id: Int? = null,
     var createdDateTime: ZonedDateTime? = null,
 
-    @ManyToOne(cascade = [CascadeType.ALL])
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "setup_group_id")
     var setupGroup: SetupGroup? = null,
     var symbol: String? = null,

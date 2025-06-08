@@ -84,7 +84,7 @@ class S3SetupGroupService(
                 path = mapToPath(symbolWithDirection),
                 enabled = true
             )
-            setupGroupRepository.saveAndFlush(setupGroup)
+            setupGroupRepository.save(setupGroup)
         }
         return newSymbols
     }
@@ -109,7 +109,7 @@ class S3SetupGroupService(
                     .forEach { setup ->
                         // Set enabled to false instead of deleting
                         setup.enabled = false
-                        setupRepository.saveAndFlush(setup)
+                        setupRepository.save(setup)
                         logger.info("Disabled Setup for symbol: ${setup.symbol}, rank: ${setup.rank}")
                     }
 
@@ -136,7 +136,7 @@ class S3SetupGroupService(
                 name = brokerName,
                 scriptsDirectory = "scripts/$brokerName"
             )
-            return setupGroupsRepository.save(newSetupGroups)
+            setupGroupsRepository.save(newSetupGroups)
         }
     }
 
@@ -201,7 +201,7 @@ class S3SetupGroupService(
             val direction = setupGroup.direction ?: return@forEach
 
             // Ensure the setupGroup is properly managed by the persistence context
-            val managedSetupGroup = setupGroupRepository.saveAndFlush(setupGroup)
+            val managedSetupGroup = setupGroupRepository.save(setupGroup)
 
             val s3Setups = s3SetupsBySymbol[SymbolWithDirection(symbol, direction)] ?: emptyList()
             val localSetups = setupRepository.findAll().filter { it.setupGroup?.id == managedSetupGroup.id }
@@ -225,12 +225,12 @@ class S3SetupGroupService(
                         tradeDuration = s3Setup.tradeDuration,
                         outOfTime = s3Setup.outOfTime
                     )
-                    setupRepository.saveAndFlush(newSetup)
+                    setupRepository.save(newSetup)
                     logger.info("Created new Setup for symbol: $symbol, rank: ${s3Setup.rank}")
                 } else if (!matchingLocalSetup.enabled) {
                     // Re-enable the setup if it was previously disabled
                     matchingLocalSetup.enabled = true
-                    setupRepository.saveAndFlush(matchingLocalSetup)
+                    setupRepository.save(matchingLocalSetup)
                     logger.info("Re-enabled Setup for symbol: $symbol, rank: ${matchingLocalSetup.rank}")
                 }
             }
@@ -244,7 +244,7 @@ class S3SetupGroupService(
                 if (matchingS3Setup == null) {
                     // Set enabled to false instead of deleting
                     localSetup.enabled = false
-                    setupRepository.saveAndFlush(localSetup)
+                    setupRepository.save(localSetup)
                     logger.info("Disabled Setup for symbol: $symbol, rank: ${localSetup.rank}")
                 }
             }
