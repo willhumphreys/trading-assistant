@@ -200,8 +200,11 @@ class S3SetupGroupService(
             val symbol = setupGroup.symbol ?: return@forEach
             val direction = setupGroup.direction ?: return@forEach
 
+            // Ensure the setupGroup is properly managed by the persistence context
+            val managedSetupGroup = setupGroupRepository.save(setupGroup)
+
             val s3Setups = s3SetupsBySymbol[SymbolWithDirection(symbol, direction)] ?: emptyList()
-            val localSetups = setupRepository.findAll().filter { it.setupGroup?.id == setupGroup.id }
+            val localSetups = setupRepository.findAll().filter { it.setupGroup?.id == managedSetupGroup.id }
 
             // Create new setups that exist in S3 but not locally
             s3Setups.forEach { s3Setup ->
@@ -211,7 +214,7 @@ class S3SetupGroupService(
 
                 if (matchingLocalSetup == null) {
                     val newSetup = Setup(
-                        setupGroup = setupGroup,
+                        setupGroup = managedSetupGroup,
                         symbol = symbol,
                         rank = s3Setup.rank,
                         dayOfWeek = s3Setup.dayOfWeek,
