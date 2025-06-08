@@ -14,7 +14,7 @@ class Setup(
     var id: Int? = null,
     var createdDateTime: ZonedDateTime? = null,
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(cascade = [CascadeType.ALL])
     @JoinColumn(name = "setup_group_id")
     var setupGroup: SetupGroup? = null,
     var symbol: String? = null,
